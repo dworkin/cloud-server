@@ -1,0 +1,5 @@
+/*
+ * This is a stub for the AUTO file which is used for System objects, only.
+ * For other objects, the #include of this file may be redirected to one
+ * that depends on the particular object being compiled.
+ */
