@@ -5,6 +5,7 @@
 # include <kernel/tls.h>
 # include <status.h>
 # include <trace.h>
+# include <type.h>
 
 
 # define TLSVAR2	call_trace()[1][TRACE_FIRSTARG][1]
@@ -604,19 +605,34 @@ static object inherit_program(string from, string path, int priv)
 {
     string creator;
     object obj;
+    mixed str;
 
     path = normalize_path(path, from + "/..", creator = creator(from));
     if (sscanf(path, "%*s" + INHERITABLE_SUBDIR) == 0 ||
 	(sscanf(path, "/kernel/%*s") != 0 && creator != "System") ||
-	!accessd->access(from, path, READ_ACCESS) ||
-	(objectd && objectd->forbid_inherit(from, path, priv))) {
+	!accessd->access(from, path, READ_ACCESS)) {
 	return nil;
+    }
+
+    if (objectd) {
+	str = objectd->inherit_program(from, path, priv);
+	switch (typeof(str)) {
+	case T_STRING:
+	    path = str;
+	    str = nil;
+	    break;
+
+	case T_ARRAY:
+	    break;
+
+	default:
+	    return nil;
+	}
     }
 
     obj = find_object(path);
     if (!obj) {
 	int *rsrc;
-	string err;
 
 	creator = creator(path);
 	rsrc = rsrcd->rsrc_get(creator, "objects");
@@ -628,12 +644,16 @@ static object inherit_program(string from, string path, int priv)
 	    objectd->compiling(path);
 	}
 	TLSVAR3 = ({ path });
-	err = catch(obj = compile_object(path));
-	if (err) {
+	if (str) {
+	    str = catch(obj = compile_object(path, str...));
+	} else {
+	    str = catch(obj = compile_object(path));
+	}
+	if (str) {
 	    if (objectd) {
 		objectd->compile_failed(creator, path);
 	    }
-	    error(err);
+	    error(str);
 	}
 	rsrcd->rsrc_incr(creator, "objects", nil, 1);
 	if (objectd) {

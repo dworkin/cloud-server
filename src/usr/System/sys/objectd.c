@@ -459,8 +459,7 @@ void compiling(string path)
 	int max;
 	object dbobj;
 
-	if (sscanf(path, "%*s.c/") != 0 || sscanf(path, "%*s.h/") != 0 ||
-	    sscanf(path, "%*s/.upgrade/") != 0) {
+	if (sscanf(path, "%*s.c/") != 0 || sscanf(path, "%*s.h/") != 0) {
 	    error("Invalid object name");
 	}
 
@@ -608,6 +607,17 @@ void remove_program(string owner, string path, int timestamp, int index)
 }
 
 /*
+ * NAME:	inherit_program()
+ * DESCRIPTION:	handle inheritance
+ */
+mixed inherit_program(string from, string path, int priv)
+{
+    if (previous_object() == driver) {
+	return path;
+    }
+}
+
+/*
  * NAME:	path_special()
  * DESCRIPTION:	handle special include file
  */
@@ -628,30 +638,14 @@ private string path_special(string compiled)
 }
 
 /*
- * NAME:	include()
- * DESCRIPTION:	keep track of files included
- */
-private void include(string from, string path)
-{
-    int len;
-
-    /* checks */
-    len = strlen(path);
-    if (path != "/include/AUTO" &&
-	(sscanf(path, "%*s.c/") != 0 || sscanf(path, "%*s.h/") != 0 ||
-	 len < 2 || path[len - 2 ..] != ".h" ||
-	 sscanf(path, "%*s/.upgrade/") != 0)) {
-	error("Invalid include file");
-    }
-}
-
-/*
  * NAME:	include_file()
  * DESCRIPTION:	handle an include file
  */
 mixed include_file(string compiled, string from, string path)
 {
     if (previous_object() == driver) {
+	int len;
+
 	if (path == "/include/AUTO" && from == "/include/std.h") {
 	    if (driver->creator(compiled) != "System") {
 		/*
@@ -663,7 +657,13 @@ mixed include_file(string compiled, string from, string path)
 	    }
 	}
 
-	include(from, path);
+	/* checks */
+	len = strlen(path);
+	if (path != "/include/AUTO" &&
+	    (sscanf(path, "%*s.c/") != 0 || sscanf(path, "%*s.h/") != 0 ||
+	     len < 2 || path[len - 2 ..] != ".h")) {
+	    error("Invalid include file");
+	}
 	return path;
     }
 }

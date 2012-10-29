@@ -57,13 +57,20 @@ void set_object_manager(object objectd)	[System only]
 
 	The last reference to the given program has been removed.
 
+    * mixed inherit_program(string from, string path, int priv)
+
+	The flag `priv' indicates that inheritance is private.  Return either
+	a string for an alternate path of the inherited file, or an array of
+	strings, representing the source code of the inherited file itself.
+	Anu other return value will prevent inheritance of the file `path'.
+
     * mixed include_file(string compiled, string from, string path)
 
 	The file `path' (which might not exist) is about to be included by
-	`from' during the compilation of 'compiled'.  The returned value can be
+	`from' during the compilation of `compiled'.  The returned value can be
 	either a string for the translated path of the include file, or an
 	array of strings, representing the included file itself.  Any other
-	return value will prevent inclusion of the file 'path'.
+	return value will prevent inclusion of the file `path'.
 
     * int touch(object obj, string function)
 
@@ -76,11 +83,6 @@ void set_object_manager(object objectd)	[System only]
 
 	Return a non-zero value if `path' is not a legal first argument
 	for call_other().
-
-    * int forbid_inherit(string from, string path, int priv)
-
-	Return a non-zero value if inheritance of `path' by `from' is not
-	allowed.  The flag `priv' indicates that inheritance is private.
 
 
 void set_error_manager(object errord)	[System only]
