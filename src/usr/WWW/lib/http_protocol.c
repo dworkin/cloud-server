@@ -1,4 +1,5 @@
 # include <config.h>
+# include <version.h>
 # include <http.h>
 # include <type.h>
 # include <status.h>
@@ -438,7 +439,7 @@ http_response(int code, string str,
     message = "HTTP/1.0 " + message + "\r\nDate: " + time2date(time()) +
 	      "\r\nServer: " +
 	      implode(explode(status(ST_VERSION), " "), "/") + " " +
-	      MUD_NAME + "/" + MUDLIB_VERSION + "\r\n";
+	      SERVER_NAME + "/" + SERVER_VERSION + "\r\n";
 
     switch (code) {
     case HTTP_MOVED_PERMANENTLY:

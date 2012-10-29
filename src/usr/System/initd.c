@@ -9,7 +9,7 @@ inherit rsrc API_RSRC;
 
 /*
  * NAME:	create()
- * DESCRIPTION:	initialize the mud
+ * DESCRIPTION:	initialize the system
  */
 static void create()
 {

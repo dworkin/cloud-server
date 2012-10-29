@@ -7,5 +7,4 @@
 
 # define SYS_PERSISTENT			/* persistent system */
 
-# define MUD_NAME	"Cloud Server"	/* name of the mud */
-# define MUDLIB_VERSION	"0.1"		/* version of the base mudlib */
+# define SERVER_NAME	"Cloud Server"	/* name of the server */
