@@ -30,4 +30,4 @@ users		= 255;			/* max # of users */
 editors		= 10;			/* max # of editor sessions */
 objects		= 10000;		/* max # of objects */
 call_outs	= 10000;		/* max # of call_outs */
-array_size	= 1000;			/* max array size */
+array_size	= 10000;		/* max array size */
