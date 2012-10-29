@@ -1,0 +1,33 @@
+telnet_port	= ([ "localhost" : 8021 ]);
+					/* telnet port number */
+binary_port	= ([ "*" : 8080 ]);	/* binary port number */
+directory	= "/home/cloud/server/src";
+					/* base directory */
+ed_tmpfile	= "../state/ed";	/* proto editor tmpfile */
+swap_file	= "../state/swap";	/* swap file */
+swap_size	= 65535;		/* # sectors in swap file */
+cache_size	= 1024;			/* # sectors in swap cache */
+sector_size	= 1024;			/* swap sector size */
+swap_fragment	= 256;			/* fragment to swap out */
+static_chunk	= 64512;		/* static memory chunk */
+dynamic_chunk	= 261120;		/* dynamic memory chunk */
+dump_file	= "../state/snapshot";	/* snapshot file */
+dump_interval	= 3600;			/* snapshot rebuild interval */
+hotboot		= ({ "../bin/dgd",	/* hotboot binary */
+		     "../cloud.dgd",	/* hotboot config file */
+		     "../state/snapshot",
+		     "../state/snapshot.old" });
+
+typechecking	= 2;			/* global typechecking */
+include_file	= "/include/std.h";	/* standard include file */
+include_dirs	= ({ "/include", "~/include" });
+					/* include directories to search */
+auto_object	= "/kernel/lib/auto";	/* automatically inherited object */
+driver_object	= "/kernel/sys/driver";	/* driver object */
+create		= "_F_create";		/* low-level create function */
+
+users		= 255;			/* max # of users */
+editors		= 10;			/* max # of editor sessions */
+objects		= 10000;		/* max # of objects */
+call_outs	= 10000;		/* max # of call_outs */
+array_size	= 1000;			/* max array size */
