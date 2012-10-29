@@ -189,9 +189,7 @@ string upgrade(string creator, int number, string *names)
 	    for (i = sz; --i >= 0; ) {
 		mapping imap, omap;
 
-		imap = ([ ]);
-		omap = ([ ]);
-		objectd->query_dependents(names[i], imap, omap, factor);
+		({ imap, omap }) = objectd->query_dependents(names[i], factor);
 		inherited = merge(inherited, imap);
 		objects = merge(objects, omap);
 		depend[i] = merge(imap, omap);
@@ -378,10 +376,9 @@ string patchall(string creator, int number, string *names)
 	    objects = ([ ]);
 	    depend = allocate(sz);
 	    for (i = sz; --i >= 0; ) {
-		map = ([ ]);
-		objectd->query_dependents(names[i], ([ ]), map, factor);
-		objects = merge(objects, map);
-		depend[i] = map;
+		({ map, depend[i] }) = objectd->query_dependents(names[i],
+								 factor);
+		objects = merge(objects, depend[i]);
 	    }
 	    if (map_sizeof(objects) == 0) {
 		return "No existing objects.\n";

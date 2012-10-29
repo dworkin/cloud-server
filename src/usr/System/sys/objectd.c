@@ -420,19 +420,22 @@ query_dep_issue(string path, int index, mapping issues, mapping inherited,
  * NAME:	query_dependents()
  * DESCRIPTION:	collect the objects that depend on all issues of a given object
  */
-void
-query_dependents(string name, mapping inherited, mapping leaves, int factor)
+mapping *query_dependents(string name, int factor)
 {
     if (SYSTEM()) {
 	int i, *issue;
-	mapping issues;
+	mapping issues, inherited, leaves;
 
 	/* collect dependents for all issues of object */
 	issues = ([ ]);
+	inherited = ([ ]);
+	leaves = ([ ]);
 	issue = query_issues(name);
 	for (i = sizeof(issue); --i >= 0; ) {
 	    query_dep_issue(name, issue[i], issues, inherited, leaves, factor);
 	}
+
+	return ({ inherited, leaves });
     }
 }
 
