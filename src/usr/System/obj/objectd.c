@@ -4,7 +4,6 @@
 
 string dbase_creator;	/* which creator is this the database part for */
 object objectd;		/* object server */
-mapping	clones;		/* ([ index : count ]) */
 mapping	inherited;	/* (index / factor) --> inherited */
 int factor;		/* 2nd level divisor */
 mapping	objects;	/* ([ index : object info ]) */
@@ -19,7 +18,6 @@ static void create(int clone)
     if (clone) {
 	objectd = find_object(OBJECTD);
 	factor = status(ST_ARRAYSIZE);
-	clones = ([ ]);
 	inherited = ([ ]);
 	objects = ([ ]);
 	names = ([ ]);
@@ -55,43 +53,6 @@ int test_space(string path, int max)
 	}
     }
     return TRUE;
-}
-
-/*
- * NAME:	add_clone()
- * DESCRIPTION:	add a clone for the object with the given index
- */
-void add_clone(int index)
-{
-    if (previous_object() == objectd) {
-	if (clones[index]) {
-	    clones[index]++;
-	} else {
-	    clones[index] = 1;
-	}
-    }
-}
-
-/*
- * NAME:	del_clone()
- * DESCRIPTION:	delete a clone for the object with the given index
- */
-void del_clone(int index)
-{
-    if (previous_object() == objectd && --clones[index] == 0) {
-	clones[index] = nil;
-    }
-}
-
-/*
- * NAME:	query_clones()
- * DESCRIPTION:	return the number of clones of the object with the given index
- */
-int query_clones(int index)
-{
-    if (previous_object() == objectd) {
-	return clones[index];
-    }
 }
 
 /*

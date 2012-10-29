@@ -151,24 +151,6 @@ private void unregister_object(string path, int index)
 }
 
 /*
- * NAME:	register_clone()
- * DESCRIPTION:	register a clone
- */
-private void register_clone(int index)
-{
-    index_map[index / factor][index]->add_clone(index);
-}
-
-/*
- * NAME:	unregister_clone()
- * DESCRIPTION:	unregister a clone
- */
-private void unregister_clone(int index)
-{
-    index_map[index / factor][index]->del_clone(index);
-}
-
-/*
  * NAME:	prereg_inherits()
  * DESCRIPTION:	for all preregistered objects, return a list of inherited
  *		objects
@@ -254,14 +236,6 @@ private void preregister_objects()
 	}
 	register_object(driver->creator(name), name, find_object(name),
 			indices[name], inherits);
-    }
-    /* register the clone for System that was created automatically */
-    register_clone(status(creator_map["System"], O_INDEX));
-
-    /* register resource object clones (kernel lib) */
-    index = status(RSRCOBJ, O_INDEX);
-    for (i = sizeof(rsrc::query_owners()); --i >= 0; ) {
-	register_clone(index);
     }
 }
 
@@ -561,28 +535,13 @@ void compile_failed(string owner, string path)
 }
 
 /*
- * NAME:	clone()
- * DESCRIPTION:	object has been cloned
- */
-void clone(string owner, object obj)
-{
-    if (previous_object() == driver) {
-	register_clone(status(obj, O_INDEX));
-    }
-}
-
-/*
  * NAME:	destruct()
  * DESCRIPTION:	object is about to be destructed
  */
 void destruct(string owner, object obj)
 {
-    if (previous_object() == driver) {
-	if (sscanf(object_name(obj), "%*s#")) {
-	    unregister_clone(status(obj, O_INDEX));
-	} else {
-	    unregister_object(object_name(obj), status(obj, O_INDEX));
-	}
+    if (previous_object() == driver && sscanf(object_name(obj), "%*s#") == 0) {
+	unregister_object(object_name(obj), status(obj, O_INDEX));
     }
 }
 
