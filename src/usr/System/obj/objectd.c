@@ -42,13 +42,14 @@ void set_creator(string str)
 int test_space(string path, int max)
 {
     if (previous_object() == objectd) {
-	mixed issues;
+	mixed issue;
 
 	if (map_sizeof(objects) >= max) {
 	    return FALSE;
 	}
 	sscanf(path, "/usr/%*s/%s", path);
-	if (typeof(issues=names[path]) == T_ARRAY && sizeof(issues) >= max) {
+	issue = names[path];
+	if (typeof(issue) == T_ARRAY && sizeof(issue) >= max) {
 	    return FALSE;
 	}
     }
@@ -59,12 +60,12 @@ int test_space(string path, int max)
  * NAME:	add_inherited()
  * DESCRIPTION:	register an inherited object
  */
-void add_inherited(int index, int iindex)
+void add_inherited(int index, int issue)
 {
     if (previous_object() == objectd) {
 	mapping map;
 
-	map = inherited[iindex];
+	map = inherited[issue];
 	if (map) {
 	    if (map[index / factor]) {
 		map[index / factor] += ({ index });
@@ -72,7 +73,7 @@ void add_inherited(int index, int iindex)
 		map[index / factor] = ({ index });
 	    }
 	} else {
-	    inherited[iindex] = ([ index / factor : ({ index }) ]);
+	    inherited[issue] = ([ index / factor : ({ index }) ]);
 	}
     }
 }
@@ -81,18 +82,18 @@ void add_inherited(int index, int iindex)
  * NAME:	del_inherited()
  * DESCRIPTION:	unregister an inherited object
  */
-int del_inherited(int index, int iindex)
+int del_inherited(int index, int issue)
 {
     if (previous_object() == objectd) {
 	mapping map;
 
-	map = inherited[iindex];
+	map = inherited[issue];
 	map[index / factor] -= ({ index });
 	if (sizeof(map[index / factor]) == 0) {
 	    map[index / factor] = nil;
 	    if (map_sizeof(map) == 0) {
-		inherited[iindex] = nil;
-		return (objects[iindex] == nil);
+		inherited[issue] = nil;
+		return (objects[issue] == nil);
 	    }
 	}
     }
@@ -103,10 +104,10 @@ int del_inherited(int index, int iindex)
  * NAME:	query_inherited()
  * DESCRIPTION:	return the objects that inherit the given object
  */
-mapping query_inherited(int iindex)
+mapping query_inherited(int issue)
 {
-    if (previous_object() == objectd && inherited[iindex]) {
-	return inherited[iindex];
+    if (previous_object() == objectd && inherited[issue]) {
+	return inherited[issue];
     }
     return ([ ]);
 }
@@ -122,19 +123,19 @@ void add_object(mixed obj, int index, int *list)
 	    /* normal object */
 	    names[obj] = index + 1;
 	} else {
-	    mixed issues;
+	    mixed issue;
 
 	    /* lib object */
 	    sscanf(obj, "/usr/%*s/%s", obj);
-	    issues = names[obj];
-	    if (issues) {
-		if (typeof(issues) == T_INT) {
-		    if (index != issues - 1) {
-			names[obj] = ({ index, issues - 1 });
+	    issue = names[obj];
+	    if (issue) {
+		if (typeof(issue) == T_INT) {
+		    if (index != issue - 1) {
+			names[obj] = ({ index, issue - 1 });
 		    }
 		} else {
-		    if (index != issues[0]) {
-			names[obj] = ({ index }) + issues;
+		    if (index != issue[0]) {
+			names[obj] = ({ index }) + issue;
 		    }
 		}
 	    } else {
@@ -152,8 +153,7 @@ void add_object(mixed obj, int index, int *list)
 int del_object(int index)
 {
     if (previous_object() == objectd) {
-	mixed obj;
-	mixed issues;
+	mixed obj, issue;
 
 	obj = objects[index][0];
 	if (typeof(obj) == T_OBJECT) {
@@ -166,15 +166,15 @@ int del_object(int index)
 	    return TRUE;
 	} else {
 	    /* lib object */
-	    issues = names[obj];
-	    if (typeof(issues) == T_INT) {
+	    issue = names[obj];
+	    if (typeof(issue) == T_INT) {
 		names[obj] = nil;
 	    } else {
-		issues -= ({ index });
-		if (sizeof(issues) == 1) {
-		    names[obj] = issues[0] + 1;
+		issue -= ({ index });
+		if (sizeof(issue) == 1) {
+		    names[obj] = issue[0] + 1;
 		} else {
-		    names[obj] = issues;
+		    names[obj] = issue;
 		}
 	    }
 
@@ -223,16 +223,16 @@ int *query_inherits(int index)
 int *query_issues(string path)
 {
     if (previous_object() == objectd) {
-	mixed issues;
+	mixed issue;
 
 	sscanf(path, "/usr/%*s/%s", path);
-	issues = names[path];
-	if (!issues) {
+	issue = names[path];
+	if (!issue) {
 	    return ({ });
-	} else if (typeof(issues) == T_INT) {
-	    return ({ issues - 1 });
+	} else if (typeof(issue) == T_INT) {
+	    return ({ issue - 1 });
 	} else {
-	    return issues;
+	    return issue;
 	}
     }
 }
