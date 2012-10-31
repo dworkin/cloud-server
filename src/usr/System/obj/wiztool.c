@@ -216,50 +216,6 @@ void report_upgrade(string *upgraded, mapping failed)
 
 
 /*
- * NAME:	cmd_patch()
- * DESCRIPTION:	patch objects after an upgrade
- */
-static void cmd_patch(object user, string cmd, string str)
-{
-    int len, i, sz, *sizes;
-    mixed **files;
-    string *names;
-
-    if (!str) {
-	message("Usage: " + cmd + " <file> [<file> ...]\n");
-	return;
-    }
-
-    files = expand(str, 1, TRUE);
-    names = files[0];
-    sizes = files[1];
-    sz = sizeof(names);
-    for (i = 0; i < sz; i++) {
-	str = names[i];
-	len = strlen(str);
-	if (len < 2 || str[len - 2 ..] != ".c") {
-	    message(str + ": No such source file.\n");
-	    names[i] = nil;
-	} else {
-	    str = str[.. len - 3];
-	    names[i] = str;
-	    if (!status(str)) {
-		message(str + ": No such object.\n");
-		names[i] = nil;
-	    }
-	}
-    }
-
-    names -= ({ nil });
-    if (sizeof(names) != 0) {
-	str = UPGRADED->patchall(query_owner(), names);
-	if (str) {
-	    message(str);
-	}
-    }
-}
-
-/*
  * NAME:	do_patch()
  * DESCRIPTION:	patch an object with this owner's resource limits
  */
@@ -277,38 +233,6 @@ void do_patch(object obj)
 static void call_patch(object obj)
 {
     obj->_F_patch();
-}
-
-/*
- * NAME:	report_patch()
- * DESCRIPTION:	report the effect of a patch command
- */
-void report_patch(string *patched, mapping failed)
-{
-    if (previous_program() == UPGRADED) {
-	int i, j, sz;
-	string str;
-	mixed **values, *list;
-
-	if (sizeof(patched) != 0) {
-	    message("Objects successfully patched:\n" +
-		    break_string("<" + implode(patched, ">, <") + ">", 0, 2));
-	}
-
-	i = map_sizeof(failed);
-	if (i != 0) {
-	    str = "";
-	    values = map_values(failed);
-	    do {
-		list = values[--i];
-		for (j = 0, sz = sizeof(list); j < sz; j++) {
-		    str += ", <" + object_name(list[j]) + ">";
-		}
-	    } while (i != 0);
-	    message("Errors occured while patching:\n" +
-		    break_string(str[2 ..], 0, 2));
-	}
-    }
 }
 
 
@@ -738,7 +662,6 @@ static int command(string str, mixed *args)
     case "@clone":
     case "@destruct":
     case "@new":
-    case "@patch":
 
     case "@compile":
     case "@issues":
