@@ -41,7 +41,7 @@ static void create()
     compile_object("/sys/cmdparser");
     compile_object("/sys/sould");
     compile_object("/obj/body/human");
-    compile_object("/data/strchunk");
+    compile_object("/data/strbuffer");
 
     /* Domain stuff */
     rsrc::rsrc_incr(nil, "filequota", nil,

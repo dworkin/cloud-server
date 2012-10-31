@@ -3,8 +3,8 @@
 
 # define CHUNK_SIZE	65535
 
-int length;		/* total length of strings in chunks */
-string *chunks;		/* string chunks */
+int length;		/* total length of strings in buffer */
+string *buffer;		/* string buffer */
 
 /*
  * NAME:	init()
@@ -14,13 +14,13 @@ static void init(varargs string str)
 {
     if (str) {
 	length = strlen(str);
-	chunks = ({ str });
+	buffer = ({ str });
     }
 }
 
 /*
  * NAME:	append()
- * DESCRIPTION:	append string to chunks
+ * DESCRIPTION:	append string to buffer
  */
 void append(string str)
 {
@@ -28,9 +28,9 @@ void append(string str)
     string chunk;
 
     len = strlen(str);
-    if (!chunks) {
+    if (!buffer) {
 	length = len;
-	chunks = ({ str });
+	buffer = ({ str });
 	return;
     }
 
@@ -38,36 +38,36 @@ void append(string str)
 	return;
     }
     length += len;
-    i = sizeof(chunks) - 1;
-    chunk = chunks[i];
+    i = sizeof(buffer) - 1;
+    chunk = buffer[i];
     clen = strlen(chunk);
     if (clen < CHUNK_SIZE) {
 	if (clen + len <= CHUNK_SIZE) {
-	    chunks[i] = chunk + str;
+	    buffer[i] = chunk + str;
 	    return;
 	}
 	clen = CHUNK_SIZE - clen;
-	chunks[i] = chunk + str[.. clen - 1];
+	buffer[i] = chunk + str[.. clen - 1];
 	str = str[clen ..];
     }
-    chunks += ({ str });
+    buffer += ({ str });
 }
 
 /*
  * NAME:	chunk()
- * DESCRIPTION:	remove the first of the chunks
+ * DESCRIPTION:	remove the first chunk from the buffer
  */
 string chunk()
 {
-    if (chunks) {
+    if (buffer) {
 	string str;
 
-	str = chunks[0];
+	str = buffer[0];
 	if (length <= CHUNK_SIZE) {
-	    chunks = nil;
+	    buffer = nil;
 	} else {
 	    length -= CHUNK_SIZE;
-	    chunks = chunks[1 ..];
+	    buffer = buffer[1 ..];
 	}
 	return str;
     } else {
@@ -77,9 +77,9 @@ string chunk()
 
 /*
  * NAME:	length()
- * DESCRIPTION:	return total length of strings in chunks
+ * DESCRIPTION:	return total length of strings in buffer
  */
 int length()
 {
-    return (chunks) ? length : -1;
+    return (buffer) ? length : -1;
 }

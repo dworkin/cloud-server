@@ -30,7 +30,7 @@ response(int code, string str,
     if (!body) {
 	body = "";
     }
-    return new_object("/data/strchunk",
+    return new_object("/data/strbuffer",
 		      http_response(code, str, type, length, modtime) + body);
 }
 
