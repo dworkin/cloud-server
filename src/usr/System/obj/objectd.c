@@ -3,11 +3,31 @@
 # include <objectd.h>
 
 string dbase_creator;	/* which creator is this the database part for */
+string creator;		/* which creator is this the database part for */
 object objectd;		/* object server */
-mapping	inherited;	/* (index / factor) --> inherited */
+mapping inherited;	/* ([ issue : ([ index / factor : indices ]) ]) */
 int factor;		/* 2nd level divisor */
-mapping	objects;	/* ([ index : object info ]) */
+mapping objects;	/* ([ index : object info ]) */
 mapping	names;		/* ([ object : index/indices ]) */
+mapping issues;		/* ([ object : indices ]) */
+
+void patch()
+{
+    if (!creator) {
+	mixed *indices, *values;
+	int i;
+
+	creator = dbase_creator;
+	issues = names;
+	indices = map_indices(issues);
+	values = map_values(issues);
+	for (i = 0; i < sizeof(values); i++) {
+	    if (typeof(values[i]) == T_INT) {
+		issues[indices[i]] = values[i] - 1;
+	    }
+	}
+    }
+}
 
 /*
  * NAME:	create()
@@ -20,7 +40,7 @@ static void create(int clone)
 	factor = status(ST_ARRAYSIZE);
 	inherited = ([ ]);
 	objects = ([ ]);
-	names = ([ ]);
+	issues = ([ ]);
     }
 }
 
@@ -31,7 +51,7 @@ static void create(int clone)
 void set_creator(string str)
 {
     if (previous_object() == objectd) {
-	dbase_creator = str;
+	creator = str;
     }
 }
 
@@ -41,6 +61,7 @@ void set_creator(string str)
  */
 int test_space(string path, int max)
 {
+    patch();
     if (previous_object() == objectd) {
 	mixed issue;
 
@@ -48,7 +69,7 @@ int test_space(string path, int max)
 	    return FALSE;
 	}
 	sscanf(path, "/usr/%*s/%s", path);
-	issue = names[path];
+	issue = issues[path];
 	if (typeof(issue) == T_ARRAY && sizeof(issue) >= max) {
 	    return FALSE;
 	}
@@ -62,6 +83,7 @@ int test_space(string path, int max)
  */
 void add_inherited(int index, int issue)
 {
+    patch();
     if (previous_object() == objectd) {
 	mapping map;
 
@@ -84,6 +106,7 @@ void add_inherited(int index, int issue)
  */
 int del_inherited(int index, int issue)
 {
+    patch();
     if (previous_object() == objectd) {
 	mapping map;
 
@@ -106,6 +129,7 @@ int del_inherited(int index, int issue)
  */
 mapping query_inherited(int issue)
 {
+    patch();
     if (previous_object() == objectd && inherited[issue]) {
 	return inherited[issue];
     }
@@ -118,28 +142,27 @@ mapping query_inherited(int issue)
  */
 void add_object(mixed obj, int index, int *list)
 {
+    patch();
     if (previous_object() == objectd) {
 	if (typeof(obj) == T_OBJECT) {
 	    /* normal object */
-	    names[obj] = index + 1;
+	    issues[obj] = index;
 	} else {
 	    mixed issue;
 
 	    /* lib object */
 	    sscanf(obj, "/usr/%*s/%s", obj);
-	    issue = names[obj];
+	    issue = issues[obj];
 	    if (issue) {
 		if (typeof(issue) == T_INT) {
-		    if (index != issue - 1) {
-			names[obj] = ({ index, issue - 1 });
+		    if (index != issue) {
+			issues[obj] = ({ index, issue });
 		    }
-		} else {
-		    if (index != issue[0]) {
-			names[obj] = ({ index }) + issue;
-		    }
+		} else if (index != issue[0]) {
+		    issues[obj] = ({ index }) + issue;
 		}
 	    } else {
-		names[obj] = index + 1;
+		issues[obj] = index;
 	    }
 	}
 	objects[index] = ({ obj }) + list;
@@ -152,13 +175,14 @@ void add_object(mixed obj, int index, int *list)
  */
 int del_object(int index)
 {
+    patch();
     if (previous_object() == objectd) {
 	mixed obj, issue;
 
 	obj = objects[index][0];
 	if (typeof(obj) == T_OBJECT) {
 	    /* normal object */
-	    names[obj] = nil;
+	    issues[obj] = nil;
 	    objects[index] = nil;
 	    if (map_sizeof(objects) == 0) {
 		destruct_object(this_object());
@@ -166,15 +190,15 @@ int del_object(int index)
 	    return TRUE;
 	} else {
 	    /* lib object */
-	    issue = names[obj];
+	    issue = issues[obj];
 	    if (typeof(issue) == T_INT) {
-		names[obj] = nil;
+		issues[obj] = nil;
 	    } else {
 		issue -= ({ index });
 		if (sizeof(issue) == 1) {
-		    names[obj] = issue[0] + 1;
+		    issues[obj] = issue[0];
 		} else {
-		    names[obj] = issue;
+		    issues[obj] = issue;
 		}
 	    }
 
@@ -193,6 +217,7 @@ int del_object(int index)
  */
 string query_path(int index)
 {
+    patch();
     if (previous_object() == objectd) {
 	mixed path;
 
@@ -200,7 +225,7 @@ string query_path(int index)
 	if (typeof(path) == T_OBJECT) {
 	    return object_name(path);
 	} else {
-	    return path[0] == '/' ? path : "/usr/" + dbase_creator + "/" + path;
+	    return (path[0] == '/') ? path : "/usr/" + creator + "/" + path;
 	}
     }
 }
@@ -211,6 +236,7 @@ string query_path(int index)
  */
 int *query_inherits(int index)
 {
+    patch();
     if (previous_object() == objectd) {
 	return objects[index][1 ..];
     }
@@ -222,15 +248,16 @@ int *query_inherits(int index)
  */
 int *query_issues(string path)
 {
+    patch();
     if (previous_object() == objectd) {
 	mixed issue;
 
 	sscanf(path, "/usr/%*s/%s", path);
-	issue = names[path];
+	issue = issues[path];
 	if (!issue) {
 	    return ({ });
 	} else if (typeof(issue) == T_INT) {
-	    return ({ issue - 1 });
+	    return ({ issue });
 	} else {
 	    return issue;
 	}
