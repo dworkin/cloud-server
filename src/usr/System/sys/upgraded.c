@@ -153,7 +153,7 @@ private mapping merge(mapping m1, mapping m2)
  * NAME:	upgrade()
  * DESCRIPTION:	upgrade interface function
  */
-string upgrade(string creator, int number, string *names)
+string upgrade(string creator, string *names)
 {
     if (SYSTEM()) {
 	rlimits (0; -1) {
@@ -337,7 +337,7 @@ private void patchbatch(string *names, mapping *leaves, mapping *depend,
  * NAME:	patchall()
  * DESCRIPTION:	patch interface function
  */
-string patchall(string creator, int number, string *names)
+string patchall(string creator, string *names)
 {
     if (SYSTEM()) {
 	rlimits (0; -1) {

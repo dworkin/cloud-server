@@ -174,7 +174,7 @@ static void cmd_upgrade(object user, string cmd, string str)
 
     names -= ({ nil });
     if (sizeof(names) != 0) {
-	str = UPGRADED->upgrade(query_owner(), UPGRADE_CHUNK, names);
+	str = UPGRADED->upgrade(query_owner(), names);
 	if (str) {
 	    message(str);
 	}
@@ -252,7 +252,7 @@ static void cmd_patch(object user, string cmd, string str)
 
     names -= ({ nil });
     if (sizeof(names) != 0) {
-	str = UPGRADED->patchall(query_owner(), UPGRADE_CHUNK, names);
+	str = UPGRADED->patchall(query_owner(), names);
 	if (str) {
 	    message(str);
 	}
