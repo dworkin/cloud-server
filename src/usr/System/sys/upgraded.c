@@ -32,23 +32,19 @@ static void create()
  * NAME:	recompile()
  * DESCRIPTION:	recompile objects in proper order
  */
-void recompile(string *names, int number, mapping *leaves, int i, int j,
-	       mapping *depend, mapping failed, object report)
+private void recompile(string *names, mapping *leaves, mapping *depend,
+		       object report)
 {
-    int count, sz, *indices;
+    int i, j, sz, *indices;
     mixed *objects, obj;
     string name;
-    mapping map;
+    mapping map, failed;
 
-    if (previous_object() != systemd) {
-	return;
-    }
-
-    count = number;
+    failed = ([ ]);
     objects = map_indices(leaves[i]);
     indices = map_values(leaves[i]);
     sz = sizeof(objects);
-    do {
+    for (;;) {
 	if (j == sz) {
 	    if (++i == sizeof(leaves)) {
 		mapping *values;
@@ -85,7 +81,6 @@ void recompile(string *names, int number, mapping *leaves, int i, int j,
 		    }
 
 		    report->report_upgrade(names - ({ nil }), failed);
-		    systemd->release();
 		    return;
 		}
 		i = 0;
@@ -120,10 +115,7 @@ void recompile(string *names, int number, mapping *leaves, int i, int j,
 	    }
 	}
 	j++;
-    } while (--count != 0);
-
-    systemd->task("recompile", names, number, leaves, i, j, depend, failed,
-		  report);
+    }
 }
 
 /*
@@ -232,11 +224,8 @@ string upgrade(string creator, int number, string *names)
 		}
 	    }
 
-	    systemd->suspend();
-
 	    /* Get the show on the road. */
-	    systemd->task("recompile", names, number, leaves, 0, 0, depend,
-			  ([ ]), previous_object());
+	    recompile(names, leaves, depend, previous_object());
 	}
     }
 
