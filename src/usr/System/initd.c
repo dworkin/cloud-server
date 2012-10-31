@@ -28,7 +28,6 @@ static void create()
     access::set_global_access("Pattern", TRUE);
 
     /* server objects */
-    compile_object("sys/systemd");
     compile_object("sys/errord");
     compile_object("sys/telnetd");
     compile_object("sys/binaryd");
@@ -67,7 +66,6 @@ static void create()
 void prepare_reboot()
 {
     if (previous_program() == DRIVER) {
-	"sys/systemd"->prepare_reboot();
     }
 }
 

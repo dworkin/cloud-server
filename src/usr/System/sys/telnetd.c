@@ -1,6 +1,5 @@
 # include <kernel/kernel.h>
 # include <kernel/user.h>
-# include <systemd.h>
 
 inherit "~/lib/auto";
 inherit LIB_USER;
@@ -10,7 +9,6 @@ inherit LIB_USER;
 
 
 object userd;		/* user daemon */
-object systemd;		/* system daemon */
 string banner;		/* login message */
 
 /*
@@ -21,7 +19,6 @@ static create()
 {
     userd = find_object(USERD);
     userd->set_telnet_manager(0, this_object());
-    systemd = find_object(SYSTEMD);
 
     banner = "\n" +
 	     "Welcome to the Cloud Server.\n" +
@@ -54,9 +51,6 @@ object select(string name)
  */
 int query_timeout(object obj)
 {
-    if (previous_object() == userd && systemd->query_suspended()) {
-	systemd->suspend_connection(obj);
-    }
     return DEFAULT_TIMEOUT;
 }
 

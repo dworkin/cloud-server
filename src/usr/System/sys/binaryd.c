@@ -1,6 +1,5 @@
 # include <kernel/kernel.h>
 # include <kernel/user.h>
-# include <systemd.h>
 # include <http.h>
 
 inherit "~/lib/auto";
@@ -10,7 +9,6 @@ inherit LIB_USER;
 
 
 object userd;		/* user daemon */
-object systemd;		/* system daemon */
 string errormessage;	/* message returned in case of a login error */
 
 /*
@@ -21,7 +19,6 @@ static create()
 {
     userd = find_object(USERD);
     userd->set_binary_manager(0, this_object());
-    systemd = find_object(SYSTEMD);
 
     errormessage = "<HTML>\n" +
 		   "<HEAD><TITLE>400 Bad Request</TITLE></HEAD>\n" +
@@ -60,9 +57,6 @@ object select(string name)
  */
 int query_timeout(object obj)
 {
-    if (previous_object() == userd && systemd->query_suspended()) {
-	systemd->suspend_connection(obj);
-    }
     return 30;
 }
 
