@@ -264,7 +264,7 @@ int *query_issues(string path)
 {
     if (SYSTEM()) {
 	object obj;
-	int *status;
+	mixed issue;
 
 	if (sscanf(path, "%*s/lib/") != 0) {
 	    /* lib object */
@@ -274,9 +274,9 @@ int *query_issues(string path)
 	    }
 	} else {
 	    /* normal object: has only one issue */
-	    status = status(path);
-	    if (status) {
-		return ({ status[O_INDEX] });
+	    issue = status(path, O_INDEX);
+	    if (issue != nil) {
+		return ({ issue });
 	    }
 	}
     }
@@ -318,31 +318,17 @@ int **query_inherited(int index)
     return ({ });
 }
 
-/*
- * NAME:	query_clones()
- * DESCRIPTION:	return the number of clones made from a given object
- */
-int query_clones(object obj)
-{
-    if (SYSTEM()) {
-	int index;
-
-	index = status(obj, O_INDEX);
-	return index_map[index / factor][index]->query_clones(index);
-    }
-}
-
 
 /*
- * NAME:	query_dep_issue()
+ * NAME:	query_issue_deps()
  * DESCRIPTION:	collect all objects that depend on a single given object issue
  */
-private void query_dep_issue(string path, int index, mapping issues,
-			     mapping inherited, mapping leaves, int factor)
+private void query_issue_deps(string path, int index, mapping issues,
+			      mapping inherited, mapping leaves, int factor)
 {
     mapping map;
     object obj;
-    int i, j, **lists, *list, *status;
+    int i, j, **lists, *list;
 
     if (sscanf(path, "%*s/lib/")) {
 	/*
@@ -353,12 +339,11 @@ private void query_dep_issue(string path, int index, mapping issues,
 	    if (map[index]) {
 		return;		/* already dealt with */
 	    }
-	    map[index] = 1;
+	    map[index] = TRUE;
 	} else {
-	    issues[index / factor] = ([ index : 1 ]);
+	    issues[index / factor] = ([ index : TRUE ]);
 	}
-	status = status(path);
-	if (status && status[O_INDEX] == index) {
+	if (status(path, O_INDEX) == index) {
 	    map = inherited[index / factor];
 	    if (map) {
 		map[path] = index;
@@ -370,8 +355,8 @@ private void query_dep_issue(string path, int index, mapping issues,
 	for (i = sizeof(lists); --i >= 0; ) {
 	    list = lists[i];
 	    for (j = sizeof(list); --j >= 0; ) {
-		query_dep_issue(query_path(list[j]), list[j], issues, inherited,
-				leaves, factor);
+		query_issue_deps(query_path(list[j]), list[j], issues,
+				 inherited, leaves, factor);
 	    }
 	}
     } else {
@@ -405,7 +390,7 @@ mapping *query_dependents(string name, int factor)
 	leaves = ([ ]);
 	issue = query_issues(name);
 	for (i = sizeof(issue); --i >= 0; ) {
-	    query_dep_issue(name, issue[i], issues, inherited, leaves, factor);
+	    query_issue_deps(name, issue[i], issues, inherited, leaves, factor);
 	}
 
 	return ({ inherited, leaves });
