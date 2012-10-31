@@ -6,7 +6,7 @@ inherit soul "/lib/base/soul";
 
 private inherit "/lib/util/string";
 
-# define SYSTEMD	"/usr/System/sys/systemd"
+# define TELNETD	"/usr/System/sys/telnetd"
 
 
 private object body;		/* current body */
@@ -26,7 +26,7 @@ static void login(object connection, string name)
     DRIVER->message("Connection: " + capitalize(name) + " from " +
 		    user::query_ip_name(connection) + "\n");
     if (name == "admin" && !wiztool) {
-	SYSTEMD->add_wiztool(this_object());
+	TELNETD->add_wiztool(this_object());
     }
 }
 
@@ -56,7 +56,7 @@ static void set_current_body(object obj)
  */
 void add_wiztool(object obj)
 {
-    if (previous_program() == SYSTEMD) {
+    if (previous_program() == TELNETD) {
 	add_body(wiztool = obj);
     }
 }
@@ -67,7 +67,7 @@ void add_wiztool(object obj)
  */
 void remove_wiztool()
 {
-    if (previous_program() == SYSTEMD) {
+    if (previous_program() == TELNETD) {
 	remove_body(wiztool);
 	wiztool = nil;
     }

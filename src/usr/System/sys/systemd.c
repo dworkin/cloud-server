@@ -13,8 +13,6 @@ inherit access	API_ACCESS;
 # define CO_PREV	3	/* previous callout */
 # define CO_NEXT	4	/* next callout */
 
-# define WIZTOOL	"/usr/System/obj/wiztool"
-
 
 object rsrcd;		/* resource daemon */
 object suspender;	/* object starting the suspension */
@@ -310,31 +308,4 @@ void task(string func, mixed args...)
 static void callback(string func, mixed *args)
 {
     call_other(suspender, func, args...);
-}
-
-
-/*
- * NAME:	add_wiztool()
- * DESCRIPTION:	give the user a wiztool
- */
-void add_wiztool(object user)
-{
-    if (SYSTEM()) {
-	user->add_wiztool(clone_object(WIZTOOL, user->query_name()));
-    }
-}
-
-/*
- * NAME:	remove_wiztool()
- * DESCRIPTION:	remove the user's wiztool
- */
-void remove_wiztool(object user)
-{
-    if (SYSTEM()) {
-	object wiztool;
-
-	wiztool = user->query_wiztool();
-	user->remove_wiztool();
-	destruct_object(wiztool);
-    }
 }

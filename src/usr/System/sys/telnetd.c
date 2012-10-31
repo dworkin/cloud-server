@@ -6,6 +6,7 @@ inherit "~/lib/auto";
 inherit LIB_USER;
 
 # define PLAYERD	"/usr/Player/sys/userd"
+# define WIZTOOL	"/usr/System/obj/wiztool"
 
 
 object userd;		/* user daemon */
@@ -87,4 +88,31 @@ int login(string str)
 {
     previous_object()->message("\"" + str + "\" is not a valid name.\n\n");
     return MODE_DISCONNECT;
+}
+
+
+/*
+ * NAME:	add_wiztool()
+ * DESCRIPTION:	give the user a wiztool
+ */
+void add_wiztool(object user)
+{
+    if (SYSTEM()) {
+	user->add_wiztool(clone_object(WIZTOOL, user->query_name()));
+    }
+}
+
+/*
+ * NAME:	remove_wiztool()
+ * DESCRIPTION:	remove the user's wiztool
+ */
+void remove_wiztool(object user)
+{
+    if (SYSTEM()) {
+	object wiztool;
+
+	wiztool = user->query_wiztool();
+	user->remove_wiztool();
+	destruct_object(wiztool);
+    }
 }
