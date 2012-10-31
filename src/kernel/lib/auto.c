@@ -572,15 +572,15 @@ private mixed **process_callouts(object obj, mixed **callouts)
 		--i;
 		co = callouts[i];
 		callouts[i] = ({ co[CO_HANDLE], co[CO_FIRSTXARG],
-				 (co[CO_FIRSTXARG + 1]) ? 0 : co[CO_DELAY] });
+				 co[CO_DELAY] });
 	    } while (i != 0);
 	} else {
 	    do {
 		--i;
 		co = callouts[i];
 		callouts[i] = ({ co[CO_HANDLE], co[CO_FIRSTXARG],
-				 (co[CO_FIRSTXARG + 1]) ? 0 : co[CO_DELAY] }) +
-			      co[CO_FIRSTXARG + 2];
+				 co[CO_DELAY] }) +
+			      co[CO_FIRSTXARG + 1];
 	    } while (i != 0);
 	}
     }
