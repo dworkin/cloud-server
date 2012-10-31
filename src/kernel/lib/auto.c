@@ -123,11 +123,6 @@ nomask void _F_destruct()
 
 	rsrcd = ::find_object(RSRCD);
 
-	/*
-	 * remove any suspended callouts
-	 */
-	rsrcd->remove_callouts(this_object());
-
 	if (resources) {
 	    string *names;
 	    int *values;
@@ -846,70 +841,17 @@ static int call_out(string func, mixed delay, mixed args...)
 	/* direct callouts for kernel objects */
 	return ::call_out(func, delay, args...);
     }
-    return ::call_out("_F_callout", delay, func, 0, args);
-}
-
-/*
- * NAME:	remove_call_out()
- * DESCRIPTION:	remove a callout
- */
-static mixed remove_call_out(int handle)
-{
-    rlimits (-1; -1) {
-	mixed delay;
-
-	if ((delay=::remove_call_out(handle)) != -1 &&
-	    ::find_object(RSRCD)->remove_callout(nil, this_object(), handle)) {
-	    return 0;
-	}
-	return delay;
-    }
+    return ::call_out("_F_callout", delay, func, args);
 }
 
 /*
  * NAME:	_F_callout()
  * DESCRIPTION:	callout gate
  */
-nomask void _F_callout(string func, int handle, mixed *args)
+nomask void _F_callout(string func, mixed *args)
 {
     if (!previous_program()) {
-	if (handle == 0 && !::find_object(RSRCD)->suspended(this_object())) {
-	    _F_call_limited(func, args);
-	} else {
-	    mixed *tls;
-	    mixed **callouts;
-	    int i;
-
-	    tls = allocate(::find_object(DRIVER)->query_tls_size());
-	    if (handle != 0) {
-		::find_object(RSRCD)->remove_callout(tls, this_object(),
-						     handle);
-	    }
-	    handle = ::call_out("_F_callout", LONG_TIME, func, 0, args);
-	    callouts = ::status(this_object())[O_CALLOUTS];
-	    for (i = sizeof(callouts); callouts[--i][CO_HANDLE] != handle; ) ;
-	    callouts[i][CO_FIRSTXARG + 1] = handle;
-	    ::find_object(RSRCD)->suspend(tls, this_object(), handle);
-	}
-    }
-}
-
-/*
- * NAME:	_F_release()
- * DESCRIPTION:	release a suspended callout
- */
-nomask void _F_release(mixed handle)
-{
-    if (previous_program() == RSRCD) {
-	mixed **callouts;
-	int i;
-
-	callouts = ::status(this_object())[O_CALLOUTS];
-	::remove_call_out(handle);
-	for (i = sizeof(callouts); callouts[--i][CO_HANDLE] != handle; ) ;
-	handle = allocate(::find_object(DRIVER)->query_tls_size());
-	_F_call_limited(callouts[i][CO_FIRSTXARG],
-			callouts[i][CO_FIRSTXARG + 2]);
+	_F_call_limited(func, args);
     }
 }
 

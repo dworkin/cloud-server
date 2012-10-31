@@ -7,8 +7,6 @@ mapping resources;	/* registered resources */
 mapping owners;		/* resource owners */
 mapping olimits;	/* resource limit per owner */
 int downtime;		/* shutdown time */
-object manager;		/* suspension manager */
-int suspend;		/* callouts suspended? */
 
 /*
  * NAME:	create()
@@ -311,100 +309,6 @@ int update_ticks(mixed *limits, int ticks)
 		     limits[LIM_NEXT][LIM_MAXTICKS] -= ticks : -1;
 	}
 	return ticks;
-    }
-}
-
-
-/*
- * NAME:	set_suspension_manager()
- * DESCRIPTION:	set an external manager to handle suspended callouts
- */
-void set_suspension_manager(object obj)
-{
-    if (SYSTEM()) {
-	if (suspend) {
-	    error("Cannot change suspension manager with suspended callouts");
-	}
-	manager = obj;
-    }
-}
-
-/*
- * NAME:	suspend_callouts()
- * DESCRIPTION:	suspend all callouts
- */
-void suspend_callouts()
-{
-    if (previous_object() == manager) {
-	suspend = TRUE;
-    }
-}
-
-/*
- * NAME:	resume_callouts()
- * DESCRIPTION:	stop suspending callouts
- */
-void resume_callouts()
-{
-    if (previous_object() == manager) {
-	suspend = FALSE;
-    }
-}
-
-
-/*
- * NAME:	suspended()
- * DESCRIPTION:	return TRUE if callouts are suspended, otherwise return FALSE
- */
-int suspended(object obj)
-{
-    return (suspend && obj != manager);
-}
-
-/*
- * NAME:	suspend()
- * DESCRIPTION:	suspend a callout
- */
-void suspend(mixed tls, object obj, int handle)
-{
-    if (previous_program() == AUTO) {
-	manager->suspend_callout(obj, handle);
-    }
-}
-
-/*
- * NAME:	remove_callout()
- * DESCRIPTION:	remove callout from list of suspended calls
- */
-int remove_callout(mixed tls, object obj, int handle)
-{
-    if (previous_program() == AUTO && obj != manager && suspend) {
-	return manager->remove_callout(obj, handle);
-    }
-    return FALSE;
-}
-
-/*
- * NAME:	remove_callouts()
- * DESCRIPTION:	remove callouts from an object about to be destructed
- */
-void remove_callouts(object obj)
-{
-    if (previous_program() == AUTO && suspend) {
-	manager->remove_callouts(obj);
-    }
-}
-
-/*
- * NAME:	release_callout()
- * DESCRIPTION:	let the suspension manager release a callout
- */
-void release_callout(object obj, int handle)
-{
-    if (previous_object() == manager) {
-	rlimits(-1; -1) {
-	    obj->_F_release(handle);
-	}
     }
 }
 
