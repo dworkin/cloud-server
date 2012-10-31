@@ -254,6 +254,10 @@ static object compile_object(string path, string source...)
     driver = ::find_object(DRIVER);
     path = driver->normalize_path(path, oname + "/..", creator);
     lib = sscanf(path, "%*s" + INHERITABLE_SUBDIR);
+    if (lib + sscanf(path, "%*s" + CLONABLE_SUBDIR) +
+	sscanf(path, "%*s" + LIGHTWEIGHT_SUBDIR) > 1) {
+	error("Ambiguous object");
+    }
     kernel = sscanf(path, "/kernel/%*s");
     uid = driver->creator(path);
     if ((sizeof(source) != 0 && kernel) ||
@@ -358,9 +362,7 @@ static object clone_object(string path, varargs string uid)
      * check if object can be cloned
      */
     if (!owner || !(obj=::find_object(path)) ||
-	sscanf(path, "%*s" + CLONABLE_SUBDIR) == 0 ||
-	sscanf(path, "%*s" + LIGHTWEIGHT_SUBDIR) != 0 ||
-	sscanf(path, "%*s" + INHERITABLE_SUBDIR) != 0) {
+	sscanf(path, "%*s" + CLONABLE_SUBDIR) == 0) {
 	/*
 	 * no owner for clone, master object not compiled, or not path of
 	 * clonable
@@ -458,9 +460,7 @@ static object new_object(mixed obj, varargs string uid)
 	/*
 	 * check if object can be created
 	 */
-	if (!obj || sscanf(str, "%*s" + LIGHTWEIGHT_SUBDIR) == 0 ||
-	    sscanf(str, "%*s" + CLONABLE_SUBDIR) != 0 ||
-	    sscanf(str, "%*s" + INHERITABLE_SUBDIR) != 0) {
+	if (!obj || sscanf(str, "%*s" + LIGHTWEIGHT_SUBDIR) == 0) {
 	    /*
 	     * master object not compiled, or not path of non-persistent object
 	     */

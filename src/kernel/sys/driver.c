@@ -609,6 +609,8 @@ static object inherit_program(string from, string path, int priv)
 
     path = normalize_path(path, from + "/..", creator = creator(from));
     if (sscanf(path, "%*s" + INHERITABLE_SUBDIR) == 0 ||
+	sscanf(path, "%*s" + CLONABLE_SUBDIR) != 0 ||
+	sscanf(path, "%*s" + LIGHTWEIGHT_SUBDIR) != 0 ||
 	(sscanf(path, "/kernel/%*s") != 0 && creator != "System") ||
 	!accessd->access(from, path, READ_ACCESS)) {
 	return nil;
