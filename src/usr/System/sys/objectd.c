@@ -12,7 +12,7 @@ inherit rsrc API_RSRC;
 
 object driver;		/* driver object */
 object notify_object;	/* object notified about changes */
-mapping *index_map;	/* a two-step mapping; (index / factor) -> dbase obj */
+mapping index_map;	/* a two-step mapping; (index / factor) -> dbase obj */
 mapping newmap;
 int factor;		/* 2nd level divisor */
 mapping creator_map;	/* creator -> dbase object */
@@ -21,15 +21,8 @@ private void preregister_objects();
 
 void patch()
 {
-    if (!newmap) {
-	int i, sz;
-
-	newmap = ([ ]);
-	for (i = 0, sz = sizeof(index_map); i < sz; i++) {
-	    if (index_map[i]) {
-		newmap[i] = index_map[i];
-	    }
-	}
+    if (!index_map) {
+	index_map = newmap;
     }
 }
 
@@ -43,7 +36,7 @@ static void create()
 
     driver = find_object(DRIVER);
     factor = status(ST_ARRAYSIZE);
-    index_map = allocate(factor);
+    index_map = ([ ]);
     creator_map = ([ ]);
 
     compile_object(OBJECTD_OBJ);
@@ -260,6 +253,7 @@ private void preregister_objects()
  */
 string query_path(int index)
 {
+    patch();
     if (SYSTEM()) {
 	mapping dbase;
 	object dbobj;
@@ -277,6 +271,7 @@ string query_path(int index)
  */
 int *query_issues(string path)
 {
+    patch();
     if (SYSTEM()) {
 	object obj;
 	int *status;
@@ -304,6 +299,7 @@ int *query_issues(string path)
  */
 int *query_inherits(int index)
 {
+    patch();
     if (SYSTEM()) {
 	mapping dbase;
 	object dbobj;
@@ -322,6 +318,7 @@ int *query_inherits(int index)
  */
 int **query_inherited(int index)
 {
+    patch();
     if (SYSTEM()) {
 	mapping dbase;
 	object dbobj;
@@ -339,6 +336,7 @@ int **query_inherited(int index)
  */
 int query_clones(object obj)
 {
+    patch();
     if (SYSTEM()) {
 	int index;
 
@@ -410,6 +408,7 @@ private void query_dep_issue(string path, int index, mapping issues,
  */
 mapping *query_dependents(string name, int factor)
 {
+    patch();
     if (SYSTEM()) {
 	int i, *issue;
 	mapping issues, inherited, leaves;
@@ -474,6 +473,7 @@ void compiling(string path)
  */
 void compile(string owner, object obj, mixed source, string inherited...)
 {
+    patch();
     if (previous_object() == driver) {
 	string oname;
 	int i, *indices;
@@ -508,6 +508,7 @@ void compile(string owner, object obj, mixed source, string inherited...)
  */
 void compile_lib(string owner, string path, mixed source, string inherited...)
 {
+    patch();
     if (previous_object() == driver) {
 	int i, *indices;
 
@@ -575,6 +576,7 @@ void destruct_lib(string owner, string path)
  */
 void remove_program(string owner, string path, int timestamp, int index)
 {
+    patch();
     if (previous_object() == driver && sscanf(path, "%*s/lib/")) {
 	/* only for lib objects */
 	unregister_object(path, index);
