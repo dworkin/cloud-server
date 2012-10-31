@@ -13,10 +13,25 @@ inherit rsrc API_RSRC;
 object driver;		/* driver object */
 object notify_object;	/* object notified about changes */
 mapping *index_map;	/* a two-step mapping; (index / factor) -> dbase obj */
+mapping newmap;
 int factor;		/* 2nd level divisor */
 mapping creator_map;	/* creator -> dbase object */
 
 private void preregister_objects();
+
+void patch()
+{
+    if (!newmap) {
+	int i, sz;
+
+	newmap = ([ ]);
+	for (i = 0, sz = sizeof(index_map); i < sz; i++) {
+	    if (index_map[i]) {
+		newmap[i] = index_map[i];
+	    }
+	}
+    }
+}
 
 /*
  * NAME:	create()
