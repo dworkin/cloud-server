@@ -41,14 +41,14 @@ static void create()
  * NAME:	register_inherited()
  * DESCRIPTION:	register inherited objects
  */
-private void register_inherited(int index, int *list)
+private void register_inherited(int issue, int *list)
 {
-    int i, iindex;
+    int i, index;
 
     /* register inherited objects */
     for (i = sizeof(list); --i >= 0; ) {
-	iindex = list[i];
-	index_map[iindex / factor][iindex]->add_inherited(index, iindex);
+	index = list[i];
+	index_map[index / factor][index]->add_inherited(issue, index);
     }
 }
 
@@ -56,19 +56,19 @@ private void register_inherited(int index, int *list)
  * NAME:	unregister_inherited()
  * DESCRIPTION:	unregister inherited objects
  */
-private void unregister_inherited(int index, int *list)
+private void unregister_inherited(int issue, int *list)
 {
-    int i, iindex;
+    int i, index;
     mapping dbase;
 
     for (i = sizeof(list); --i >= 0; ) {
-	iindex = list[i];
-	dbase = index_map[iindex / factor];
-	if (dbase[iindex]->del_inherited(index, iindex)) {
+	index = list[i];
+	dbase = index_map[index / factor];
+	if (dbase[index]->del_inherited(issue, index)) {
 	    /* dbase object removed */
-	    dbase[iindex] = nil;
+	    dbase[index] = nil;
 	    if (map_sizeof(dbase) == 0) {
-		index_map[iindex / factor] = nil;
+		index_map[index / factor] = nil;
 	    }
 	}
     }
@@ -78,8 +78,8 @@ private void unregister_inherited(int index, int *list)
  * NAME:	register_object()
  * DESCRIPTION:	register a new object and what it inherits
  */
-private void
-register_object(string creator, string oname, object obj, int index, int *list)
+private void register_object(string creator, string oname, object obj,
+			     int index, int *list)
 {
     int i;
     object dbobj;
@@ -102,7 +102,7 @@ register_object(string creator, string oname, object obj, int index, int *list)
 	    dbase[index] = dbobj;
 	}
     } else {
-	index_map[index / factor] = dbase = ([ index : dbobj ]);
+	index_map[index / factor] = ([ index : dbobj ]);
     }
 
     /* minimize & sort list of inherited objects */
@@ -144,7 +144,7 @@ private void unregister_object(string path, int index)
     if (dbobj->del_object(index)) {
 	/* dbase object removed */
 	dbase[index] = nil;
-	if (!map_sizeof(dbase)) {
+	if (map_sizeof(dbase) == 0) {
 	    index_map[index / factor] = nil;
 	}
     }
@@ -337,9 +337,8 @@ int query_clones(object obj)
  * NAME:	query_dep_issue()
  * DESCRIPTION:	collect all objects that depend on a single given object issue
  */
-private void
-query_dep_issue(string path, int index, mapping issues, mapping inherited,
-		mapping leaves, int factor)
+private void query_dep_issue(string path, int index, mapping issues,
+			     mapping inherited, mapping leaves, int factor)
 {
     mapping map;
     object obj;
@@ -443,8 +442,7 @@ void compiling(string path)
 	/* check if there's enough space for another one */
 	max = status(ST_ARRAYSIZE);
 	if ((dbobj=creator_map[driver->creator(path)]) ?
-	     !dbobj->test_space(path, max) :
-	     map_sizeof(creator_map) >= max) {
+	    !dbobj->test_space(path, max) : map_sizeof(creator_map) >= max) {
 	    error("Out of space");
 	}
 
