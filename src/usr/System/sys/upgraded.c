@@ -4,13 +4,11 @@
 # include <kernel/kernel.h>
 # include <kernel/rsrc.h>
 # include <objectd.h>
-# include <systemd.h>
 
 inherit access API_ACCESS;
 
 
 object objectd;			/* object server */
-object systemd;			/* system daemon */
 mapping inherited;		/* Not yet compiled lib-objects */
 int factor;			/* 2nd level divisor */
 
@@ -23,7 +21,6 @@ static void create()
     access::create();
 
     objectd = find_object(OBJECTD);
-    systemd = find_object(SYSTEMD);
     factor = status(ST_ARRAYSIZE);
 }
 
@@ -236,21 +233,18 @@ string upgrade(string creator, int number, string *names)
  * NAME:	patchbatch()
  * DESCRIPTION:	patch a batch of objects
  */
-void patchbatch(string *names, int number, mapping *leaves, int i, int j,
-		object clone, mapping *depend, mapping failed, object wiztool)
+private void patchbatch(string *names, mapping *leaves, mapping *depend,
+			object wiztool)
 {
-    int count, sz, *indices;
-    object *objects, obj;
+    int i, j, sz, *indices;
+    object *objects, obj, clone;
+    mapping failed;
 
-    if (previous_object() != systemd) {
-	return;
-    }
-
-    count = number;
+    failed = ([ ]);
     objects = map_indices(leaves[i]);
     indices = map_values(leaves[i]);
     sz = sizeof(objects);
-    do {
+    for (;;) {
 	/*
 	 * get next object to patch
 	 */
@@ -327,7 +321,6 @@ void patchbatch(string *names, int number, mapping *leaves, int i, int j,
 		    }
 
 		    wiztool->report_patch(names - ({ nil }), failed);
-		    systemd->release();
 		    return;
 		}
 
@@ -337,10 +330,7 @@ void patchbatch(string *names, int number, mapping *leaves, int i, int j,
 		sz = sizeof(objects);
 	    }
 	}
-    } while (--count != 0);
-
-    systemd->task("patchbatch", names, number, leaves, i, j, clone, depend,
-		  failed, wiztool);
+    }
 }
 
 /*
@@ -373,11 +363,8 @@ string patchall(string creator, int number, string *names)
 		return "No existing objects.\n";
 	    }
 
-	    systemd->suspend();
-
 	    /* Get the show on the road. */
-	    systemd->task("patchbatch", names, number, map_values(objects), 0,
-			  0, nil, depend, ([ ]), previous_object());
+	    patchbatch(names, map_values(objects), depend, previous_object());
 	}
     }
 
