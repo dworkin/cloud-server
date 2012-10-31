@@ -1,7 +1,4 @@
-# include <attributes.h>
-
 inherit body	"/lib/base/body";
-inherit attr	"/lib/base/attr";
 inherit inv	"/lib/container";
 
 private inherit "/lib/util/string";
@@ -19,7 +16,6 @@ private string actor;		/* this body, as it shows up in actions */
 static void create(string str)
 {
     body::create();
-    attr::create();
     inv::create();
 
     ::set_name(race = str);

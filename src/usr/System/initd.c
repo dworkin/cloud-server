@@ -40,7 +40,6 @@ static void create()
     /* mudlib objects */
     compile_object("/sys/cmdparser");
     compile_object("/sys/sould");
-    compile_object("/sys/attrd");
     compile_object("/obj/body/human");
     compile_object("/data/strchunk");
 
