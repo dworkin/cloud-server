@@ -106,31 +106,31 @@ static object new_object(string path)
  */
 static void cmd_issues(object user, string cmd, string str)
 {
-    int i, j, sz, n, len, *issues;
-    mixed *files;
+    mixed *files, *issues;
     object objectd;
+    int i, j, sz, len;
     string file;
 
     if (!str) {
 	message("Usage: " + cmd + " <file> [<file> ...]\n");
 	return;
     }
-    files = expand(str, -1, TRUE); /* May not exist, full filenames */
+    files = expand(str, -1, TRUE)[0]; /* May not exist, full filenames */
     objectd = find_object(OBJECTD);
 
-    files = files[0];
     for (i = 0, sz = sizeof(files); i < sz; i++) {
 	file = files[i];
 	str = "No issues.";
 	len = strlen(file);
 	if (len >= 2 && file[len - 2 ..] == ".c") {
 	    issues = objectd->query_issues(file[.. len - 3]);
-	    n = sizeof(issues);
-	    if (n != 0) {
-		str = (string) issues[0];
-		for (j = 1; j < n; j++) {
-		    str += ", " + issues[j];
-		}
+	    j = sizeof(issues);
+	    if (j != 0) {
+		do {
+		    --j;
+		    issues[j] = (string) issues[j];
+		} while (j != 0);
+		str = implode(issues, ", ");
 	    }
 	}
 	message(indent_string(file + ": ", str));
@@ -143,20 +143,17 @@ static void cmd_issues(object user, string cmd, string str)
  */
 static void cmd_upgrade(object user, string cmd, string str)
 {
-    int len, i, sz, *sizes;
-    mixed **files;
     string *names;
+    int i, sz, len;
+    mapping failed;
 
     if (!str) {
 	message("Usage: " + cmd + " <file> [<file> ...]\n");
 	return;
     }
 
-    files = expand(str, 1, TRUE);
-    names = files[0];
-    sizes = files[1];
-    sz = sizeof(names);
-    for (i = 0; i < sz; i++) {
+    names = expand(str, 1, TRUE)[0];
+    for (i = 0, sz = sizeof(names); i < sz; i++) {
 	str = names[i];
 	len = strlen(str);
 	if (len < 2 || str[len - 2 ..] != ".c") {
@@ -174,42 +171,29 @@ static void cmd_upgrade(object user, string cmd, string str)
 
     names -= ({ nil });
     if (sizeof(names) != 0) {
-	str = UPGRADED->upgrade(query_owner(), names);
+	failed = ([ ]);
+	str = UPGRADED->upgrade(query_owner(), names, failed);
 	if (str) {
 	    message(str);
-	}
-    }
-}
+	} else {
+	    names -= ({ nil });
+	    if (sizeof(names) != 0) {
+		message("Objects successfully upgraded:\n" +
+			break_string("<" + implode(names, ">, <") + ">", 0, 2));
+	    }
 
-/*
- * NAME:	report_upgrade()
- * DESCRIPTION:	report the effect of an upgrade command
- */
-void report_upgrade(string *upgraded, mapping failed)
-{
-    if (previous_program() == UPGRADED) {
-	int i, j, sz;
-	string str;
-	mixed **values, *list;
+	    i = map_sizeof(failed);
+	    if (i != 0) {
+		string **values;
 
-	if (sizeof(upgraded) != 0) {
-	    message("Objects successfully upgraded:\n" +
-		    break_string("<" + implode(upgraded, ">, <") + ">", 0, 2));
-	}
-
-	i = map_sizeof(failed);
-	if (i != 0) {
-	    str = "";
-	    values = map_values(failed);
-	    do {
-		list = values[--i];
-		for (j = 0, sz = sizeof(list); j < sz; j++) {
-		    str += ", " + ((typeof(list[j]) == T_STRING) ?
-				    list[j] : object_name(list[j])) + ".c";
-		}
-	    } while (i != 0);
-	    message("Errors occured compiling:\n" +
-		    break_string(str[2 ..], 0, 2));
+		str = "";
+		values = map_values(failed);
+		do {
+		    str += ".c, " + implode(values[--i], ".c, ");
+		} while (i != 0);
+		message("Errors occured compiling:\n" +
+			break_string(str[4 ..] + ".c", 0, 2));
+	    }
 	}
     }
 }

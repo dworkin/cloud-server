@@ -5,7 +5,7 @@
 # include <kernel/rsrc.h>
 # include <objectd.h>
 
-inherit access API_ACCESS;
+inherit API_ACCESS;
 
 
 object objectd;			/* object server */
@@ -18,7 +18,7 @@ int factor;			/* 2nd level divisor */
  */
 static void create()
 {
-    access::create();
+    ::create();
 
     objectd = find_object(OBJECTD);
     factor = status(ST_ARRAYSIZE);
@@ -30,14 +30,13 @@ static void create()
  * DESCRIPTION:	recompile objects in proper order
  */
 private void recompile(string *names, mapping *leaves, mapping *depend,
-		       object report)
+		       mapping failed)
 {
     int i, j, sz, *indices;
     mixed *objects, obj;
     string name;
-    mapping map, failed;
+    mapping map;
 
-    failed = ([ ]);
     objects = map_indices(leaves[i]);
     indices = map_values(leaves[i]);
     sz = sizeof(objects);
@@ -68,16 +67,12 @@ private void recompile(string *names, mapping *leaves, mapping *depend,
 
 		if (sizeof(leaves) == 0) {
 		    /* clean up */
-		    inherited = nil;
-		    objectd->notify_compiling(nil);
-
 		    indices = map_indices(failed);
 		    objects = map_values(failed);
 		    for (i = map_sizeof(failed); --i >= 0; ) {
 			failed[indices[i]] = map_indices(objects[i]);
 		    }
 
-		    report->report_upgrade(names - ({ nil }), failed);
 		    return;
 		}
 		i = 0;
@@ -100,9 +95,9 @@ private void recompile(string *names, mapping *leaves, mapping *depend,
 	    index = indices[j] / factor;
 	    map = failed[index];
 	    if (map) {
-		map[obj] = 1;
+		map[name] = 1;
 	    } else {
-		failed[index] = ([ obj : 1 ]);
+		failed[index] = ([ name : 1 ]);
 	    }
 
 	    for (k = sizeof(depend); --k >= 0; ) {
@@ -153,7 +148,7 @@ private mapping merge(mapping m1, mapping m2)
  * NAME:	upgrade()
  * DESCRIPTION:	upgrade interface function
  */
-string upgrade(string creator, string *names)
+string upgrade(string creator, string *names, mapping failed)
 {
     if (SYSTEM()) {
 	rlimits (0; -1) {
@@ -222,7 +217,10 @@ string upgrade(string creator, string *names)
 	    }
 
 	    /* Get the show on the road. */
-	    recompile(names, leaves, depend, previous_object());
+	    recompile(names, leaves, depend, failed);
+
+	    inherited = nil;
+	    objectd->notify_compiling(nil);
 	}
     }
 
