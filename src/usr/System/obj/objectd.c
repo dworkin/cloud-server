@@ -230,7 +230,7 @@ int *query_issues(string path)
 	} else if (typeof(issue) == T_INT) {
 	    return ({ issue });
 	} else {
-	    return issue;
+	    return issue[..];
 	}
     }
 }
