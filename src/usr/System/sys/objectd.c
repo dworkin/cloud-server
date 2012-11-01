@@ -568,16 +568,13 @@ mixed inherit_program(string from, string path, int priv)
  */
 private string path_special(string compiled)
 {
-    if (sscanf(compiled, "%*s/obj/") != 0) {
-	/* clonable: inherit ~System/lib/clone */
-	return "/usr/System/include/clone_std.h";
-    } else if (sscanf(compiled, "%*s/data/") != 0) {
-	/* light-weight: inherit ~System/lib/data */
+    if (sscanf(compiled, "%*s/data/") != 0) {
+	/* light-weight */
 	return "/usr/System/include/data_std.h";
+    } else {
+	/* ordinary */
+	return "/usr/System/include/std.h";
     }
-
-    /* non-clonable: inherit ~System/lib/auto */
-    return "/usr/System/include/std.h";
 }
 
 /*
