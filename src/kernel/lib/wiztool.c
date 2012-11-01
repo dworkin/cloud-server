@@ -985,7 +985,6 @@ static void cmd_clear(object user, string cmd, string str)
  */
 static void cmd_compile(object user, string cmd, string str)
 {
-    mixed *files;
     string *names;
     int num, i, len;
     object obj;
@@ -995,8 +994,7 @@ static void cmd_compile(object user, string cmd, string str)
 	return;
     }
 
-    files = expand(str, 1, TRUE);	/* must exist, full filenames */
-    names = files[0];
+    names = expand(str, 1, TRUE)[0];	/* must exist, full filenames */
     num = sizeof(names);
 
     for (i = 0; i < num; i++) {
