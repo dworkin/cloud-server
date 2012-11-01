@@ -7,7 +7,7 @@
 # include <status.h>
 # include <type.h>
 
-inherit clone	"~/lib/clone";
+inherit auto	"~/lib/auto";
 inherit wiztool LIB_WIZTOOL;
 inherit body	"/lib/base/body";
 
@@ -79,7 +79,7 @@ static int destruct_object(mixed obj)
 	message(path + ": Permission denied.\n");
 	return -1;
     }
-    return clone::destruct_object(obj);
+    return auto::destruct_object(obj);
 }
 
 /*
@@ -96,7 +96,7 @@ static object new_object(string path)
 	message(path + ": Permission denied.\n");
 	return nil;
     }
-    return clone::new_object(path);
+    return auto::new_object(path);
 }
 
 
