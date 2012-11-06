@@ -10,8 +10,6 @@ inherit parser	  "/lib/cmdparser";
 private inherit "/lib/util/string";
 private inherit "/lib/util/language";
 
-# define SYSTEMD		"/usr/System/sys/systemd"
-
 # define STATE_NORMAL		0
 # define STATE_LOGIN		1
 # define STATE_OLDPASSWD	2

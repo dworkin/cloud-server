@@ -3,8 +3,6 @@
 
 inherit telnet	"~/lib/interface/telnet";
 
-# define SYSTEMD	"/usr/System/sys/systemd"
-
 
 int last_activity;	/* time of last activity */
 
@@ -63,28 +61,6 @@ int receive_message(string str)
     if (previous_program() == LIB_CONN) {
 	last_activity = time();
 	return telnet::receive_message(str);
-    }
-}
-
-/*
- * NAME:	suspend()
- * DESCRIPTION:	pass on call to the correct interface
- */
-void suspend()
-{
-    if (previous_program() == SYSTEMD) {
-	telnet::suspend();
-    }
-}
-
-/*
- * NAME:	release()
- * DESCRIPTION:	pass on call to the correct interface
- */
-void release()
-{
-    if (previous_program() == SYSTEMD) {
-	telnet::release();
     }
 }
 
