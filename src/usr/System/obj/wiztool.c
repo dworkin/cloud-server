@@ -451,6 +451,27 @@ static void cmd_ungrant(object user, string cmd, string str)
     }
 }
 
+/*
+ * NAME:	cmd_snapshot()
+ * DESCRIPTION:	create a snapshot
+ */
+static void cmd_snapshot(object user, string cmd, string str)
+{
+    int incr;
+
+    if (str) {
+	if (str != "-f") {
+	    message("Usage: " + cmd + " [-f]\n");
+	    return;
+	}
+	incr = FALSE;
+    } else {
+	incr = TRUE;
+    }
+
+    dump_state(incr);
+}
+
 # define Container	"/lib/base/container"
 
 static void cmd_goto(object user, string cmd, string str)
