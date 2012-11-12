@@ -90,7 +90,7 @@ private int respond(int code)
  */
 nomask void request(mixed *req)
 {
-    if (previous_program() == "/usr/System/sys/binaryd") {
+    if (previous_program() == "/usr/WWW/sys/server") {
 	request = req;
     }
 }

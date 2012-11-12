@@ -9,10 +9,14 @@ private inherit "/lib/util/time";
 
 # define CHUNK_SIZE	65535
 
+string httphost;
+string ftphost;
+
 static void create(int clone)
 {
     if (clone) {
 	::create();
+	({ httphost, ftphost }) = "~WWW/sys/server"->query_host();
 	call_out("disconnect", 300);
     }
 }
@@ -109,7 +113,7 @@ private string ftp_dir(string dir)
     }
     str = "<HTML><HEAD><TITLE>Index of " + dir + "</TITLE></HEAD>" +
 	  "<BODY><H1>Index of " + dir + "</H1><TABLE>" +
-	  "<TR><TH><IMG SRC=\"http://www.dworkin.nl/icons/blank.png\"</TH>" +
+	  "<TR><TH><IMG SRC=\"http://" + httphost + "/icons/blank.png\"</TH>" +
 	  "<TH>Name</TH><TH>Last modified</TH><TH>Size</TH>" +
 	  "<TH>Description</TH></TR><TR><TH COLSPAN=\"5\"><HR></TH></TR>";
     if (dir != "/") {
@@ -118,7 +122,7 @@ private string ftp_dir(string dir)
 	    parent += "/";
 	}
 	str += "<TR><TD VALIGN=\"top\">" +
-	       "<IMG SRC=\"http://www.dworkin.nl/icons/back.png\"</TD>" +
+	       "<IMG SRC=\"http://" + httphost + "/icons/back.png\"</TD>" +
 	       "<TD><A HREF=\"" + parent +
 	       "\">Parent Directory</A></TD><TD>&nbsp;</TD>" +
 	       "<TD ALIGN=\"right\">-</TD></TR>";
@@ -128,11 +132,11 @@ private string ftp_dir(string dir)
     for (i = 0; i < sizeof(list[0]); i++) {
 	str += "<TR><TD VALIGN=\"top\">";
 	if (list[1][i] == -2) {
-	    str += "<IMG SRC=\"http://www.dworkin.nl/icons/folder.png\"";
+	    str += "<IMG SRC=\"http://" + httphost + "/icons/folder.png\"";
 	} else if (sscanf(list[3][i], "application/%*s") != 0) {
-	    str += "<IMG SRC=\"http://www.dworkin.nl/icons/compressed.png\"";
+	    str += "<IMG SRC=\"http://" + httphost + "/icons/compressed.png\"";
 	} else {
-	    str += "<IMG SRC=\"http://www.dworkin.nl/icons/text.png\"";
+	    str += "<IMG SRC=\"http://" + httphost + "/icons/text.png\"";
 	}
 	str += "</TD><TD><A HREF=\"" + dir + "/" + list[0][i];
 	if (list[1][i] == -2) {
@@ -197,7 +201,7 @@ static object http_message(int code, object entity)
     }
     host = query_host();
     if (!host) {
-	host = "www.dworkin.nl";
+	host = httphost;
     } else {
 	host = lower_case(host);
     }
@@ -207,8 +211,7 @@ static object http_message(int code, object entity)
     }
     file = DRIVER->normalize_path(file, "");
 
-    switch (host) {
-    case "www.dworkin.nl":
+    if (host == httphost) {
 	file = "/usr/WWW/html" + file;
 
 	info = http_file_info(file);
@@ -237,7 +240,7 @@ static object http_message(int code, object entity)
 	    return response(HTTP_OK, nil, info[2], info[0], info[1]);
 
 	case "POST":
-	    if (query_authorization() != "foodibar:gnulifoo") {
+	    if (query_authorization() != "foobar:gnu") {
 		return unauthorized("posting");
 	    }
 	    mesg = response(HTTP_CREATED, nil, info[2], info[0], info[1]);
@@ -247,8 +250,7 @@ static object http_message(int code, object entity)
 	default:
 	    return not_implemented();
 	}
-
-    case "ftp.dworkin.nl":
+    } else if (host == ftphost) {
 	file = "/usr/WWW/ftp" + file;
 
 	info = http_file_info(file);
@@ -286,8 +288,7 @@ static object http_message(int code, object entity)
 	default:
 	    return not_implemented();
 	}
-
-    default:
+    } else {
 	return not_found();
     }
 }

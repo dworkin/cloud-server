@@ -30,24 +30,13 @@ static create()
  * NAME:	select()
  * DESCRIPTION:	select user object based on loginname
  */
-object select(string name)
+object select(string str)
 {
     if (previous_object() == userd) {
 	object obj;
-	mixed *request;
 
-	obj = PLAYERD->get_user(name);
-	if (obj) {
-	    return obj;
-	}
-
-	request = HTTP_REQUEST->parse_request(name);
-	if (request) {
-	    obj = clone_object(HTTP_HANDLER, HTTP_OWNER);
-	    obj->request(request);
-	    return obj;
-	}
-	return this_object();
+	obj = "~WWW/sys/server"->request(str);
+	return (obj) ? obj : this_object();
     }
 }
 
