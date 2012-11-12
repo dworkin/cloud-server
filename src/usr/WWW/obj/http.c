@@ -109,7 +109,7 @@ private string ftp_dir(string dir)
     }
     str = "<HTML><HEAD><TITLE>Index of " + dir + "</TITLE></HEAD>" +
 	  "<BODY><H1>Index of " + dir + "</H1><TABLE>" +
-	  "<TR><TH><IMG SRC=\"http://www.dworkin.nl/icons/blank.gif\"</TH>" +
+	  "<TR><TH><IMG SRC=\"http://www.dworkin.nl/icons/blank.png\"</TH>" +
 	  "<TH>Name</TH><TH>Last modified</TH><TH>Size</TH>" +
 	  "<TH>Description</TH></TR><TR><TH COLSPAN=\"5\"><HR></TH></TR>";
     if (dir != "/") {
@@ -118,7 +118,7 @@ private string ftp_dir(string dir)
 	    parent += "/";
 	}
 	str += "<TR><TD VALIGN=\"top\">" +
-	       "<IMG SRC=\"http://www.dworkin.nl/icons/back.gif\"</TD>" +
+	       "<IMG SRC=\"http://www.dworkin.nl/icons/back.png\"</TD>" +
 	       "<TD><A HREF=\"" + parent +
 	       "\">Parent Directory</A></TD><TD>&nbsp;</TD>" +
 	       "<TD ALIGN=\"right\">-</TD></TR>";
@@ -128,11 +128,11 @@ private string ftp_dir(string dir)
     for (i = 0; i < sizeof(list[0]); i++) {
 	str += "<TR><TD VALIGN=\"top\">";
 	if (list[1][i] == -2) {
-	    str += "<IMG SRC=\"http://www.dworkin.nl/icons/folder.gif\"";
+	    str += "<IMG SRC=\"http://www.dworkin.nl/icons/folder.png\"";
 	} else if (sscanf(list[3][i], "application/%*s") != 0) {
-	    str += "<IMG SRC=\"http://www.dworkin.nl/icons/compressed.gif\"";
+	    str += "<IMG SRC=\"http://www.dworkin.nl/icons/compressed.png\"";
 	} else {
-	    str += "<IMG SRC=\"http://www.dworkin.nl/icons/text.gif\"";
+	    str += "<IMG SRC=\"http://www.dworkin.nl/icons/text.png\"";
 	}
 	str += "</TD><TD><A HREF=\"" + dir + "/" + list[0][i];
 	if (list[1][i] == -2) {
