@@ -116,31 +116,31 @@ mapping query_inherited(int issue)
  * NAME:	add_object()
  * DESCRIPTION:	register an object
  */
-void add_object(mixed obj, int index, int *list)
+void add_object(string path, int index, int *list)
 {
     if (previous_object() == objectd) {
-	if (typeof(obj) == T_OBJECT) {
+	sscanf(path, "/usr/%*s/%s", path);
+	if (sscanf("/" + path, "%*s/lib/") == 0) {
 	    /* normal object */
-	    issues[obj] = index;
+	    issues[path] = index;
 	} else {
 	    mixed issue;
 
 	    /* lib object */
-	    sscanf(obj, "/usr/%*s/%s", obj);
-	    issue = issues[obj];
+	    issue = issues[path];
 	    if (issue) {
 		if (typeof(issue) == T_INT) {
 		    if (index != issue) {
-			issues[obj] = ({ index, issue });
+			issues[path] = ({ index, issue });
 		    }
 		} else if (index != issue[0]) {
-		    issues[obj] = ({ index }) + issue;
+		    issues[path] = ({ index }) + issue;
 		}
 	    } else {
-		issues[obj] = index;
+		issues[path] = index;
 	    }
 	}
-	objects[index] = ({ obj }) + list;
+	objects[index] = ({ path }) + list;
     }
 }
 
@@ -151,12 +151,13 @@ void add_object(mixed obj, int index, int *list)
 int del_object(int index)
 {
     if (previous_object() == objectd) {
-	mixed obj, issue;
+	string path;
+	mixed issue;
 
-	obj = objects[index][0];
-	if (typeof(obj) == T_OBJECT) {
+	path = objects[index][0];
+	if (sscanf("/" + path, "%*s/lib/") == 0) {
 	    /* normal object */
-	    issues[obj] = nil;
+	    issues[path] = nil;
 	    objects[index] = nil;
 	    if (map_sizeof(objects) == 0) {
 		destruct_object(this_object());
@@ -164,15 +165,15 @@ int del_object(int index)
 	    return TRUE;
 	} else {
 	    /* lib object */
-	    issue = issues[obj];
+	    issue = issues[path];
 	    if (typeof(issue) == T_INT) {
-		issues[obj] = nil;
+		issues[path] = nil;
 	    } else {
 		issue -= ({ index });
 		if (sizeof(issue) == 1) {
-		    issues[obj] = issue[0];
+		    issues[path] = issue[0];
 		} else {
-		    issues[obj] = issue;
+		    issues[path] = issue;
 		}
 	    }
 

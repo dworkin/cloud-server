@@ -78,8 +78,7 @@ private void unregister_inherited(int issue, int *list)
  * NAME:	register_object()
  * DESCRIPTION:	register a new object and what it inherits
  */
-private void register_object(string creator, string oname, object obj,
-			     int index, int *list)
+private void register_object(string creator, string path, int index, int *list)
 {
     int i;
     object dbobj;
@@ -113,13 +112,7 @@ private void register_object(string creator, string oname, object obj,
     list = map_indices(dbase);
 
     /* register object in dbase object */
-    if (obj) {
-	/* normal object */
-	dbobj->add_object(obj, index, list);
-    } else {
-	/* lib object */
-	dbobj->add_object(oname, index, list);
-    }
+    dbobj->add_object(path, index, list);
 
     /* register inherited objects */
     register_inherited(index, list);
@@ -234,8 +227,7 @@ private void preregister_objects()
 	for (j = sizeof(inherits); --j >= 0; ) {
 	    inherits[j] = indices[inherits[j]];
 	}
-	register_object(driver->creator(name), name, find_object(name),
-			indices[name], inherits);
+	register_object(driver->creator(name), name, indices[name], inherits);
     }
 }
 
@@ -378,7 +370,7 @@ private void query_issue_deps(string path, int index, mapping issues,
  * NAME:	query_dependents()
  * DESCRIPTION:	collect the objects that depend on all issues of a given object
  */
-mapping *query_dependents(string name, int factor)
+mapping *query_dependents(string path, int factor)
 {
     if (SYSTEM()) {
 	int i, *issue;
@@ -388,9 +380,9 @@ mapping *query_dependents(string name, int factor)
 	issues = ([ ]);
 	inherited = ([ ]);
 	leaves = ([ ]);
-	issue = query_issues(name);
+	issue = query_issues(path);
 	for (i = sizeof(issue); --i >= 0; ) {
-	    query_issue_deps(name, issue[i], issues, inherited, leaves, factor);
+	    query_issue_deps(path, issue[i], issues, inherited, leaves, factor);
 	}
 
 	return ({ inherited, leaves });
@@ -442,13 +434,11 @@ void compiling(string path)
  * NAME:	compile()
  * DESCRIPTION:	an object has been compiled
  */
-void compile(string owner, object obj, mixed source, string inherited...)
+void compile(string owner, string path, mixed source, string inherited...)
 {
     if (previous_object() == driver) {
-	string oname;
 	int i, *indices;
 
-	oname = object_name(obj);
 	i = sizeof(inherited);
 	if (i != 0) {
 	    /* collect indices of inherited objects */
@@ -457,7 +447,7 @@ void compile(string owner, object obj, mixed source, string inherited...)
 		--i;
 		indices[i] = status(inherited[i], O_INDEX);
 	    } while (i != 0);
-	} else if (oname == DRIVER) {
+	} else if (path == DRIVER) {
 	    /* no index at all */
 	    indices = ({ });
 	} else {
@@ -465,9 +455,9 @@ void compile(string owner, object obj, mixed source, string inherited...)
 	    indices = ({ status(AUTO, O_INDEX) });
 	}
 
-	register_object(owner, oname, obj, status(obj, O_INDEX), indices);
+	register_object(owner, path, status(path, O_INDEX), indices);
 	if (notify_object) {
-	    notify_object->compile(obj);
+	    notify_object->compile(path);
 	}
     }
 }
@@ -497,7 +487,7 @@ void compile_lib(string owner, string path, mixed source, string inherited...)
 	    indices = ({ status(AUTO, O_INDEX) });
 	}
 
-	register_object(owner, path, nil, status(path, O_INDEX), indices);
+	register_object(owner, path, status(path, O_INDEX), indices);
 	if (notify_object) {
 	    notify_object->compile_lib(path);
 	}
@@ -521,10 +511,10 @@ void compile_failed(string owner, string path)
  * NAME:	destruct()
  * DESCRIPTION:	object is about to be destructed
  */
-void destruct(string owner, object obj)
+void destruct(string owner, string path)
 {
-    if (previous_object() == driver && sscanf(object_name(obj), "%*s#") == 0) {
-	unregister_object(object_name(obj), status(obj, O_INDEX));
+    if (previous_object() == driver && sscanf(path, "%*s#") == 0) {
+	unregister_object(path, status(path, O_INDEX));
     }
 }
 

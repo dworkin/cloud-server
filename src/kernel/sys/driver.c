@@ -218,11 +218,11 @@ void compiling(string path)
  * NAME:	compile()
  * DESCRIPTION:	object compiled
  */
-void compile(object obj, string owner, string source...)
+void compile(string path, string owner, string source...)
 {
     if (previous_program() == AUTO) {
 	if (objectd) {
-	    objectd->compile(owner, obj, source, TLSVAR3[1 ..]...);
+	    objectd->compile(owner, path, source, TLSVAR3[1 ..]...);
 	}
     }
 }
@@ -268,10 +268,10 @@ void clone(object obj, string owner)
  * NAME:	destruct()
  * DESCRIPTION:	object about to be destructed
  */
-void destruct(object obj, string owner)
+void destruct(string path, string owner)
 {
     if (objectd && previous_program() == AUTO) {
-	objectd->destruct(owner, obj);
+	objectd->destruct(owner, path);
     }
 }
 

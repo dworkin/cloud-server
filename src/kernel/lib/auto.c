@@ -208,7 +208,7 @@ static int destruct_object(mixed obj)
      * check privileges
      */
     oname = object_name(obj);
-    if (sscanf(oname, "%s#%d", oname, lib) != 0 && lib < 0) {
+    if (sscanf(oname, "%*s#%d", lib) != 0 && lib < 0) {
 	error("Cannot destruct non-persistent object");
     }
     lib = sscanf(oname, "%*s" + INHERITABLE_SUBDIR);
@@ -221,11 +221,11 @@ static int destruct_object(mixed obj)
     rlimits (-1; -1) {
 	if (!lib) {
 	    if (oname != BINARY_CONN && oname != TELNET_CONN) {
-		driver->destruct(obj, oowner);
+		driver->destruct(oname, oowner);
 	    }
 	    obj->_F_destruct();
 	} else {
-	    driver->destruct_lib(object_name(obj), oowner);
+	    driver->destruct_lib(oname, oowner);
 	}
 	::destruct_object(obj);
     }
@@ -307,7 +307,7 @@ static object compile_object(string path, string source...)
 	    if (lib) {
 		driver->compile_lib(path, uid, source...);
 	    } else {
-		driver->compile(obj, uid, source...);
+		driver->compile(path, uid, source...);
 	    }
 	} : {
 	    driver->compile_failed(path, uid);
