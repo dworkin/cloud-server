@@ -164,9 +164,11 @@ static object find_object(string path)
 						 object_name(this_object()) +
 						 "/..",
 						 creator);
-    if (sscanf(path, "%*s" + INHERITABLE_SUBDIR) != 0) {
+    if (sscanf(path, "%*s" + INHERITABLE_SUBDIR) != 0 ||
+	sscanf(path, "%*s" + CLONABLE_SUBDIR) != 0 ||
+	sscanf(path, "%*s" + LIGHTWEIGHT_SUBDIR) != 0) {
 	/*
-	 * It is not possible to find a lib object by name, or to call a
+	 * It is not possible to find a class object by name, or to call a
 	 * function in it.
 	 */
 	return nil;
@@ -182,7 +184,7 @@ static int destruct_object(mixed obj)
 {
     object driver;
     string oname, oowner;
-    int lib;
+    int lib, class;
 
     /* check and translate argument */
     driver = ::find_object(DRIVER);
@@ -212,7 +214,9 @@ static int destruct_object(mixed obj)
 	error("Cannot destruct non-persistent object");
     }
     lib = sscanf(oname, "%*s" + INHERITABLE_SUBDIR);
-    oowner = (lib) ? driver->creator(oname) : obj->query_owner();
+    class = (lib || sscanf(oname, "%*s" + CLONABLE_SUBDIR) != 0 ||
+	     sscanf(oname, "%*s" + LIGHTWEIGHT_SUBDIR) != 0);
+    oowner = (class) ? driver->creator(oname) : obj->query_owner();
     if ((sscanf(oname, "/kernel/%*s") != 0 && !lib && !KERNEL()) ||
 	(creator != "System" && owner != oowner)) {
 	error("Cannot destruct object: not owner");
@@ -222,7 +226,7 @@ static int destruct_object(mixed obj)
 	if (oname != BINARY_CONN && oname != TELNET_CONN) {
 	    driver->destruct(oname, oowner);
 	}
-	if (!lib) {
+	if (!class) {
 	    obj->_F_destruct();
 	}
 	::destruct_object(obj);
@@ -238,7 +242,7 @@ static object compile_object(string path, string source...)
 {
     string oname, uid;
     object driver, rsrcd, obj;
-    int *rsrc, lib, kernel, new, stack, ticks;
+    int *rsrc, class, kernel, new, stack, ticks;
 
     CHECKARG(path, 1, "compile_object");
     if (!this_object()) {
@@ -251,20 +255,21 @@ static object compile_object(string path, string source...)
     oname = object_name(this_object());
     driver = ::find_object(DRIVER);
     path = driver->normalize_path(path, oname + "/..", creator);
-    lib = sscanf(path, "%*s" + INHERITABLE_SUBDIR);
-    if (lib + sscanf(path, "%*s" + CLONABLE_SUBDIR) +
-	sscanf(path, "%*s" + LIGHTWEIGHT_SUBDIR) > 1) {
-	error("Ambiguous object");
-    }
+    class = sscanf(path, "%*s" + INHERITABLE_SUBDIR);
     kernel = sscanf(path, "/kernel/%*s");
     uid = driver->creator(path);
     if ((sizeof(source) != 0 && kernel) ||
 	(creator != "System" &&
 	 !::find_object(ACCESSD)->access(oname, path,
-					 ((lib || !uid) &&
+					 ((class || !uid) &&
 					  sizeof(source) == 0 && !kernel) ?
 					  READ_ACCESS : WRITE_ACCESS))) {
 	error("Access denied");
+    }
+    class += sscanf(path, "%*s" + CLONABLE_SUBDIR) +
+	     sscanf(path, "%*s" + LIGHTWEIGHT_SUBDIR);
+    if (class > 1) {
+	error("Ambiguous object");
     }
 
     /*
@@ -284,7 +289,7 @@ static object compile_object(string path, string source...)
     ticks = ::status()[ST_TICKS];
     rlimits (-1; -1) {
 	catch {
-	    if (new && !lib) {
+	    if (new && !class) {
 		if ((stack >= 0 &&
 		     stack - 2 < rsrcd->rsrc_get(uid,
 						 "create stack")[RSRC_MAX]) ||
@@ -310,11 +315,11 @@ static object compile_object(string path, string source...)
 	    }
 	}
     }
-    if (new && !lib) {
-	call_other(obj, "???");	/* initialize & register */
+    if (new && !class) {
+	call_other(obj, "???");		/* initialize */
     }
 
-    return (lib) ? nil : obj;
+    return (class) ? nil : obj;
 }
 
 /*

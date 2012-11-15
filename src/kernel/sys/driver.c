@@ -520,6 +520,8 @@ static object call_object(string path)
 	path = normalize_path(path, oname + "/..", creator(oname));
     }
     if (sscanf(path, "%*s" + INHERITABLE_SUBDIR) != 0 ||
+	sscanf(path, "%*s" + CLONABLE_SUBDIR) != 0 ||
+	sscanf(path, "%*s" + LIGHTWEIGHT_SUBDIR) != 0 ||
 	(objectd && objectd->forbid_call(path))) {
 	error("Illegal use of call_other");
     }
