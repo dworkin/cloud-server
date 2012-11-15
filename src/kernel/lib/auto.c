@@ -1043,8 +1043,10 @@ static mixed **get_dir(string path)
     dir = implode(names[.. sizeof(names) - 2], "/");
     names = list[0];
     olist = allocate(sz = sizeof(names));
-    if (sscanf(path, "%*s" + INHERITABLE_SUBDIR) != 0) {
-	/* lib objects */
+    if (sscanf(path, "%*s" + INHERITABLE_SUBDIR) != 0 ||
+	sscanf(path, "%*s" + CLONABLE_SUBDIR) != 0 ||
+	sscanf(path, "%*s" + LIGHTWEIGHT_SUBDIR) != 0) {
+	/* class objects */
 	for (i = sz; --i >= 0; ) {
 	    path = dir + "/" + names[i];
 	    if ((sz=strlen(path)) >= 2 && path[sz - 2 ..] == ".c" &&
@@ -1114,7 +1116,9 @@ static mixed *file_info(string path)
     info = ({ info[1][i], info[2][i], nil });
     if ((sz=strlen(path)) >= 2 && path[sz - 2 ..] == ".c" &&
 	(obj=::find_object(path[.. sz - 3]))) {
-	info[2] = (sscanf(path, "%*s" + INHERITABLE_SUBDIR) != 0) ? TRUE : obj;
+	info[2] = (sscanf(path, "%*s" + INHERITABLE_SUBDIR) != 0 ||
+		   sscanf(path, "%*s" + CLONABLE_SUBDIR) != 0 ||
+		   sscanf(path, "%*s" + LIGHTWEIGHT_SUBDIR) != 0) ? TRUE : obj;
     }
     return info;
 }
