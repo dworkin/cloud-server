@@ -58,8 +58,8 @@ static int destruct_object(mixed obj)
 	driver = find_object(DRIVER);
 	path = obj = driver->normalize_path(obj, query_directory(), owner);
 	lib = sscanf(path, "%*s/lib/");
-	if (lib || sscanf(path, "%*s/obj/") != 0 ||
-	    sscanf(path, "%*s/data/") != 0) {
+	if (lib || sscanf(path, "%*s/obj/%*s#") == 1 ||
+	    sscanf(path, "%*s/data/%*s#") == 1) {
 	    oowner = driver->creator(path);
 	} else {
 	    obj = find_object(path);

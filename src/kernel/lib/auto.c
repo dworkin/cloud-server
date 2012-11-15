@@ -116,34 +116,21 @@ nomask void _F_create()
  */
 nomask void _F_destruct()
 {
-    if (previous_program() == AUTO) {
+    if (previous_program() == AUTO && resources) {
 	object rsrcd;
-	int i, j;
-	string oname;
+	string *names;
+	int *values;
+	int i;
 
+	/*
+	 * decrease resources associated with object
+	 */
 	rsrcd = ::find_object(RSRCD);
-
-	if (resources) {
-	    string *names;
-	    int *values;
-
-	    /*
-	     * decrease resources associated with object
-	     */
-	    names = map_indices(resources);
-	    values = map_values(resources);
-	    i = sizeof(names);
-	    while (--i >= 0) {
-		rsrcd->rsrc_incr(owner, names[i], this_object(), -values[i]);
-	    }
-	}
-
-	if (sscanf(object_name(this_object()), "%s#%d", oname, i) != 0 &&
-	    oname != BINARY_CONN && oname != TELNET_CONN && i >= 0) {
-	    /*
-	     * non-clones are handled by driver->remove_program()
-	     */
-	    rsrcd->rsrc_incr(owner, "objects", nil, -1);
+	names = map_indices(resources);
+	values = map_values(resources);
+	i = sizeof(names);
+	while (--i >= 0) {
+	    rsrcd->rsrc_incr(owner, names[i], this_object(), -values[i]);
 	}
     }
 }
@@ -165,7 +152,7 @@ static object find_object(string path)
 						 "/..",
 						 creator);
     if (sscanf(path, "%*s" + INHERITABLE_SUBDIR) != 0 ||
-	sscanf(path, "%*s" + CLONABLE_SUBDIR) != 0 ||
+	sscanf(path, "%*s" + CLONABLE_SUBDIR + "%*s#") == 1 ||
 	sscanf(path, "%*s" + LIGHTWEIGHT_SUBDIR) != 0) {
 	/*
 	 * It is not possible to find a class object by name, or to call a
@@ -184,7 +171,7 @@ static int destruct_object(mixed obj)
 {
     object driver;
     string oname, oowner;
-    int lib, class;
+    int clone, lib, class;
 
     /* check and translate argument */
     driver = ::find_object(DRIVER);
@@ -210,12 +197,14 @@ static int destruct_object(mixed obj)
      * check privileges
      */
     oname = object_name(obj);
-    if (sscanf(oname, "%*s#%d", lib) != 0 && lib < 0) {
+    clone = sscanf(oname, "%s#%d", oname, lib);
+    if (clone && lib < 0) {
 	error("Cannot destruct non-persistent object");
     }
     lib = sscanf(oname, "%*s" + INHERITABLE_SUBDIR);
-    class = (lib || sscanf(oname, "%*s" + CLONABLE_SUBDIR) != 0 ||
-	     sscanf(oname, "%*s" + LIGHTWEIGHT_SUBDIR) != 0);
+    class = (!clone &&
+	     (lib || sscanf(oname, "%*s" + CLONABLE_SUBDIR) != 0 ||
+	      sscanf(oname, "%*s" + LIGHTWEIGHT_SUBDIR) != 0));
     oowner = (class) ? driver->creator(oname) : obj->query_owner();
     if ((sscanf(oname, "/kernel/%*s") != 0 && !lib && !KERNEL()) ||
 	(creator != "System" && owner != oowner)) {
@@ -224,7 +213,13 @@ static int destruct_object(mixed obj)
 
     rlimits (-1; -1) {
 	if (oname != BINARY_CONN && oname != TELNET_CONN) {
-	    driver->destruct(oname, oowner);
+	    driver->destruct(object_name(obj), oowner);
+	    if (clone) {
+		/*
+		 * non-clones are handled by driver->remove_program()
+		 */
+		::find_object(RSRCD)->rsrc_incr(owner, "objects", nil, -1);
+	    }
 	}
 	if (!class) {
 	    obj->_F_destruct();
@@ -361,7 +356,7 @@ static object clone_object(string path, varargs string uid)
      * check if object can be cloned
      */
     if (!owner || !(obj=::find_object(path)) ||
-	sscanf(path, "%*s" + CLONABLE_SUBDIR) == 0) {
+	sscanf(path, "%*s" + CLONABLE_SUBDIR + "%*s#") != 1) {
 	/*
 	 * no owner for clone, master object not compiled, or not path of
 	 * clonable
@@ -1044,7 +1039,7 @@ static mixed **get_dir(string path)
     names = list[0];
     olist = allocate(sz = sizeof(names));
     if (sscanf(path, "%*s" + INHERITABLE_SUBDIR) != 0 ||
-	sscanf(path, "%*s" + CLONABLE_SUBDIR) != 0 ||
+	sscanf(path, "%*s" + CLONABLE_SUBDIR + "%*s#") == 1 ||
 	sscanf(path, "%*s" + LIGHTWEIGHT_SUBDIR) != 0) {
 	/* class objects */
 	for (i = sz; --i >= 0; ) {
@@ -1117,7 +1112,7 @@ static mixed *file_info(string path)
     if ((sz=strlen(path)) >= 2 && path[sz - 2 ..] == ".c" &&
 	(obj=::find_object(path[.. sz - 3]))) {
 	info[2] = (sscanf(path, "%*s" + INHERITABLE_SUBDIR) != 0 ||
-		   sscanf(path, "%*s" + CLONABLE_SUBDIR) != 0 ||
+		   sscanf(path, "%*s" + CLONABLE_SUBDIR + "%*s#") == 1 ||
 		   sscanf(path, "%*s" + LIGHTWEIGHT_SUBDIR) != 0) ? TRUE : obj;
     }
     return info;

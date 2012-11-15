@@ -1029,7 +1029,6 @@ static void cmd_clone(object user, string cmd, string str)
 
     case T_STRING:
 	str = obj;
-	obj = find_object(str);
 	break;
 
     case T_OBJECT:
@@ -1039,7 +1038,7 @@ static void cmd_clone(object user, string cmd, string str)
 
     if (sscanf(str, "%*s" + CLONABLE_SUBDIR + "%*s#") != 1) {
 	message("Not a master object.\n");
-    } else if (!obj) {
+    } else if (status(str, O_INDEX) == nil) {
 	message("No such object.\n");
     } else {
 	str = catch(obj = clone_object(str));
