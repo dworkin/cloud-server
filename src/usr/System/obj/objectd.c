@@ -193,14 +193,10 @@ int del_object(int index)
 string query_path(int index)
 {
     if (previous_object() == objectd) {
-	mixed path;
+	string path;
 
 	path = objects[index][0];
-	if (typeof(path) == T_OBJECT) {
-	    return object_name(path);
-	} else {
-	    return (path[0] == '/') ? path : "/usr/" + creator + "/" + path;
-	}
+	return (path[0] == '/') ? path : "/usr/" + creator + "/" + path;
     }
 }
 
