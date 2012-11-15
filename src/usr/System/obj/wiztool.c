@@ -50,13 +50,16 @@ static int destruct_object(mixed obj)
 {
     string path, owner, oowner;
     object driver;
+    int lib;
 
     owner = query_owner();
     switch (typeof(obj)) {
     case T_STRING:
 	driver = find_object(DRIVER);
 	path = obj = driver->normalize_path(obj, query_directory(), owner);
-	if (sscanf(path, "%*s/lib/") != 0) {
+	lib = sscanf(path, "%*s/lib/");
+	if (lib || sscanf(path, "%*s/obj/") != 0 ||
+	    sscanf(path, "%*s/data/") != 0) {
 	    oowner = driver->creator(path);
 	} else {
 	    obj = find_object(path);
@@ -74,7 +77,7 @@ static int destruct_object(mixed obj)
     }
 
     if (path && owner != oowner &&
-	((sscanf(path, "/kernel/%*s") != 0 && sscanf(path, "%*s/lib/") == 0) ||
+	((sscanf(path, "/kernel/%*s") != 0 && !lib) ||
 	 !access(owner, path, WRITE_ACCESS))) {
 	message(path + ": Permission denied.\n");
 	return -1;
