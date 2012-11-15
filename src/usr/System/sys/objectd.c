@@ -447,7 +447,7 @@ void compile(string owner, string path, mixed source, string inherited...)
 		--i;
 		indices[i] = status(inherited[i], O_INDEX);
 	    } while (i != 0);
-	} else if (path == DRIVER) {
+	} else if (path == DRIVER || path == AUTO) {
 	    /* no index at all */
 	    indices = ({ });
 	} else {
@@ -458,38 +458,6 @@ void compile(string owner, string path, mixed source, string inherited...)
 	register_object(owner, path, status(path, O_INDEX), indices);
 	if (notify_object) {
 	    notify_object->compile(path);
-	}
-    }
-}
-
-/*
- * NAME:	compile_lib()
- * DESCRIPTION:	a lib object has been compiled
- */
-void compile_lib(string owner, string path, mixed source, string inherited...)
-{
-    if (previous_object() == driver) {
-	int i, *indices;
-
-	i = sizeof(inherited);
-	if (i != 0) {
-	    /* collect indices of inherited objects */
-	    indices = allocate(i);
-	    do {
-		--i;
-		indices[i] = status(inherited[i], O_INDEX);
-	    } while (i != 0);
-	} else if (path == AUTO) {
-	    /* no index at all */
-	    indices = ({ });
-	} else {
-	    /* just the auto object */
-	    indices = ({ status(AUTO, O_INDEX) });
-	}
-
-	register_object(owner, path, status(path, O_INDEX), indices);
-	if (notify_object) {
-	    notify_object->compile_lib(path);
 	}
     }
 }
@@ -514,18 +482,12 @@ void compile_failed(string owner, string path)
 void destruct(string owner, string path)
 {
     if (previous_object() == driver && sscanf(path, "%*s#") == 0) {
-	unregister_object(path, status(path, O_INDEX));
-    }
-}
-
-/*
- * NAME:	destruct_lib()
- * DESCRIPTION:	lib object is about to be destructed
- */
-void destruct_lib(string owner, string path)
-{
-    if (previous_object() == driver && notify_object) {
-	notify_object->destruct_lib(path);
+	if (sscanf(path, "%*s/lib/") == 0) {
+	    unregister_object(path, status(path, O_INDEX));
+	}
+	if (notify_object) {
+	    notify_object->destruct(path);
+	}
     }
 }
 

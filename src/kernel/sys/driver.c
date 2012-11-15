@@ -204,7 +204,7 @@ void compiling(string path)
 	    }
 	    rsrcd->rsrc_incr("System", "objects", nil, 1);
 	    if (objectd) {
-		objectd->compile_lib("System", AUTO, ({ }));
+		objectd->compile("System", AUTO, ({ }));
 	    }
 	}
 	if (objectd) {
@@ -223,19 +223,6 @@ void compile(string path, string owner, string source...)
     if (previous_program() == AUTO) {
 	if (objectd) {
 	    objectd->compile(owner, path, source, TLSVAR3[1 ..]...);
-	}
-    }
-}
-
-/*
- * NAME:	compile_lib()
- * DESCRIPTION:	inherited object compiled
- */
-void compile_lib(string path, string owner, string source...)
-{
-    if (previous_program() == AUTO) {
-	if (objectd) {
-	    objectd->compile_lib(owner, path, source, TLSVAR3[1 ..]...);
 	}
     }
 }
@@ -272,17 +259,6 @@ void destruct(string path, string owner)
 {
     if (objectd && previous_program() == AUTO) {
 	objectd->destruct(owner, path);
-    }
-}
-
-/*
- * NAME:	destruct_lib()
- * DESCRIPTION:	inherited object about to be destructed
- */
-void destruct_lib(string path, string owner)
-{
-    if (objectd && previous_program() == AUTO) {
-	objectd->destruct_lib(owner, path);
     }
 }
 
@@ -659,7 +635,7 @@ static object inherit_program(string from, string path, int priv)
 	}
 	rsrcd->rsrc_incr(creator, "objects", nil, 1);
 	if (objectd) {
-	    objectd->compile_lib(creator, path, ({ }), TLSVAR3[1 ..]...);
+	    objectd->compile(creator, path, ({ }), TLSVAR3[1 ..]...);
 
 	    objectd->compiling(from);
 	}
@@ -729,7 +705,7 @@ static void recompile(object obj)
 	string name;
 
 	name = object_name(obj);
-	objectd->destruct_lib(creator(name), name);
+	objectd->destruct(creator(name), name);
     }
     destruct_object(obj);
 }

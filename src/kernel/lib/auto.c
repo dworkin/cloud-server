@@ -219,13 +219,11 @@ static int destruct_object(mixed obj)
     }
 
     rlimits (-1; -1) {
+	if (oname != BINARY_CONN && oname != TELNET_CONN) {
+	    driver->destruct(oname, oowner);
+	}
 	if (!lib) {
-	    if (oname != BINARY_CONN && oname != TELNET_CONN) {
-		driver->destruct(oname, oowner);
-	    }
 	    obj->_F_destruct();
-	} else {
-	    driver->destruct_lib(oname, oowner);
 	}
 	::destruct_object(obj);
     }
@@ -304,11 +302,7 @@ static object compile_object(string path, string source...)
 	    if (new) {
 		rsrcd->rsrc_incr(uid, "objects", nil, 1);
 	    }
-	    if (lib) {
-		driver->compile_lib(path, uid, source...);
-	    } else {
-		driver->compile(path, uid, source...);
-	    }
+	    driver->compile(path, uid, source...);
 	} : {
 	    driver->compile_failed(path, uid);
 	    rlimits (stack; ticks) {

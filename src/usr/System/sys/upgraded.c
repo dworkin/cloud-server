@@ -229,12 +229,12 @@ string upgrade(string creator, string *names, mapping failed)
 
 
 /*
- * NAME:	destruct_lib()
- * DESCRIPTION:	a lib object is about to be destructed
+ * NAME:	destruct()
+ * DESCRIPTION:	check if a lib object is about to be destructed
  */
-void destruct_lib(string path)
+void destruct(string path)
 {
-    if (previous_object() == objectd) {
+    if (previous_object() == objectd && sscanf(path, "%*s/lib/") != 0) {
 	inherited[status(path, O_INDEX) / factor][path] = nil;
     }
 }

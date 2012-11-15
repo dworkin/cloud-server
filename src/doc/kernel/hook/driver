@@ -27,14 +27,7 @@ void set_object_manager(object objectd)	[System only]
 		   string inherited...)
 
 	The given object has just been compiled.  If the source array is not
-	empty, it was compiled from those strings.  Called just before the
-	object is initialized with create(0).
-
-    * void compile_lib(string owner, string path, string *source,
-		       string inherited...)
-
-	The given inheritable object has just been compiled.  If the source
-	array is not empty, it was compiled from those strings.
+	empty, it was compiled from those strings.
 
     * void compile_failed(string owner, string path)
 
@@ -48,10 +41,6 @@ void set_object_manager(object objectd)	[System only]
     * void destruct(string owner, string path)
 
 	The given object is about to be destructed.
-
-    * void destruct_lib(string owner, string path)
-
-	The given inheritable object is about to be destructed.
 
     * void remove_program(string owner, string path, int timestamp, int index)
 
