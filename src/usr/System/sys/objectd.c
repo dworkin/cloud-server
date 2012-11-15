@@ -319,7 +319,6 @@ private void query_issue_deps(string path, int index, mapping issues,
 			      mapping inherited, mapping leaves, int factor)
 {
     mapping map;
-    object obj;
     int i, j, **lists, *list;
 
     if (sscanf(path, "%*s/lib/")) {
@@ -356,12 +355,11 @@ private void query_issue_deps(string path, int index, mapping issues,
 	 * Not a lib object, so it must be a leaf object, which is stored in the
 	 * 'leaves' structure as an object.
 	 */
-	obj = find_object(path);
 	map = leaves[index / factor];
 	if (map) {
-	    map[obj] = index;
+	    map[path] = index;
 	} else {
-	    leaves[index / factor] = ([ obj : index ]);
+	    leaves[index / factor] = ([ path : index ]);
 	}
     }
 }

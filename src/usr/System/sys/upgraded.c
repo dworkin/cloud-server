@@ -153,9 +153,8 @@ string upgrade(string creator, string *names, mapping failed)
     if (SYSTEM()) {
 	rlimits (0; -1) {
 	    int i, j, sz, *status;
-	    string name;
+	    string name, *list;
 	    mapping objects, *depend, *leaves;
-	    object *list;
 
 	    /* verify write access to objects to be upgraded directly */
 	    for (i = 0, sz = sizeof(names); i < sz; i++) {
@@ -187,7 +186,7 @@ string upgrade(string creator, string *names, mapping failed)
 	    for (i = sizeof(leaves); --i >= 0; ) {
 		list = map_indices(leaves[i]);
 		for (j = sizeof(list); --j >= 0; ) {
-		    name = object_name(list[j]) + ".c";
+		    name = list[j] + ".c";
 		    if (!access(creator, name, WRITE_ACCESS)) {
 			inherited = nil;
 			return name + ": Access denied.\n";
