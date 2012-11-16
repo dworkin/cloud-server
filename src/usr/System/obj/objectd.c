@@ -13,15 +13,13 @@ mapping issues;		/* ([ object : indices ]) */
  * NAME:	create()
  * DESCRIPTION:	initialize database object
  */
-static void create(int clone)
+static void create()
 {
-    if (clone) {
-	objectd = find_object(OBJECTD);
-	factor = status(ST_ARRAYSIZE);
-	inherited = ([ ]);
-	objects = ([ ]);
-	issues = ([ ]);
-    }
+    objectd = find_object(OBJECTD);
+    factor = status(ST_ARRAYSIZE);
+    inherited = ([ ]);
+    objects = ([ ]);
+    issues = ([ ]);
 }
 
 /*

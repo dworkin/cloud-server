@@ -23,13 +23,11 @@ object user;		/* associated user object */
  * NAME:	create()
  * DESCRIPTION:	initialize object
  */
-static create(int clone)
+static create()
 {
-    if (clone) {
-	wiztool::create(200);
-	body::create();
-	user = PLAYERD->find_user(query_owner());
-    }
+    wiztool::create(200);
+    body::create();
+    user = PLAYERD->find_user(query_owner());
 }
 
 /*

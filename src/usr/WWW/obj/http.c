@@ -12,13 +12,11 @@ private inherit "/lib/util/time";
 string httphost;
 string ftphost;
 
-static void create(int clone)
+static void create()
 {
-    if (clone) {
-	::create();
-	({ httphost, ftphost }) = "~WWW/sys/server"->query_host();
-	call_out("disconnect", 300);
-    }
+    ::create();
+    ({ httphost, ftphost }) = "~WWW/sys/server"->query_host();
+    call_out("disconnect", 300);
 }
 
 private string file_type(string file)

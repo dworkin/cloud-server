@@ -25,13 +25,11 @@ static int nconn;		/* # of connections */
  * NAME:	create()
  * DESCRIPTION:	initialize user object
  */
-static void create(int clone)
+static void create()
 {
-    if (clone) {
-	user::create();
-	access::create();
-	state = ([ ]);
-    }
+    user::create();
+    access::create();
+    state = ([ ]);
 }
 
 /*

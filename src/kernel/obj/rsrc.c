@@ -14,17 +14,15 @@ int maxticks;		/* maximum number of ticks currently allowed */
  * NAME:	create()
  * DESCRIPTION:	initialize resource mapping
  */
-static void create(int clone)
+static void create()
 {
-    if (clone) {
-	resources = ([
-			"stack" :	({   0, -1, 0 }),
-			"ticks" :	({   0, -1, 0 }),
-			"tick usage" :	({ 0.0, -1, 0 })
-		    ]);
-	maxticks = -1;
-	rsrcd = find_object(RSRCD);
-    }
+    resources = ([
+		    "stack" :	({   0, -1, 0 }),
+		    "ticks" :	({   0, -1, 0 }),
+		    "tick usage" :	({ 0.0, -1, 0 })
+		]);
+    maxticks = -1;
+    rsrcd = find_object(RSRCD);
 }
 
 /*

@@ -10,12 +10,10 @@ private object user;		/* associated user object */
  * NAME:	create()
  * DESCRIPTION:	initialize object
  */
-static void create(int clone)
+static void create()
 {
-    if (clone) {
-	::create(200);
-	user = this_user();
-    }
+    ::create(200);
+    user = this_user();
 }
 
 /*

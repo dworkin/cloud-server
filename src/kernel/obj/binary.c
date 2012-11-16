@@ -12,13 +12,11 @@ int raw;		/* pending raw input? */
  * NAME:	create()
  * DESCRIPTION:	initialize
  */
-static void create(int clone)
+static void create()
 {
-    if (clone) {
-	::create("binary");
-	driver = find_object(DRIVER);
-	buffer = "";
-    }
+    ::create("binary");
+    driver = find_object(DRIVER);
+    buffer = "";
 }
 
 /*

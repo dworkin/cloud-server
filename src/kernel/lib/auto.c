@@ -51,7 +51,7 @@ nomask void _F_rsrc_incr(string rsrc, int incr)
     }
 }
 
-void create(varargs int clone) { }	/* default high-level create function */
+void create() { }	/* default high-level create function */
 
 /*
  * NAME:	_F_create()
@@ -76,8 +76,8 @@ nomask void _F_create()
 	    creator = driver->creator(oname);
 	    if (sscanf(oname, "%s#%d", oname, clone) != 0) {
 		owner = TLSVAR2;
-		clone = (clone >= 0);
-		if (clone && oname != BINARY_CONN && oname != TELNET_CONN) {
+		if (clone >= 0 && oname != BINARY_CONN && oname != TELNET_CONN)
+		{
 		    /*
 		     * register object
 		     */
@@ -94,19 +94,13 @@ nomask void _F_create()
 	    cname = function_object(CREATOR, this_object());
 	    if (cname && sscanf(cname, USR_DIR + "/System/%*s") != 0) {
 		/* extra initialisation function */
-		if (call_other(this_object(), CREATOR, clone)) {
+		if (call_other(this_object(), CREATOR)) {
 		    return;
 		}
 	    }
 # endif
 	}
-	/* call higher-level creator function */
-	if (sscanf(oname, "%*s" + CLONABLE_SUBDIR) == 0 &&
-	    sscanf(oname, "%*s" + LIGHTWEIGHT_SUBDIR) == 0) {
-	    create();
-	} else {
-	    create(clone);
-	}
+	create();
     }
 }
 

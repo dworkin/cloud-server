@@ -10,12 +10,10 @@ object driver;		/* driver object */
  * NAME:	create()
  * DESCRIPTION:	initialize
  */
-static void create(int clone)
+static void create()
 {
-    if (clone) {
-	::create("telnet");
-	driver = find_object(DRIVER);
-    }
+    ::create("telnet");
+    driver = find_object(DRIVER);
 }
 
 /*

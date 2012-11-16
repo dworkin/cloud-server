@@ -7,17 +7,6 @@ inherit telnet	"~/lib/interface/telnet";
 int last_activity;	/* time of last activity */
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize user object
- */
-static void create(int clone)
-{
-    if (clone) {
-	telnet::create();
-    }
-}
-
-/*
  * NAME:	login()
  * DESCRIPTION:	pass on call to the correct interface
  */
