@@ -3,15 +3,27 @@
 
 
 /*
- * NAME:	_F_patch()
- * DESCRIPTION:	upgrade the dataspace of this object by patching it
+ * NAME:	_F_init()
+ * DESCRIPTION:	initialization call gate
  */
-nomask void _F_patch()
+nomask void _F_init(mixed *args)
 {
-    if (previous_program() == "/usr/System/obj/wiztool") {
-	this_object()->patch(sscanf(object_name(this_object()),
-				    "%*s/obj/%*s#") != 1);
+    if (previous_program() == "/usr/System/lib/auto") {
+	this_object()->init(args...);
     }
+}
+
+/*
+ * NAME:	clone_object()
+ * DESCRIPTION:	create and initialize a new clone
+ */
+static object clone_object(string path, mixed args...)
+{
+    object clone;
+
+    clone = ::clone_object(path);
+    clone->_F_init(args);
+    return clone;
 }
 
 /*
@@ -23,7 +35,7 @@ static object new_object(string path, mixed args...)
     object new;
 
     new = ::new_object(path);
-    new->_F_data(args);
+    new->_F_init(args);
     return new;
 }
 

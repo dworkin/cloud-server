@@ -40,54 +40,10 @@ static void message(string str)
 }
 
 /*
- * NAME:	destruct_object()
- * DESCRIPTION:	destruct_object wrapper (almost literally the same as in
- *		/kernel/lib/wiztool.c, except for the last line)
+ * NAME:	clone_object()
+ * DESCRIPTION:	clone_object wrapper
  */
-static int destruct_object(mixed obj)
-{
-    string path, owner, oowner;
-    object driver;
-    int lib;
-
-    owner = query_owner();
-    switch (typeof(obj)) {
-    case T_STRING:
-	driver = find_object(DRIVER);
-	path = obj = driver->normalize_path(obj, query_directory(), owner);
-	lib = sscanf(path, "%*s/lib/");
-	if (lib || sscanf(path, "%*s/obj/%*s#") == 1 ||
-	    sscanf(path, "%*s/data/%*s#") == 1) {
-	    oowner = driver->creator(path);
-	} else {
-	    obj = find_object(path);
-	    if (!obj) {
-		return FALSE;
-	    }
-	    oowner = obj->query_owner();
-	}
-	break;
-
-    case T_OBJECT:
-	path = object_name(obj);
-	oowner = obj->query_owner();
-	break;
-    }
-
-    if (path && owner != oowner &&
-	((sscanf(path, "/kernel/%*s") != 0 && !lib) ||
-	 !access(owner, path, WRITE_ACCESS))) {
-	message(path + ": Permission denied.\n");
-	return -1;
-    }
-    return auto::destruct_object(obj);
-}
-
-/*
- * NAME:	new_object()
- * DESCRIPTION:	new_object wrapper
- */
-static object new_object(string path)
+static object clone_object(string path, mixed args...)
 {
     string owner;
 
@@ -97,7 +53,24 @@ static object new_object(string path)
 	message(path + ": Permission denied.\n");
 	return nil;
     }
-    return auto::new_object(path);
+    return auto::clone_object(path, args...);
+}
+
+/*
+ * NAME:	new_object()
+ * DESCRIPTION:	new_object wrapper
+ */
+static object new_object(string path, mixed args...)
+{
+    string owner;
+
+    owner = query_owner();
+    path = DRIVER->normalize_path(path, query_directory(), owner);
+    if (sscanf(path, "/kernel/%*s") != 0 || !access(owner, path, READ_ACCESS)) {
+	message(path + ": Permission denied.\n");
+	return nil;
+    }
+    return auto::new_object(path, args...);
 }
 
 

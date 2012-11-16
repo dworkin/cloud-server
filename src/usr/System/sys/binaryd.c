@@ -2,7 +2,6 @@
 # include <kernel/user.h>
 # include <http.h>
 
-inherit "~/lib/auto";
 inherit LIB_USER;
 
 # define PLAYERD	"/usr/Player/sys/userd"

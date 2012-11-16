@@ -513,21 +513,6 @@ mixed inherit_program(string from, string path, int priv)
 }
 
 /*
- * NAME:	path_special()
- * DESCRIPTION:	handle special include file
- */
-private string path_special(string compiled)
-{
-    if (sscanf(compiled, "%*s/data/") != 0) {
-	/* light-weight */
-	return "/usr/System/include/data_std.h";
-    } else {
-	/* ordinary */
-	return "/usr/System/include/std.h";
-    }
-}
-
-/*
  * NAME:	include_file()
  * DESCRIPTION:	handle an include file
  */
@@ -539,9 +524,9 @@ mixed include_file(string compiled, string from, string path)
 	if (path == "/include/AUTO" && from == "/include/std.h") {
 	    if (driver->creator(compiled) != "System") {
 		/*
-		 * special object-dependent include file 
+		 * special include file
 		 */
-		return path_special(compiled);    
+		return "/usr/System/include/std.h";
 	    } else {
 		return ({ "" });
 	    }

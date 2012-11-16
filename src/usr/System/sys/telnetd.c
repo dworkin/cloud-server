@@ -1,7 +1,6 @@
 # include <kernel/kernel.h>
 # include <kernel/user.h>
 
-inherit "~/lib/auto";
 inherit LIB_USER;
 
 # define PLAYERD	"/usr/Player/sys/userd"
