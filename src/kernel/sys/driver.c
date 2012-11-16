@@ -596,17 +596,21 @@ static object inherit_program(string from, string path, int priv)
 
     if (objectd) {
 	str = objectd->inherit_program(from, path, priv);
-	switch (typeof(str)) {
-	case T_STRING:
-	    path = str;
+	if (sscanf(from, "/kernel/%*s") != 0) {
 	    str = nil;
-	    break;
+	} else {
+	    switch (typeof(str)) {
+	    case T_STRING:
+		path = str;
+		str = nil;
+		break;
 
-	case T_ARRAY:
-	    break;
+	    case T_ARRAY:
+		break;
 
-	default:
-	    return nil;
+	    default:
+		return nil;
+	    }
 	}
     }
 
