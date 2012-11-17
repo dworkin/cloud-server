@@ -119,14 +119,16 @@ static void cmd_upgrade(object user, string cmd, string str)
 {
     string *names;
     int i, sz, len;
+    object objectd;
     mapping failed;
 
     if (!str) {
 	message("Usage: " + cmd + " <file> [<file> ...]\n");
 	return;
     }
-
     names = expand(str, 1, TRUE)[0];
+    objectd = find_object(OBJECTD);
+
     for (i = 0, sz = sizeof(names); i < sz; i++) {
 	str = names[i];
 	len = strlen(str);
@@ -136,7 +138,7 @@ static void cmd_upgrade(object user, string cmd, string str)
 	} else {
 	    str = str[.. len - 3];
 	    names[i] = str;
-	    if (!status(str)) {
+	    if (sizeof(objectd->query_issues(str)) == 0) {
 		message(str + ": No such object.\n");
 		names[i] = nil;
 	    }
