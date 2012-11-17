@@ -33,7 +33,7 @@ private void recompile(string *names, mapping *leaves, mapping *depend,
 		       mapping failed)
 {
     int i, j, sz, *indices;
-    mixed *objects, obj;
+    mixed *objects;
     string name;
     mapping map;
 
@@ -84,8 +84,7 @@ private void recompile(string *names, mapping *leaves, mapping *depend,
 	}
 
 	/* recompile a leaf object */
-	obj = objects[j];
-	name = (typeof(obj) == T_STRING) ? obj : object_name(obj);
+	name = objects[j];
 	catch {
 	    compile_object(name);
 	} : {
@@ -101,7 +100,7 @@ private void recompile(string *names, mapping *leaves, mapping *depend,
 	    }
 
 	    for (k = sizeof(depend); --k >= 0; ) {
-		if ((map=depend[k][index]) && map[obj]) {
+		if ((map=depend[k][index]) && map[name]) {
 		    names[k] = nil;
 		}
 	    }
