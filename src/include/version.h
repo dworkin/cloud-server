@@ -1,1 +1,1 @@
-# define SERVER_VERSION		"0.1"	/* server version */
+# define SERVER_VERSION		"0.2"	/* server version */
