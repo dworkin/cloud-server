@@ -9,6 +9,7 @@ inherit API_ACCESS;
 
 
 object objectd;			/* object server */
+string compfailed;		/* compilation of this object failed */
 mapping inherited;		/* Not yet compiled lib-objects */
 int factor;			/* 2nd level divisor */
 
@@ -49,7 +50,8 @@ private void recompile(string *names, mapping *leaves, mapping *depend,
 		mapping map;
 
 		/* recompile failed */
-		failed[name] = 1;
+		failed[compfailed] = 1;
+		compfailed = nil;
 
 		index = indices[j] / factor;
 		for (k = sizeof(depend); --k >= 0; ) {
@@ -193,6 +195,17 @@ mixed upgrade(string owner, string *names)
     }
 }
 
+
+/*
+ * NAME:	compile_failed()
+ * DESCRIPTION:	attempt to compile object failed
+ */
+void compile_failed(string path)
+{
+    if (previous_object() == objectd && !compfailed) {
+	compfailed = path;
+    }
+}
 
 /*
  * NAME:	destruct()
