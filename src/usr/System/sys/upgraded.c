@@ -33,8 +33,7 @@ static void create()
 private string *recompile(string *names, mapping *leaves, mapping *depend)
 {
     int i, j, sz, *status;
-    mixed *objects;
-    string name;
+    string name, *objects;
     mapping failed;
 
     objectd->notify_compiling(this_object());
@@ -54,14 +53,13 @@ private string *recompile(string *names, mapping *leaves, mapping *depend)
     do {
 	int *indices, *issues;
 	mapping *values, map;
-	string *list;
 
 	/*
 	 * recompile leaf objects
 	 */
 	for (i = sizeof(leaves); --i >= 0; ) {
 	    objects = map_indices(leaves[i]);
-	    indices = map_values(leaves[i]);
+	    issues = map_values(leaves[i]);
 	    for (j = 0, sz = sizeof(objects); j < sz; j++) {
 		/* recompile a leaf object */
 		name = objects[j];
@@ -75,7 +73,7 @@ private string *recompile(string *names, mapping *leaves, mapping *depend)
 		    compfailed = nil;
 
 		    /* take note of upgraded objects that are inherited */
-		    index = indices[j] / factor;
+		    index = issues[j] / factor;
 		    for (k = sizeof(depend); --k >= 0; ) {
 			map = depend[k][index];
 			if (map && map[name]) {
@@ -94,11 +92,11 @@ private string *recompile(string *names, mapping *leaves, mapping *depend)
 	values = map_values(inherited);
 	for (i = sizeof(indices); --i >= 0; ) {
 	    map = values[i][..];
-	    list = map_indices(values[i]);
+	    objects = map_indices(values[i]);
 	    issues = map_values(values[i]);
-	    for (j = sizeof(list); --j >= 0; ) {
+	    for (j = sizeof(objects); --j >= 0; ) {
 		if (sizeof(objectd->query_inherited(issues[j])) != 0) {
-		    map[list[j]] = nil;
+		    map[objects[j]] = nil;
 		}
 	    }
 	    if (map_sizeof(map) != 0) {
