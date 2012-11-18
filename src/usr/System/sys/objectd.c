@@ -11,7 +11,7 @@ inherit rsrc API_RSRC;
 # define INITD	"/usr/System/initd"
 
 object driver;		/* driver object */
-object notify_object;	/* object notified about changes */
+object notify;		/* object notified about changes */
 mapping index_map;	/* a two-step mapping; (index / factor) -> dbase obj */
 int factor;		/* 2nd level divisor */
 mapping creator_map;	/* creator -> dbase object */
@@ -390,15 +390,14 @@ mapping *query_dependents(string path, int factor)
 
 /*
  * NAME:	notify_compiling()
- * DESCRIPTION:	set the object to be notified of object compiling
+ * DESCRIPTION:	set the object to be notified of changes
  */
 void notify_compiling(object obj)
 {
     if (SYSTEM()) {
-	notify_object = obj;
+	notify = obj;
     }
 }
-
 
 /*
  * NAME:	compiling()
@@ -421,9 +420,8 @@ void compiling(string path)
 	    error("Out of space");
 	}
 
-	/* prepare for compilation of object */
-	if (notify_object) {
-	    notify_object->compiling(path);
+	if (notify) {
+	    notify->compiling(path);
 	}
     }
 }
@@ -452,10 +450,10 @@ void compile(string owner, string path, mixed source, string inherited...)
 	    /* just the auto object */
 	    indices = ({ status(AUTO, O_INDEX) });
 	}
-
 	register_object(owner, path, status(path, O_INDEX), indices);
-	if (notify_object) {
-	    notify_object->compile(path);
+
+	if (notify) {
+	    notify->compile(path);
 	}
     }
 }
@@ -467,9 +465,7 @@ void compile(string owner, string path, mixed source, string inherited...)
 void compile_failed(string owner, string path)
 {
     if (previous_object() == driver) {
-	if (notify_object) {
-	    notify_object->compile_failed(path);
-	}
+	notify->compile_failed(path);
     }
 }
 
@@ -483,10 +479,23 @@ void destruct(string owner, string path)
 	if (sscanf(path, "%*s/lib/") == 0) {
 	    unregister_object(path, status(path, O_INDEX));
 	}
-	if (notify_object) {
-	    notify_object->destruct(path);
+
+	if (notify) {
+	    notify->destruct(path);
 	}
     }
+}
+
+/*
+ * NAME:	touch()
+ * DESCRIPTION:	an object flagged with call_touch() is touched
+ */
+int touch(object obj, string func)
+{
+    if (previous_object() == driver) {
+	obj->_F_touch();
+    }
+    return 0;
 }
 
 /*
@@ -541,13 +550,4 @@ mixed include_file(string compiled, string from, string path)
 	}
 	return path;
     }
-}
-
-/*
- * NAME:	touch()
- * DESCRIPTION:	empty touch() function
- */
-int touch()
-{
-    return 0;
 }
