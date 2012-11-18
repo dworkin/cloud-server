@@ -27,7 +27,7 @@ static void create()
 
 /*
  * NAME:	recompile()
- * DESCRIPTION:	recompile objects in proper order
+ * DESCRIPTION:	recompile leaf objects
  */
 private void recompile(string *names, mapping *leaves, mapping *depend,
 		       mapping failed)
@@ -37,107 +37,55 @@ private void recompile(string *names, mapping *leaves, mapping *depend,
     string name;
     mapping map;
 
-    objects = map_indices(leaves[i]);
-    indices = map_values(leaves[i]);
-    sz = sizeof(objects);
-    for (;;) {
-	if (j == sz) {
-	    if (++i == sizeof(leaves)) {
-		mapping *values;
-		int *issues;
+    for (i = sizeof(leaves); --i >= 0; ) {
+	objects = map_indices(leaves[i]);
+	indices = map_values(leaves[i]);
+	for (j = 0, sz = sizeof(objects); j < sz; j++) {
+	    /* recompile a leaf object */
+	    name = objects[j];
+	    catch {
+		compile_object(name);
+	    } : {
+		int index, k;
 
-		/* get new leaves */
-		leaves = ({ });
-		indices = map_indices(inherited);
-		values = map_values(inherited);
-		for (i = sizeof(indices); --i >= 0; ) {
-		    map = ([ ]);
-		    objects = map_indices(values[i]);
-		    issues = map_values(values[i]);
-		    for (j = sizeof(objects); --j >= 0; ) {
-			if (sizeof(objectd->query_inherited(issues[j])) == 0) {
-			    map[objects[j]] = issues[j];
-			}
-		    }
-		    if (map_sizeof(map) != 0) {
-			leaves += ({ map });
-			inherited[indices[i]] -= map_indices(map);
-		    }
+		/* recompile failed */
+		index = indices[j] / factor;
+		map = failed[index];
+		if (map) {
+		    map[name] = 1;
+		} else {
+		    failed[index] = ([ name : 1 ]);
 		}
 
-		if (sizeof(leaves) == 0) {
-		    /* clean up */
-		    indices = map_indices(failed);
-		    objects = map_values(failed);
-		    for (i = map_sizeof(failed); --i >= 0; ) {
-			failed[indices[i]] = map_indices(objects[i]);
+		for (k = sizeof(depend); --k >= 0; ) {
+		    map = depend[k][index];
+		    if (map && map[name]) {
+			names[k] = nil;
 		    }
-
-		    return;
-		}
-		i = 0;
-	    }
-	    j = 0;
-	    objects = map_indices(leaves[i]);
-	    indices = map_values(leaves[i]);
-	    sz = sizeof(objects);
-	}
-
-	/* recompile a leaf object */
-	name = objects[j];
-	catch {
-	    compile_object(name);
-	} : {
-	    int index, k;
-
-	    /* recompile failed */
-	    index = indices[j] / factor;
-	    map = failed[index];
-	    if (map) {
-		map[name] = 1;
-	    } else {
-		failed[index] = ([ name : 1 ]);
-	    }
-
-	    for (k = sizeof(depend); --k >= 0; ) {
-		if ((map=depend[k][index]) && map[name]) {
-		    names[k] = nil;
 		}
 	    }
 	}
-	j++;
     }
 }
 
 /*
  * NAME:	merge()
- * DESCRIPTION:	merge two mapping structures (trashes first argument)
+ * DESCRIPTION:	merge two mapping structures (changes first argument)
  */
 private mapping merge(mapping m1, mapping m2)
 {
-    int i, j, v1, v2, sz1, sz2, *indices1, *indices2;
+    int i, index, *indices;
     mapping *values;
 
-    sz1 = map_sizeof(m1);
-    sz2 = map_sizeof(m2);
-    indices1 = map_indices(m1);
-    indices2 = map_indices(m2);
+    indices = map_indices(m2);
     values = map_values(m2);
-
-    while (i < sz1 && j < sz2) {
-	v1 = indices1[i];
-	v2 = indices2[j];
-	if (v1 < v2) {
-	    i++;
-	} else if (v1 > v2) {
-	    m1[v2] = values[j++];
+    for (i = sizeof(indices); --i >= 0; ) {
+	index = indices[i];
+	if (m1[index]) {
+	    m1[index] += values[i];
 	} else {
-	    m1[v1] += values[j++];
-	    i++;
+	    m1[index] = values[i];
 	}
-    }
-    if (j < sz2) {
-	m1 += m2[indices2[j] ..];
     }
 
     return m1;
@@ -151,7 +99,7 @@ string upgrade(string creator, string *names, mapping failed)
 {
     if (SYSTEM()) {
 	rlimits (0; -1) {
-	    int i, j, sz, *status;
+	    int i, j, sz, *status, *indices;
 	    string name, *list;
 	    mapping objects, *depend, *leaves;
 
@@ -196,9 +144,6 @@ string upgrade(string creator, string *names, mapping failed)
 		    }
 		}
 	    }
-	    if (sizeof(leaves) == 0) {
-		leaves = ({ ([ ]) });
-	    }
 
 	    objectd->notify_compiling(this_object());
 
@@ -214,8 +159,45 @@ string upgrade(string creator, string *names, mapping failed)
 		}
 	    }
 
-	    /* Get the show on the road. */
-	    recompile(names, leaves, depend, failed);
+	    /*
+	     * Recompile leaf objects, which may expose new leaves.
+	     */
+	    do {
+		mapping *values, map;
+		int *indices, *issues;
+
+		/* recompile leaf objects */
+		recompile(names, leaves, depend, failed);
+		if (map_sizeof(failed) != 0) {
+		    break;
+		}
+
+		/* get new leaves */
+		leaves = ({ });
+		indices = map_indices(inherited);
+		values = map_values(inherited);
+		for (i = sizeof(indices); --i >= 0; ) {
+		    map = ([ ]);
+		    list = map_indices(values[i]);
+		    issues = map_values(values[i]);
+		    for (j = sizeof(list); --j >= 0; ) {
+			if (sizeof(objectd->query_inherited(issues[j])) == 0) {
+			    map[list[j]] = issues[j];
+			}
+		    }
+		    if (map_sizeof(map) != 0) {
+			leaves += ({ map });
+			inherited[indices[i]] -= map_indices(map);
+		    }
+		}
+	    } while (sizeof(leaves) != 0);
+
+	    /* clean up */
+	    indices = map_indices(failed);
+	    leaves = map_values(failed);
+	    for (i = map_sizeof(failed); --i >= 0; ) {
+		failed[indices[i]] = map_indices(leaves[i]);
+	    }
 
 	    inherited = nil;
 	    objectd->notify_compiling(nil);
