@@ -95,7 +95,7 @@ private mapping merge(mapping m1, mapping m2)
  * NAME:	upgrade()
  * DESCRIPTION:	upgrade interface function
  */
-string upgrade(string creator, string *names, mapping failed)
+string upgrade(string owner, string *names, mapping failed)
 {
     if (SYSTEM()) {
 	rlimits (0; -1) {
@@ -105,7 +105,7 @@ string upgrade(string creator, string *names, mapping failed)
 
 	    /* verify write access to objects to be upgraded directly */
 	    for (i = 0, sz = sizeof(names); i < sz; i++) {
-		if (!access(creator, names[i], WRITE_ACCESS)) {
+		if (!access(owner, names[i], WRITE_ACCESS)) {
 		    return names[i] + ".c: Access denied.\n";
 		}
 	    }
@@ -134,7 +134,7 @@ string upgrade(string creator, string *names, mapping failed)
 		list = map_indices(leaves[i]);
 		for (j = sizeof(list); --j >= 0; ) {
 		    name = list[j] + ".c";
-		    if (!access(creator, name, WRITE_ACCESS)) {
+		    if (!access(owner, name, WRITE_ACCESS)) {
 			inherited = nil;
 			return name + ": Access denied.\n";
 		    }
