@@ -493,9 +493,9 @@ void destruct(string owner, string path)
 int touch(object obj, string func)
 {
     if (previous_object() == driver) {
-	obj->_F_touch();
+	return obj->_F_touch(func);
     }
-    return 0;
+    return FALSE;
 }
 
 /*

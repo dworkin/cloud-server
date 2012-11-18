@@ -1,5 +1,6 @@
 # include <kernel/kernel.h>
 # include <type.h>
+# include <objectd.h>
 
 
 /*
@@ -50,6 +51,24 @@ static object copy_object(object obj)
     }
     return ::new_object(obj);
 }
+
+/*
+ * NAME:	_F_touch()
+ * DESCRIPTION:	touch call gate
+ */
+nomask int _F_touch(string func)
+{
+    if (previous_program() == OBJECTD) {
+	if (!function_object("patch", this_object())) {
+	    /* patch function doesn't exist yet */
+	    return TRUE;
+	}
+
+	this_object()->patch();
+    }
+    return FALSE;
+}
+
 
 /*
  * Disabled functions.
