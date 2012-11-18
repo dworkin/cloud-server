@@ -30,39 +30,88 @@ static void create()
  * NAME:	recompile()
  * DESCRIPTION:	recompile leaf objects
  */
-private void recompile(string *names, mapping *leaves, mapping *depend,
-		       mapping failed)
+private string *recompile(string *names, mapping *leaves, mapping *depend)
 {
-    int i, j, sz, *indices;
+    int i, j, sz, *status;
     mixed *objects;
     string name;
+    mapping failed;
 
-    for (i = sizeof(leaves); --i >= 0; ) {
-	objects = map_indices(leaves[i]);
-	indices = map_values(leaves[i]);
-	for (j = 0, sz = sizeof(objects); j < sz; j++) {
-	    /* recompile a leaf object */
-	    name = objects[j];
-	    catch {
-		compile_object(name);
-	    } : {
-		int index, k;
-		mapping map;
+    objectd->notify_compiling(this_object());
 
-		/* recompile failed */
-		failed[compfailed] = 1;
-		compfailed = nil;
+    /*
+     * Destruct inherited lib objects among the ones that are being upgraded.
+     */
+    for (i = sz; --i >= 0; ) {
+	name = names[i];
+	if (sscanf(name, "%*s/lib/") != 0 && (status=status(name)) &&
+	    sizeof(objectd->query_inherited(status[O_INDEX])) != 0) {
+	    destruct_object(name);
+	}
+    }
 
-		index = indices[j] / factor;
-		for (k = sizeof(depend); --k >= 0; ) {
-		    map = depend[k][index];
-		    if (map && map[name]) {
-			names[k] = nil;
+    failed = ([ ]);
+    do {
+	int *indices, *issues;
+	mapping *values, map;
+	string *list;
+
+	/*
+	 * recompile leaf objects
+	 */
+	for (i = sizeof(leaves); --i >= 0; ) {
+	    objects = map_indices(leaves[i]);
+	    indices = map_values(leaves[i]);
+	    for (j = 0, sz = sizeof(objects); j < sz; j++) {
+		/* recompile a leaf object */
+		name = objects[j];
+		catch {
+		    compile_object(name);
+		} : {
+		    int index, k;
+
+		    /* recompile failed */
+		    failed[compfailed] = 1;
+		    compfailed = nil;
+
+		    /* take note of upgraded objects that are inherited */
+		    index = indices[j] / factor;
+		    for (k = sizeof(depend); --k >= 0; ) {
+			map = depend[k][index];
+			if (map && map[name]) {
+			    names[k] = nil;
+			}
 		    }
 		}
 	    }
 	}
-    }
+
+	/*
+	 * get newly exposed leaves
+	 */
+	leaves = ({ });
+	indices = map_indices(inherited);
+	values = map_values(inherited);
+	for (i = sizeof(indices); --i >= 0; ) {
+	    map = values[i][..];
+	    list = map_indices(values[i]);
+	    issues = map_values(values[i]);
+	    for (j = sizeof(list); --j >= 0; ) {
+		if (sizeof(objectd->query_inherited(issues[j])) != 0) {
+		    map[list[j]] = nil;
+		}
+	    }
+	    if (map_sizeof(map) != 0) {
+		leaves += ({ map });
+		inherited[indices[i]] -= map_indices(map);
+	    }
+	}
+    } while (sizeof(leaves) != 0);
+
+    inherited = nil;
+    objectd->notify_compiling(nil);
+
+    return map_indices(failed);
 }
 
 /*
@@ -96,7 +145,7 @@ mixed upgrade(string owner, string *names)
 {
     if (SYSTEM()) {
 	rlimits (0; -1) {
-	    int i, j, sz, *status, *indices;
+	    int i, j, sz;
 	    string name, *list;
 	    mapping objects, *depend, *leaves;
 
@@ -108,7 +157,7 @@ mixed upgrade(string owner, string *names)
 	    }
 
 	    /*
-	     * Gather information about the dependencies.
+	     * gather information about the dependencies
 	     */
 	    inherited = ([ ]);
 	    objects = ([ ]);
@@ -126,6 +175,9 @@ mixed upgrade(string owner, string *names)
 		return "No existing issues.\n";
 	    }
 
+	    /*
+	     * check if leaves can be recompiled
+	     */
 	    leaves = map_values(objects);
 	    for (i = sizeof(leaves); --i >= 0; ) {
 		list = map_indices(leaves[i]);
@@ -142,55 +194,10 @@ mixed upgrade(string owner, string *names)
 		}
 	    }
 
-	    objectd->notify_compiling(this_object());
-
 	    /*
-	     * Destruct inherited lib objects among the ones that are being
-	     * upgraded.
+	     * recompile leaf objects
 	     */
-	    objects = ([ ]);
-	    for (i = sz; --i >= 0; ) {
-		name = names[i];
-		if (sscanf(name, "%*s/lib/") != 0 && (status=status(name)) &&
-		    sizeof(objectd->query_inherited(status[O_INDEX])) != 0) {
-		    destruct_object(name);
-		}
-	    }
-
-	    /*
-	     * Recompile leaf objects, which may expose new leaves.
-	     */
-	    do {
-		mapping *values, map;
-		int *indices, *issues;
-
-		/* recompile leaf objects */
-		recompile(names, leaves, depend, objects);
-
-		/* get new leaves */
-		leaves = ({ });
-		indices = map_indices(inherited);
-		values = map_values(inherited);
-		for (i = sizeof(indices); --i >= 0; ) {
-		    map = ([ ]);
-		    list = map_indices(values[i]);
-		    issues = map_values(values[i]);
-		    for (j = sizeof(list); --j >= 0; ) {
-			if (sizeof(objectd->query_inherited(issues[j])) == 0) {
-			    map[list[j]] = issues[j];
-			}
-		    }
-		    if (map_sizeof(map) != 0) {
-			leaves += ({ map });
-			inherited[indices[i]] -= map_indices(map);
-		    }
-		}
-	    } while (sizeof(leaves) != 0);
-
-	    inherited = nil;
-	    objectd->notify_compiling(nil);
-
-	    return map_indices(objects);
+	    return recompile(names, leaves, depend);
 	}
     }
 }
