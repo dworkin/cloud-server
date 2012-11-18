@@ -1,6 +1,7 @@
 inherit base	"/lib/base/container";
 inherit obj	"/lib/object";
 
+
 static void create()
 {
     base::create();

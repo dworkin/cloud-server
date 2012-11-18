@@ -1,11 +1,11 @@
 # include <kernel/access.h>
 # include <kernel/kernel.h>
 # include <kernel/user.h>
-# include <objectd.h>
-# include <upgraded.h>
 # include <messages.h>
 # include <status.h>
 # include <type.h>
+# include "objectd.h"
+# include "upgraded.h"
 
 inherit auto	"~/lib/auto";
 inherit wiztool LIB_WIZTOOL;

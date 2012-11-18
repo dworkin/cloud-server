@@ -1,7 +1,7 @@
 # include <limits.h>
 
-
 # define CHUNK_SIZE	65535
+
 
 int length;		/* total length of strings in buffer */
 string *buffer;		/* string buffer */

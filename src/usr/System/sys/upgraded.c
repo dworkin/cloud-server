@@ -1,9 +1,9 @@
-# include <status.h>
-# include <type.h>
 # include <kernel/access.h>
 # include <kernel/kernel.h>
 # include <kernel/rsrc.h>
-# include <objectd.h>
+# include <status.h>
+# include <type.h>
+# include "objectd.h"
 
 inherit API_ACCESS;
 

@@ -1,5 +1,6 @@
 # define Movable	"/lib/base/movable"
 
+
 private mapping inventory;	/* object -> position */
 
 /*

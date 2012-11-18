@@ -1,5 +1,5 @@
-# include <config.h>
 # include <kernel/user.h>
+# include <config.h>
 
 inherit telnet	"~/lib/interface/telnet";
 

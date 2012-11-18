@@ -1,6 +1,7 @@
 # include <status.h>
 # include <type.h>
-# include <objectd.h>
+# include "objectd.h"
+
 
 string creator;		/* which creator is this the database part for */
 object objectd;		/* object server */

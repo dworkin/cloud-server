@@ -1,7 +1,7 @@
 # include <type.h>
 
-
 # define Container	"/lib/base/container"
+
 
 private object environment;	/* environment of this object */
 

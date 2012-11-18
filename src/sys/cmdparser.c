@@ -1,6 +1,7 @@
 # include <type.h>
 # include <cmdparser.h>
 
+
 mapping verbs;		/* verb -> refcount */
 mapping adverbs;	/* adverb -> 1 */
 string *literals;	/* list of literals */
