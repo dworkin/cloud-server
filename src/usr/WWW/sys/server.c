@@ -6,8 +6,8 @@ mapping urlmap;
 
 static void create()
 {
-    httphost = "localhost";
-    ftphost = "ftphost";
+    httphost = "localhost:8080";
+    ftphost = "ftphost:8080";
     urlmap = ([ "" : HTTP_HANDLER ]);
 }
 
