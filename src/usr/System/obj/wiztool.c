@@ -118,13 +118,14 @@ static void cmd_issues(object user, string cmd, string str)
 static void cmd_upgrade(object user, string cmd, string str)
 {
     string *names;
-    int i, sz, len;
+    int atom, i, sz, len;
     object objectd;
 
-    if (!str) {
-	message("Usage: " + cmd + " <file> [<file> ...]\n");
+    if (!str || str == "-a") {
+	message("Usage: " + cmd + " [-a] <file> [<file> ...]\n");
 	return;
     }
+    atom = sscanf(str, "-a %s", str);
     names = expand(str, 1, TRUE)[0];
     objectd = find_object(OBJECTD);
 
@@ -148,14 +149,17 @@ static void cmd_upgrade(object user, string cmd, string str)
     if (sizeof(names) != 0) {
 	mixed result;
 
-	result = UPGRADED->upgrade(query_owner(), names);
+	result = UPGRADED->upgrade(query_owner(), names, atom);
 	if (typeof(result) == T_STRING) {
-	    message(result);
+	    message(result + "\n");
 	} else {
-	    names -= ({ nil });
-	    if (sizeof(names) != 0) {
-		message("Objects successfully upgraded:\n" +
-			break_string("<" + implode(names, ">, <") + ">", 0, 2));
+	    if (!atom || sizeof(result) == 0) {
+		names -= ({ nil });
+		if (sizeof(names) != 0) {
+		    message("Objects successfully upgraded:\n" +
+			    break_string("<" + implode(names, ">, <") + ">", 0,
+					 2));
+		}
 	    }
 
 	    if (sizeof(result) != 0) {

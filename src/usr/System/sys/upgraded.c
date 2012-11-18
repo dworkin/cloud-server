@@ -30,7 +30,8 @@ static void create()
  * NAME:	recompile()
  * DESCRIPTION:	recompile leaf objects
  */
-private string *recompile(string *names, mapping *leaves, mapping *depend)
+private atomic
+string *recompile(string *names, mapping *leaves, mapping *depend, int fail)
 {
     int i, j, sz, *status;
     string name, *objects;
@@ -41,7 +42,7 @@ private string *recompile(string *names, mapping *leaves, mapping *depend)
     /*
      * Destruct inherited lib objects among the ones that are being upgraded.
      */
-    for (i = sz; --i >= 0; ) {
+    for (i = sizeof(names); --i >= 0; ) {
 	name = names[i];
 	if (sscanf(name, "%*s/lib/") != 0 && (status=status(name)) &&
 	    sizeof(objectd->query_inherited(status[O_INDEX])) != 0) {
@@ -109,7 +110,14 @@ private string *recompile(string *names, mapping *leaves, mapping *depend)
     inherited = nil;
     objectd->notify_compiling(nil);
 
-    return map_indices(failed);
+    objects = map_indices(failed);
+    if (sizeof(objects) != 0 && fail) {
+	/*
+	 * some objects could not be compiled -- fail atomically
+	 */
+	error("#" + implode(objects, "#"));
+    }
+    return objects;
 }
 
 /*
@@ -139,18 +147,18 @@ private mapping merge(mapping m1, mapping m2)
  * NAME:	upgrade()
  * DESCRIPTION:	upgrade interface function
  */
-mixed upgrade(string owner, string *names)
+mixed upgrade(string owner, string *names, int atom)
 {
     if (SYSTEM()) {
 	rlimits (0; -1) {
 	    int i, j, sz;
-	    string name, *list;
+	    string str, *list;
 	    mapping objects, *depend, *leaves;
 
 	    /* verify write access to objects to be upgraded directly */
 	    for (i = 0, sz = sizeof(names); i < sz; i++) {
 		if (!access(owner, names[i], WRITE_ACCESS)) {
-		    return names[i] + ".c: Access denied.\n";
+		    return names[i] + ".c: Access denied.";
 		}
 	    }
 
@@ -170,7 +178,7 @@ mixed upgrade(string owner, string *names)
 	    }
 	    if (map_sizeof(inherited) + map_sizeof(objects) == 0) {
 		inherited = nil;
-		return "No existing issues.\n";
+		return "No existing issues.";
 	    }
 
 	    /*
@@ -180,14 +188,14 @@ mixed upgrade(string owner, string *names)
 	    for (i = sizeof(leaves); --i >= 0; ) {
 		list = map_indices(leaves[i]);
 		for (j = sizeof(list); --j >= 0; ) {
-		    name = list[j] + ".c";
-		    if (!access(owner, name, WRITE_ACCESS)) {
+		    str = list[j] + ".c";
+		    if (!access(owner, str, WRITE_ACCESS)) {
 			inherited = nil;
-			return name + ": Access denied.\n";
+			return str + ": Access denied.";
 		    }
-		    if (!file_info(name)) {
+		    if (!file_info(str)) {
 			inherited = nil;
-			return name + ": Missing source file.\n";
+			return str + ": Missing source file.";
 		    }
 		}
 	    }
@@ -195,7 +203,17 @@ mixed upgrade(string owner, string *names)
 	    /*
 	     * recompile leaf objects
 	     */
-	    return recompile(names, leaves, depend);
+	    str = catch(list = recompile(names, leaves, depend, atom));
+	    if (!str) {
+		/* return failed list */
+		return list;
+	    } else if (str[0] == '#') {
+		/* failed list returned in error message */
+		return explode(str, "#");
+	    } else {
+		/* return error */
+		return str;
+	    }
 	}
     }
 }
