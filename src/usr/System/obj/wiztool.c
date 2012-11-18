@@ -120,7 +120,6 @@ static void cmd_upgrade(object user, string cmd, string str)
     string *names;
     int i, sz, len;
     object objectd;
-    mapping failed;
 
     if (!str) {
 	message("Usage: " + cmd + " <file> [<file> ...]\n");
@@ -147,10 +146,11 @@ static void cmd_upgrade(object user, string cmd, string str)
 
     names -= ({ nil });
     if (sizeof(names) != 0) {
-	failed = ([ ]);
-	str = UPGRADED->upgrade(query_owner(), names, failed);
-	if (str) {
-	    message(str);
+	mixed result;
+
+	result = UPGRADED->upgrade(query_owner(), names);
+	if (typeof(result) == T_STRING) {
+	    message(result);
 	} else {
 	    names -= ({ nil });
 	    if (sizeof(names) != 0) {
@@ -158,17 +158,9 @@ static void cmd_upgrade(object user, string cmd, string str)
 			break_string("<" + implode(names, ">, <") + ">", 0, 2));
 	    }
 
-	    i = map_sizeof(failed);
-	    if (i != 0) {
-		string **values;
-
-		str = "";
-		values = map_values(failed);
-		do {
-		    str += ".c, " + implode(values[--i], ".c, ");
-		} while (i != 0);
+	    if (sizeof(result) != 0) {
 		message("Errors occured compiling:\n" +
-			break_string(str[4 ..] + ".c", 0, 2));
+			break_string(implode(result, ".c, ") + ".c", 0, 2));
 	    }
 	}
     }

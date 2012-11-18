@@ -35,7 +35,6 @@ private void recompile(string *names, mapping *leaves, mapping *depend,
     int i, j, sz, *indices;
     mixed *objects;
     string name;
-    mapping map;
 
     for (i = sizeof(leaves); --i >= 0; ) {
 	objects = map_indices(leaves[i]);
@@ -47,16 +46,12 @@ private void recompile(string *names, mapping *leaves, mapping *depend,
 		compile_object(name);
 	    } : {
 		int index, k;
+		mapping map;
 
 		/* recompile failed */
-		index = indices[j] / factor;
-		map = failed[index];
-		if (map) {
-		    map[name] = 1;
-		} else {
-		    failed[index] = ([ name : 1 ]);
-		}
+		failed[name] = 1;
 
+		index = indices[j] / factor;
 		for (k = sizeof(depend); --k >= 0; ) {
 		    map = depend[k][index];
 		    if (map && map[name]) {
@@ -95,7 +90,7 @@ private mapping merge(mapping m1, mapping m2)
  * NAME:	upgrade()
  * DESCRIPTION:	upgrade interface function
  */
-string upgrade(string owner, string *names, mapping failed)
+mixed upgrade(string owner, string *names)
 {
     if (SYSTEM()) {
 	rlimits (0; -1) {
@@ -151,6 +146,7 @@ string upgrade(string owner, string *names, mapping failed)
 	     * Destruct inherited lib objects among the ones that are being
 	     * upgraded.
 	     */
+	    objects = ([ ]);
 	    for (i = sz; --i >= 0; ) {
 		name = names[i];
 		if (sscanf(name, "%*s/lib/") != 0 && (status=status(name)) &&
@@ -167,10 +163,7 @@ string upgrade(string owner, string *names, mapping failed)
 		int *indices, *issues;
 
 		/* recompile leaf objects */
-		recompile(names, leaves, depend, failed);
-		if (map_sizeof(failed) != 0) {
-		    break;
-		}
+		recompile(names, leaves, depend, objects);
 
 		/* get new leaves */
 		leaves = ({ });
@@ -192,19 +185,12 @@ string upgrade(string owner, string *names, mapping failed)
 		}
 	    } while (sizeof(leaves) != 0);
 
-	    /* clean up */
-	    indices = map_indices(failed);
-	    leaves = map_values(failed);
-	    for (i = map_sizeof(failed); --i >= 0; ) {
-		failed[indices[i]] = map_indices(leaves[i]);
-	    }
-
 	    inherited = nil;
 	    objectd->notify_compiling(nil);
+
+	    return map_indices(objects);
 	}
     }
-
-    return nil;
 }
 
 
