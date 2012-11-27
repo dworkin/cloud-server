@@ -27,6 +27,55 @@ static void create()
 
 
 /*
+ * NAME:	merge()
+ * DESCRIPTION:	merge two mapping structures (changes first argument)
+ */
+private mapping merge(mapping m1, mapping m2)
+{
+    int i, index, *indices;
+    mapping *values;
+
+    indices = map_indices(m2);
+    values = map_values(m2);
+    for (i = sizeof(indices); --i >= 0; ) {
+	index = indices[i];
+	if (m1[index]) {
+	    m1[index] += values[i];
+	} else {
+	    m1[index] = values[i];
+	}
+    }
+
+    return m1;
+}
+
+/*
+ * NAME:	dependencies()
+ * DESCRIPTION:	find the dependencies for a list of objects, as library objects,
+ *		leaf objects, and total dependencies per object in the list.
+ */
+private mixed *dependencies(string *names)
+{
+    mapping libs, leaves, *all;
+    int i, sz;
+
+    libs = ([ ]);
+    leaves = ([ ]);
+    sz = sizeof(names);
+    all = allocate(sz);
+    for (i = sz; --i >= 0; ) {
+	mapping imap, omap;
+
+	({ imap, omap }) = objectd->query_dependents(names[i], factor);
+	libs = merge(libs, imap);
+	leaves = merge(leaves, omap);
+	all[i] = merge(imap, omap);
+    }
+
+    return ({ libs, leaves, all });
+}
+
+/*
  * NAME:	recompile()
  * DESCRIPTION:	recompile leaf objects
  */
@@ -121,29 +170,6 @@ string *recompile(string *names, mapping *leaves, mapping *depend, int fail)
 }
 
 /*
- * NAME:	merge()
- * DESCRIPTION:	merge two mapping structures (changes first argument)
- */
-private mapping merge(mapping m1, mapping m2)
-{
-    int i, index, *indices;
-    mapping *values;
-
-    indices = map_indices(m2);
-    values = map_values(m2);
-    for (i = sizeof(indices); --i >= 0; ) {
-	index = indices[i];
-	if (m1[index]) {
-	    m1[index] += values[i];
-	} else {
-	    m1[index] = values[i];
-	}
-    }
-
-    return m1;
-}
-
-/*
  * NAME:	upgrade()
  * DESCRIPTION:	upgrade interface function
  */
@@ -165,17 +191,7 @@ mixed upgrade(string owner, string *names, int atom)
 	    /*
 	     * gather information about the dependencies
 	     */
-	    inherited = ([ ]);
-	    objects = ([ ]);
-	    depend = allocate(sz);
-	    for (i = sz; --i >= 0; ) {
-		mapping imap, omap;
-
-		({ imap, omap }) = objectd->query_dependents(names[i], factor);
-		inherited = merge(inherited, imap);
-		objects = merge(objects, omap);
-		depend[i] = merge(imap, omap);
-	    }
+	    ({ inherited, objects, depend }) = dependencies(names);
 	    if (map_sizeof(inherited) + map_sizeof(objects) == 0) {
 		inherited = nil;
 		return "No existing issues.";
