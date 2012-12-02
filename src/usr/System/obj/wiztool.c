@@ -5,7 +5,6 @@
 # include <status.h>
 # include <type.h>
 # include "objectd.h"
-# include "upgraded.h"
 
 inherit auto	"~/lib/auto";
 inherit wiztool LIB_WIZTOOL;
@@ -15,6 +14,7 @@ private inherit	"/lib/util/string";
 
 # define TELNETD	"/usr/System/sys/telnetd"
 # define PLAYERD	"/usr/Player/sys/userd"
+# define UPGRADED	"/usr/System/sys/upgraded"
 
 
 object user;		/* associated user object */
