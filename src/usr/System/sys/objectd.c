@@ -8,7 +8,8 @@
 
 inherit rsrc API_RSRC;
 
-# define INITD	"/usr/System/initd"
+# define INITD		"/usr/System/initd"
+# define OBJECTD_OBJ	"/usr/System/obj/objectd"
 
 
 object driver;		/* driver object */
