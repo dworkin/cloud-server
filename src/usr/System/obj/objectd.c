@@ -1,6 +1,7 @@
 # include <status.h>
 # include <type.h>
-# include "objectd.h"
+
+# define OBJECTD	"/usr/System/sys/objectd"
 
 
 string creator;		/* which creator is this the database part for */

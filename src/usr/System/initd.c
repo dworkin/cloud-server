@@ -1,7 +1,6 @@
 # include <kernel/kernel.h>
 # include <kernel/access.h>
 # include <kernel/rsrc.h>
-# include <objectd.h>
 
 inherit access API_ACCESS;
 inherit rsrc API_RSRC;
@@ -21,7 +20,7 @@ static void create()
     rsrc::create();
 
     /* object registry */
-    compile_object(OBJECTD);
+    compile_object("sys/objectd");
 
     /* global access */
     access::set_global_access("System", TRUE);

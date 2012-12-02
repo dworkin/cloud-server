@@ -1,10 +1,9 @@
-# include <kernel/access.h>
 # include <kernel/kernel.h>
+# include <kernel/access.h>
 # include <kernel/user.h>
 # include <messages.h>
 # include <status.h>
 # include <type.h>
-# include "objectd.h"
 
 inherit auto	"~/lib/auto";
 inherit wiztool LIB_WIZTOOL;
@@ -14,6 +13,7 @@ private inherit	"/lib/util/string";
 
 # define TELNETD	"/usr/System/sys/telnetd"
 # define PLAYERD	"/usr/Player/sys/userd"
+# define OBJECTD	"/usr/System/sys/objectd"
 # define UPGRADED	"/usr/System/sys/upgraded"
 
 

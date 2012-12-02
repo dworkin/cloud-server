@@ -4,11 +4,11 @@
 # include <kernel/user.h>
 # include <limits.h>
 # include <status.h>
-# include "objectd.h"
 
 inherit rsrc API_RSRC;
 
 # define INITD		"/usr/System/initd"
+# define OBJECTD	"/usr/System/sys/objectd"
 # define OBJECTD_OBJ	"/usr/System/obj/objectd"
 
 

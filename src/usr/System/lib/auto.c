@@ -1,6 +1,5 @@
-# include <kernel/kernel.h>
-# include <type.h>
-# include "objectd.h"
+# define SYSAUTO	"/usr/System/lib/auto"
+# define OBJECTD	"/usr/System/sys/objectd"
 
 
 /*
@@ -9,7 +8,7 @@
  */
 nomask void _F_init(mixed *args)
 {
-    if (previous_program() == "/usr/System/lib/auto") {
+    if (previous_program() == SYSAUTO) {
 	this_object()->init(args...);
     }
 }

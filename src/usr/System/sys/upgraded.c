@@ -1,11 +1,12 @@
-# include <kernel/access.h>
 # include <kernel/kernel.h>
+# include <kernel/access.h>
 # include <kernel/rsrc.h>
 # include <status.h>
 # include <type.h>
-# include "objectd.h"
 
 inherit API_ACCESS;
+
+# define OBJECTD	"/usr/System/sys/objectd"
 
 
 object objectd;			/* object server */
