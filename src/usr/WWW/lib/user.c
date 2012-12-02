@@ -1,7 +1,7 @@
 # include <kernel/kernel.h>
 # include <http.h>
 
-inherit HTTP_USER;
+inherit "~System/lib/http";
 inherit "http_protocol";
 
 private inherit "/lib/util/string";

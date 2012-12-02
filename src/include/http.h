@@ -1,8 +1,6 @@
 # define HTTP_REQUEST		"/usr/WWW/sys/httprequest"
 # define HTTP_HEADER		"/usr/WWW/sys/httpheader"
 # define HTTP_HANDLER		"/usr/WWW/obj/http"
-# define HTTP_OWNER		"WWW"
-# define HTTP_USER		"/usr/System/lib/http"
 
 
 /* GET http://foo.bar.com/index.html?foo?bar HTTP/1.0 */

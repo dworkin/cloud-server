@@ -1,6 +1,5 @@
 # include <kernel/kernel.h>
 # include <kernel/user.h>
-# include <http.h>
 
 inherit LIB_USER;
 
