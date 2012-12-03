@@ -314,11 +314,11 @@ int **query_inherited(int index)
 
 
 /*
- * NAME:	query_issue_deps()
- * DESCRIPTION:	collect all objects that depend on a single given object issue
+ * NAME:	gather_deps()
+ * DESCRIPTION:	gather all objects that depend on a single given object issue
  */
-private void query_issue_deps(string path, int index, mapping issues,
-			      mapping inherited, mapping leaves, int factor)
+private void gather_deps(string path, int index, mapping issues,
+			 mapping inherited, mapping leaves, int factor)
 {
     mapping map;
     int i, j, **lists, *list;
@@ -348,8 +348,8 @@ private void query_issue_deps(string path, int index, mapping issues,
 	for (i = sizeof(lists); --i >= 0; ) {
 	    list = lists[i];
 	    for (j = sizeof(list); --j >= 0; ) {
-		query_issue_deps(query_path(list[j]), list[j], issues,
-				 inherited, leaves, factor);
+		gather_deps(query_path(list[j]), list[j], issues, inherited,
+			    leaves, factor);
 	    }
 	}
     } else {
@@ -368,7 +368,9 @@ private void query_issue_deps(string path, int index, mapping issues,
 
 /*
  * NAME:	query_dependents()
- * DESCRIPTION:	collect the objects that depend on all issues of a given object
+ * DESCRIPTION:	Return the objects that depend on all issues of a given object,
+ *		separated into inheritables and leaves.
+ *		Datastructure: ([ index / factor : ([ path : index ]) ])
  */
 mapping *query_dependents(string path, int factor)
 {
@@ -382,7 +384,7 @@ mapping *query_dependents(string path, int factor)
 	leaves = ([ ]);
 	issue = query_issues(path);
 	for (i = sizeof(issue); --i >= 0; ) {
-	    query_issue_deps(path, issue[i], issues, inherited, leaves, factor);
+	    gather_deps(path, issue[i], issues, inherited, leaves, factor);
 	}
 
 	return ({ inherited, leaves });
