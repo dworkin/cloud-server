@@ -118,14 +118,17 @@ static void cmd_issues(object user, string cmd, string str)
 static void cmd_upgrade(object user, string cmd, string str)
 {
     string *names;
-    int atom, i, sz, len;
+    int atom, patch, i, sz, len;
     object objectd;
 
     if (!str || str == "-a") {
-	message("Usage: " + cmd + " [-a] <file> [<file> ...]\n");
+	message("Usage: " + cmd + " [-a|-p] <file> [<file> ...]\n");
 	return;
     }
     atom = sscanf(str, "-a %s", str);
+    if (!atom) {
+	atom = patch = sscanf(str, "-p %s", str);
+    }
     names = expand(str, 1, TRUE)[0];
     objectd = find_object(OBJECTD);
 
@@ -149,7 +152,7 @@ static void cmd_upgrade(object user, string cmd, string str)
     if (sizeof(names) != 0) {
 	mixed result;
 
-	result = UPGRADED->upgrade(query_owner(), names, atom);
+	result = UPGRADED->upgrade(query_owner(), names, atom, patch);
 	if (typeof(result) == T_STRING) {
 	    message(result + "\n");
 	} else {
@@ -188,7 +191,7 @@ void do_patch(object obj)
  */
 static void call_patch(object obj)
 {
-    obj->_F_patch();
+    call_other(obj, "???");
 }
 
 

@@ -1,5 +1,8 @@
+# include <status.h>
+
 # define SYSAUTO	"/usr/System/lib/auto"
 # define OBJECTD	"/usr/System/sys/objectd"
+# define UPGRADED	"/usr/System/sys/upgraded"
 
 
 /*
@@ -55,12 +58,11 @@ static object copy_object(object obj)
  * NAME:	_F_touch()
  * DESCRIPTION:	touch call gate
  */
-nomask int _F_touch(string func)
+nomask int _F_touch()
 {
     if (previous_program() == OBJECTD) {
-	if (!function_object("patch", this_object())) {
-	    /* patch function doesn't exist yet */
-	    return TRUE;
+	if (UPGRADED->query_upgrading()) {
+	    return TRUE;	/* still upgrading */
 	}
 
 	this_object()->patch();

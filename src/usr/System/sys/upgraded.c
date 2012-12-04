@@ -1,10 +1,11 @@
 # include <kernel/kernel.h>
 # include <kernel/access.h>
-# include <kernel/rsrc.h>
+# include <kernel/tls.h>
 # include <status.h>
 # include <type.h>
 
-inherit API_ACCESS;
+inherit access API_ACCESS;
+inherit tls API_TLS;
 
 # define OBJECTD	"/usr/System/sys/objectd"
 
@@ -12,6 +13,7 @@ inherit API_ACCESS;
 object objectd;			/* object server */
 string compfailed;		/* compilation of this object failed */
 mapping inherited;		/* Not yet compiled lib-objects */
+mapping *patching;		/* objects left to patch */
 int factor;			/* 2nd level divisor */
 
 /*
@@ -20,10 +22,12 @@ int factor;			/* 2nd level divisor */
  */
 static void create()
 {
-    ::create();
+    access::create();
+    tls::create();
 
     objectd = find_object(OBJECTD);
     factor = status(ST_ARRAYSIZE);
+    set_tls_size(1);
 }
 
 
@@ -77,17 +81,110 @@ private mixed *dependencies(string *names)
 }
 
 /*
+ * NAME:	touch_clones()
+ * DESCRIPTION:	prepare to patch clones
+ */
+private mixed touch_clones(string master)
+{
+    mixed max;
+    int i;
+    object obj;
+
+    max = nil;
+    master += "#";
+    for (i = status(ST_OTABSIZE); --i >= 0; ) {
+	obj = find_object(master + i);
+	if (obj) {
+	    if (max == nil && !(obj <- "~/lib/auto")) {
+		return nil;
+	    }
+
+	    call_touch(obj);
+	    max = i;
+	}
+    }
+
+    return max;
+}
+
+/*
+ * NAME:	next()
+ * DESCRIPTION:	find the next object to patch
+ */
+private object next()
+{
+    mapping map;
+    string name;
+    int clone;
+    object obj;
+
+    while (sizeof(patching) != 0) {
+	map = patching[0];
+	if (map_sizeof(map) == 0) {
+	    patching = patching[1 ..];
+	} else {
+	    name = map_indices(map)[0];
+	    if (sscanf(name, "%*s/obj/") != 0) {
+		/*
+		 * find the next clone
+		 */
+		clone = map[name];
+		while (clone >= 0) {
+		    obj = find_object(name + "#" + clone);
+		    --clone;
+		    if (obj) {
+			map[name] = clone;
+			return obj;
+		    }
+		}
+		map[name] = nil;
+	    } else {
+		/*
+		 * find a master object
+		 */
+		obj = find_object(name);
+		map[name] = nil;
+		if (obj) {
+		    return obj;
+		}
+	    }
+	}
+    }
+
+    patching = nil;
+    return nil;
+}
+
+/*
+ * NAME:	patcher()
+ * DESCRIPTION:	patch one object, and start a callout for the next one
+ */
+static void patcher(object patchtool)
+{
+    object obj;
+
+    obj = next();
+
+    if (obj) {
+	call_out("patcher", 0, patchtool);
+	patchtool->do_patch(obj);
+    }
+}
+
+/*
  * NAME:	recompile()
  * DESCRIPTION:	recompile leaf objects
  */
 private atomic
-string *recompile(string *names, mapping *leaves, mapping *depend, int fail)
+string *recompile(string *names, mapping *leaves, mapping *depend, int atom,
+		  int patch)
 {
     int i, j, sz, *status;
     string name, *objects;
     mapping failed;
 
     objectd->notify_compiling(this_object());
+    set_tlvar(0, TRUE);
 
     /*
      * Destruct inherited lib objects among the ones that are being upgraded.
@@ -101,27 +198,50 @@ string *recompile(string *names, mapping *leaves, mapping *depend, int fail)
     }
 
     failed = ([ ]);
+    if (patch) {
+	patching = leaves;
+    }
     do {
 	int *indices, *issues;
 	mapping *values, map;
+	object obj;
 
 	/*
 	 * recompile leaf objects
 	 */
 	for (i = sizeof(leaves); --i >= 0; ) {
-	    objects = map_indices(leaves[i]);
-	    issues = map_values(leaves[i]);
+	    map = leaves[i];
+	    objects = map_indices(map);
+	    issues = map_values(map);
 	    for (j = 0, sz = sizeof(objects); j < sz; j++) {
 		/* recompile a leaf object */
 		name = objects[j];
 		catch {
 		    compile_object(name);
+		    if (patch) {
+			/*
+			 * patch objects after upgrade
+			 */
+			if (sscanf(name, "%*s/obj/") != 0) {
+			    if (sscanf(name, "/kernel/%*s") == 0 &&
+				name != "/usr/System/obj/objectd") {
+				map[objects[j]] = touch_clones(name);
+				continue;
+			    }
+			} else if ((obj=find_object(name)) &&
+				   obj <- "~/lib/auto") {
+			    call_touch(obj);
+			    continue;
+			}
+			map[objects[j]] = nil;
+		    }
 		} : {
 		    int index, k;
 
 		    /* recompile failed */
 		    failed[compfailed] = 1;
 		    compfailed = nil;
+		    patch = FALSE;
 
 		    /* take note of upgraded objects that are inherited */
 		    index = issues[j] / factor;
@@ -134,6 +254,7 @@ string *recompile(string *names, mapping *leaves, mapping *depend, int fail)
 		}
 	    }
 	}
+	patch = FALSE;
 
 	/*
 	 * get newly exposed leaves
@@ -161,11 +282,16 @@ string *recompile(string *names, mapping *leaves, mapping *depend, int fail)
     objectd->notify_compiling(nil);
 
     objects = map_indices(failed);
-    if (sizeof(objects) != 0 && fail) {
+    if (sizeof(objects) != 0 && atom) {
 	/*
 	 * some objects could not be compiled -- fail atomically
 	 */
 	error("#" + implode(objects, "#"));
+    } else if (patching) {
+	/*
+	 * patch affected objects through callout
+	 */
+	call_out("patcher", 0, previous_object());
     }
     return objects;
 }
@@ -174,13 +300,17 @@ string *recompile(string *names, mapping *leaves, mapping *depend, int fail)
  * NAME:	upgrade()
  * DESCRIPTION:	upgrade interface function
  */
-mixed upgrade(string owner, string *names, int atom)
+mixed upgrade(string owner, string *names, int atom, int patch)
 {
     if (SYSTEM()) {
 	rlimits (0; -1) {
 	    int i, j, sz;
 	    string str, *list;
 	    mapping objects, *depend, *leaves;
+
+	    if (patch && patching) {
+		return "Still patching after previous upgrade.";
+	    }
 
 	    /* verify write access to objects to be upgraded directly */
 	    for (i = 0, sz = sizeof(names); i < sz; i++) {
@@ -220,7 +350,7 @@ mixed upgrade(string owner, string *names, int atom)
 	    /*
 	     * recompile leaf objects
 	     */
-	    str = catch(list = recompile(names, leaves, depend, atom));
+	    str = catch(list = recompile(names, leaves, depend, atom, patch));
 	    if (!str) {
 		/* return failed list */
 		return list;
@@ -256,4 +386,13 @@ void destruct(string path)
     if (previous_object() == objectd && sscanf(path, "%*s/lib/") != 0) {
 	inherited[status(path, O_INDEX) / factor][path] = nil;
     }
+}
+
+/*
+ * NAME:	query_upgrading()
+ * DESCRIPTION:	upgrading during this task?
+ */
+int query_upgrading()
+{
+    return !!get_tlvar(0);
 }
