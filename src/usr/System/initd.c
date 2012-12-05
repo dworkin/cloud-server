@@ -23,8 +23,7 @@ static void create()
     compile_object("sys/objectd");
 
     /* global access */
-    access::set_global_access("System", TRUE);
-    access::set_global_access("Pattern", TRUE);
+    set_global_access("System", TRUE);
 
     /* server objects */
     compile_object("sys/errord");
@@ -42,17 +41,17 @@ static void create()
     compile_object("/data/strbuffer");
 
     /* Domain stuff */
-    rsrc::rsrc_incr(nil, "filequota", nil,
-		    DRIVER->file_size("/lib", TRUE) +
-		    DRIVER->file_size("/obj", TRUE) +
-		    DRIVER->file_size("/sys", TRUE), TRUE);
+    rsrc_incr(nil, "filequota", nil,
+	      DRIVER->file_size("/lib", TRUE) +
+	      DRIVER->file_size("/obj", TRUE) +
+	      DRIVER->file_size("/sys", TRUE), TRUE);
     domains = get_dir("/usr/[A-Z]*")[0];
     for (i = 0, sz = sizeof(domains); i < sz; i++) {
 	domain = domains[i];
 	if (domain != "System" && file_info("/usr/" + domain + "/initd.c")) {
-	    rsrc::add_owner(domain);
-	    rsrc::rsrc_incr(domain, "filequota", nil,
-			    DRIVER->file_size("/usr/" + domain, TRUE), TRUE);
+	    add_owner(domain);
+	    rsrc_incr(domain, "filequota", nil,
+		      DRIVER->file_size("/usr/" + domain, TRUE), TRUE);
 	    compile_object("/usr/" + domain + "/initd");
 	}
     }
@@ -78,20 +77,20 @@ void reboot()
 	string *owners;
 	int i, sz;
 
-	rsrc::rsrc_incr(nil, "filequota", nil,
-			 DRIVER->file_size("/doc", TRUE) +
-			 DRIVER->file_size("/include", TRUE) +
-			 DRIVER->file_size("/lib", TRUE) +
-			 DRIVER->file_size("/obj", TRUE) +
-			 DRIVER->file_size("/sys", TRUE) -
-			 rsrc::rsrc_get(nil, "filequota")[RSRC_USAGE],
-			 TRUE);
-	owners = rsrc::query_owners();
+	rsrc_incr(nil, "filequota", nil,
+		  DRIVER->file_size("/doc", TRUE) +
+		  DRIVER->file_size("/include", TRUE) +
+		  DRIVER->file_size("/lib", TRUE) +
+		  DRIVER->file_size("/obj", TRUE) +
+		  DRIVER->file_size("/sys", TRUE) -
+		  rsrc_get(nil, "filequota")[RSRC_USAGE],
+		  TRUE);
+	owners = query_owners();
 	for (i = 1, sz = sizeof(owners); i < sz; i++) {
-	    rsrc::rsrc_incr(owners[i], "filequota", nil,
-			    DRIVER->file_size("/usr/" + owners[i], TRUE) -
-			    rsrc::rsrc_get(owners[i], "filequota")[RSRC_USAGE],
-			    TRUE);
+	    rsrc_incr(owners[i], "filequota", nil,
+		      DRIVER->file_size("/usr/" + owners[i], TRUE) -
+		      rsrc_get(owners[i], "filequota")[RSRC_USAGE],
+		      TRUE);
 	}
     }
 }

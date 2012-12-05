@@ -5,8 +5,6 @@
 # include <limits.h>
 # include <status.h>
 
-inherit rsrc API_RSRC;
-
 # define INITD		"/usr/System/initd"
 # define OBJECTD	"/usr/System/sys/objectd"
 # define OBJECTD_OBJ	"/usr/System/obj/objectd"
@@ -26,8 +24,6 @@ private void preregister_objects();
  */
 static void create()
 {
-    rsrc::create();
-
     driver = find_object(DRIVER);
     factor = status(ST_ARRAYSIZE);
     index_map = ([ ]);
@@ -186,9 +182,8 @@ private string *prereg_inherits(string path)
     case INITD:
 	return ({ API_ACCESS, API_RSRC });
     case OBJECTD_OBJ:
-	return ({ AUTO });
     case OBJECTD:
-	return ({ API_RSRC });
+	return ({ AUTO });
     }
 }
 
