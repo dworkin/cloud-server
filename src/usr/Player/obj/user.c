@@ -1,7 +1,7 @@
 # include <kernel/user.h>
 # include <config.h>
 
-inherit telnet	"~/lib/interface/telnet";
+inherit "~/lib/interface/telnet";
 
 
 int last_activity;	/* time of last activity */
@@ -14,7 +14,7 @@ int login(string str)
 {
     if (previous_program() == LIB_CONN) {
 	last_activity = time();
-	return telnet::login(str);
+	return ::login(str);
     }
 }
 
@@ -28,7 +28,7 @@ void logout(int quit)
 	if (quit) {
 	    last_activity = time();
 	}
-	telnet::logout(quit);
+	::logout(quit);
     }
 }
 
@@ -38,7 +38,7 @@ void logout(int quit)
  */
 void message(int type, string str)
 {
-    telnet::message(type, str);
+    ::message(type, str);
 }
 
 /*
@@ -49,7 +49,7 @@ int receive_message(string str)
 {
     if (previous_program() == LIB_CONN) {
 	last_activity = time();
-	return telnet::receive_message(str);
+	return ::receive_message(str);
     }
 }
 
