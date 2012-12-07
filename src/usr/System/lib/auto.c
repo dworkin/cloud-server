@@ -9,7 +9,7 @@
  * NAME:	_F_init()
  * DESCRIPTION:	System level creator function
  */
-nomask void _F_init()
+nomask int _F_init()
 {
     if (previous_program() == AUTO) {
 	mixed *args;
@@ -21,6 +21,7 @@ nomask void _F_init()
 	    create();
 	}
     }
+    return TRUE;
 }
 
 /*
