@@ -27,7 +27,6 @@ static void create()
 
     objectd = find_object(OBJECTD);
     factor = status(ST_ARRAYSIZE);
-    set_tls_size(1);
 }
 
 

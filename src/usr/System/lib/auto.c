@@ -1,18 +1,25 @@
+# include <kernel/kernel.h>
 # include <status.h>
 
-# define SYSAUTO	"/usr/System/lib/auto"
 # define OBJECTD	"/usr/System/sys/objectd"
 # define UPGRADED	"/usr/System/sys/upgraded"
 
 
 /*
  * NAME:	_F_init()
- * DESCRIPTION:	initialization call gate
+ * DESCRIPTION:	System level creator function
  */
-nomask void _F_init(mixed *args)
+nomask void _F_init()
 {
-    if (previous_program() == SYSAUTO) {
-	this_object()->init(args...);
+    if (previous_program() == AUTO) {
+	mixed *args;
+
+	args = DRIVER->get_tlvar(0);
+	if (args) {
+	    create(args...);
+	} else {
+	    create();
+	}
     }
 }
 
@@ -22,11 +29,8 @@ nomask void _F_init(mixed *args)
  */
 static object clone_object(string path, mixed args...)
 {
-    object clone;
-
-    clone = ::clone_object(path);
-    clone->_F_init(args);
-    return clone;
+    DRIVER->set_tlvar(0, args);
+    return ::clone_object(path);
 }
 
 /*
@@ -37,9 +41,8 @@ static object new_object(string path, mixed args...)
 {
     object new;
 
-    new = ::new_object(path);
-    new->_F_init(args);
-    return new;
+    DRIVER->set_tlvar(0, args);
+    return ::new_object(path);
 }
 
 /*

@@ -25,6 +25,8 @@ static void create()
     /* global access */
     set_global_access("System", TRUE);
 
+    DRIVER->set_tls_size(2);
+
     /* server objects */
     compile_object("sys/errord");
     compile_object("sys/telnetd");

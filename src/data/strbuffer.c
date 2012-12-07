@@ -7,10 +7,10 @@ int length;		/* total length of strings in buffer */
 string *buffer;		/* string buffer */
 
 /*
- * NAME:	init()
- * DESCRIPTION:	initialize strchunk
+ * NAME:	create()
+ * DESCRIPTION:	initialize strbuffer
  */
-static void init(varargs string str)
+static void create(varargs string str)
 {
     if (str) {
 	length = strlen(str);
