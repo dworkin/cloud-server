@@ -114,7 +114,7 @@ static void receive_message(string str)
  */
 void set_mode(int mode)
 {
-    if (KERNEL() || SYSTEM()) {
+    if (previous_program() == LIB_CONN || SYSTEM()) {
 	::set_mode(mode);
 	if (!raw && mode == MODE_RAW && strlen(buffer) != 0) {
 	    call_out("raw_message", 0);

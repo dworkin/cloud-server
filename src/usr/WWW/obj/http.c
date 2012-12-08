@@ -1,7 +1,7 @@
 # include <kernel/kernel.h>
-# include "http.h"
+# include "~HTTP/open/include/http.h"
 
-inherit "~/lib/user";
+inherit "~HTTP/open/lib/http";
 
 private inherit "/lib/util/string";
 private inherit "/lib/util/time";

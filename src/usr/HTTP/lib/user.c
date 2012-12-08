@@ -1,6 +1,6 @@
 # include <kernel/kernel.h>
 # include <kernel/user.h>
-# include "http.h"
+# include "~/open/include/http.h"
 
 inherit	user "~System/lib/user";
 
@@ -60,7 +60,7 @@ private int respond(int code)
 {
     string host;
 
-    previous_object()->set_mode(MODE_RAW);
+    set_mode(MODE_RAW);
     catch {
 	mesg = call_limited("http_message", code, mesg);
     } : {

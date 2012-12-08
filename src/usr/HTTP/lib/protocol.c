@@ -1,8 +1,8 @@
 # include <config.h>
 # include <version.h>
-# include <type.h>
 # include <status.h>
-# include "http.h"
+# include <type.h>
+# include "~/open/include/http.h"
 
 private inherit "/lib/util/string";
 private inherit "/lib/util/time";

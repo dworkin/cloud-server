@@ -1,6 +1,6 @@
 # include <kernel/kernel.h>
 # include <kernel/user.h>
-# include "http.h"
+# include "~HTTP/open/include/http.h"
 
 inherit "~System/lib/user";
 
@@ -16,7 +16,7 @@ static void create()
     userd = find_object(USERD);
     httphost = "localhost:8080";
     ftphost = "ftphost:8080";
-    urlmap = ([ "" : HTTPObject ]);
+    urlmap = ([ "" : "~/obj/http" ]);
     errormessage = "<HTML>\n" +
 		   "<HEAD><TITLE>400 Bad Request</TITLE></HEAD>\n" +
 		   "<BODY><H1>400 Bad Request</H1></BODY>\n" +

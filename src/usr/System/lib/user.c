@@ -7,6 +7,15 @@ inherit LIB_USER;
 
 
 /*
+ * NAME:	set_mode()
+ * DESCRIPTION:	set the connection mode
+ */
+static void set_mode(int mode)
+{
+    query_conn()->set_mode(mode);
+}
+
+/*
  * NAME:	log_connection()
  * DESCRIPTION:	log this connection
  */
