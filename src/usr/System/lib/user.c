@@ -3,7 +3,7 @@
 
 inherit LIB_USER;
 
-# define INITD	"/usr/System/initd"
+# define Init	"/usr/System/initd"
 
 
 static void log_connection(string str)
@@ -26,6 +26,6 @@ static nomask string connected()
 static void admin_wiztool()
 {
     if (connected()) {
-	INITD->add_wiztool(this_object());
+	Init->add_wiztool(this_object());
     }
 }

@@ -16,7 +16,7 @@ static void create()
     userd = find_object(USERD);
     httphost = "localhost:8080";
     ftphost = "ftphost:8080";
-    urlmap = ([ "" : HTTP_HANDLER ]);
+    urlmap = ([ "" : HTTPObject ]);
     errormessage = "<HTML>\n" +
 		   "<HEAD><TITLE>400 Bad Request</TITLE></HEAD>\n" +
 		   "<BODY><H1>400 Bad Request</H1></BODY>\n" +
@@ -32,7 +32,7 @@ static object request(string str)
     string *dirs;
     int i, sz;
 
-    request = HTTP_REQUEST->parse_request(str);
+    request = HTTPRequest->parse_request(str);
     if (request) {
 	dirs = map_indices(urlmap);
 	str = nil;

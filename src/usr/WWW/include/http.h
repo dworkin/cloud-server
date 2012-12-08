@@ -1,6 +1,6 @@
-# define HTTP_REQUEST		"/usr/WWW/sys/httprequest"
-# define HTTP_HEADER		"/usr/WWW/sys/httpheader"
-# define HTTP_HANDLER		"/usr/WWW/obj/http"
+# define HTTPRequest		"/usr/WWW/sys/httprequest"
+# define HTTPHeader		"/usr/WWW/sys/httpheader"
+# define HTTPObject		"/usr/WWW/obj/http"
 
 
 /* GET http://foo.bar.com/index.html?foo?bar HTTP/1.0 */

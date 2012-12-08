@@ -6,7 +6,7 @@ private object userd;	/* user daemon */
  */
 static void create()
 {
-    userd = find_object("/usr/Player/sys/userd");
+    userd = find_object("~/sys/userd");
 }
 
 /*

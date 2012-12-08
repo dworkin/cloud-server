@@ -537,7 +537,7 @@ static int receive_message(string str)
 
 		    str = nil;
 		    sscanf(cmd, "%s %s", cmd, str);
-		    if ((verbs="/usr/Player/sys/sould"->query_verb(cmd))) {
+		    if ((verbs="~/sys/sould"->query_verb(cmd))) {
 			cmd_feeling(body, cmd, verbs, str);
 			break;
 		    }

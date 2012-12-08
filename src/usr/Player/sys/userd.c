@@ -51,7 +51,6 @@ static object get_user(string name)
     object obj;
     mapping map;
 
-    obj = previous_object();
     if (!parse_string("word = /[A-Za-z][A-Za-z]+/ junk = /./ name: word",
 		      name)) {
 	/* bad name */

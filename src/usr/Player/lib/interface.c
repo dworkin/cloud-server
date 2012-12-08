@@ -5,8 +5,7 @@ inherit soul "/lib/base/soul";
 
 private inherit "/lib/util/string";
 
-# define TELNETD	"/usr/Player/sys/telnetd"
-# define INITD		"/usr/System/initd"
+# define SystemInit	"/usr/System/initd"
 
 
 private object body;		/* current body */
@@ -53,7 +52,7 @@ static void set_current_body(object obj)
  */
 void add_wiztool(object obj)
 {
-    if (previous_program() == INITD) {
+    if (previous_program() == SystemInit) {
 	add_body(wiztool = obj);
     }
 }
@@ -64,7 +63,7 @@ void add_wiztool(object obj)
  */
 void remove_wiztool()
 {
-    if (previous_program() == INITD) {
+    if (previous_program() == SystemInit) {
 	remove_body(wiztool);
 	wiztool = nil;
     }

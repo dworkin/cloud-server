@@ -1,8 +1,8 @@
 # include <kernel/kernel.h>
 # include <status.h>
 
-# define OBJECTD	"/usr/System/sys/objectd"
-# define UPGRADED	"/usr/System/sys/upgraded"
+# define ObjectServer	"/usr/System/sys/objectd"
+# define UpgradeServer	"/usr/System/sys/upgraded"
 
 
 /*
@@ -64,8 +64,8 @@ static object copy_object(object obj)
  */
 nomask int _F_touch()
 {
-    if (previous_program() == OBJECTD) {
-	if (UPGRADED->query_upgrading()) {
+    if (previous_program() == ObjectServer) {
+	if (UpgradeServer->query_upgrading()) {
 	    return TRUE;	/* still upgrading */
 	}
 

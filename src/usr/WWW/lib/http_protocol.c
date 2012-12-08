@@ -37,8 +37,8 @@ private string content_type;	/* entity type */
  */
 static void create()
 {
-    httpreq = find_object(HTTP_REQUEST);
-    httphdr = find_object(HTTP_HEADER);
+    httpreq = find_object(HTTPRequest);
+    httphdr = find_object(HTTPHeader);
 }
 
 /*

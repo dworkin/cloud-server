@@ -7,7 +7,7 @@
 inherit access API_ACCESS;
 inherit tls API_TLS;
 
-# define OBJECTD	"/usr/System/sys/objectd"
+# define ObjectServer	"/usr/System/sys/objectd"
 
 
 object objectd;			/* object server */
@@ -25,7 +25,7 @@ static void create()
     access::create();
     tls::create();
 
-    objectd = find_object(OBJECTD);
+    objectd = find_object(ObjectServer);
     factor = status(ST_ARRAYSIZE);
 }
 

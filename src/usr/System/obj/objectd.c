@@ -1,7 +1,7 @@
 # include <status.h>
 # include <type.h>
 
-# define OBJECTD	"/usr/System/sys/objectd"
+# define ObjectServer	"/usr/System/sys/objectd"
 
 
 string creator;		/* which creator is this the database part for */
@@ -17,7 +17,7 @@ mapping issues;		/* ([ object : indices ]) */
  */
 static void create()
 {
-    objectd = find_object(OBJECTD);
+    objectd = find_object(ObjectServer);
     factor = status(ST_ARRAYSIZE);
     inherited = ([ ]);
     objects = ([ ]);

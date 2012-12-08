@@ -6,9 +6,9 @@
 inherit access API_ACCESS;
 inherit rsrc API_RSRC;
 
-# define BINARYD	"/usr/WWW/sys/server"
-# define TELNETD	"/usr/Player/sys/userd"
-# define WIZTOOL	"/usr/System/obj/wiztool"
+# define BinaryServer	"/usr/WWW/sys/server"
+# define TelnetServer	"/usr/Player/sys/userd"
+# define WizTool	"/usr/System/obj/wiztool"
 
 
 /*
@@ -46,8 +46,7 @@ static void create()
     /* Domain stuff */
     rsrc_incr(nil, "filequota", nil,
 	      DRIVER->file_size("/lib", TRUE) +
-	      DRIVER->file_size("/obj", TRUE) +
-	      DRIVER->file_size("/sys", TRUE), TRUE);
+	      DRIVER->file_size("/obj", TRUE), TRUE);
     domains = get_dir("/usr/[A-Z]*")[0];
     for (i = 0, sz = sizeof(domains); i < sz; i++) {
 	domain = domains[i];
@@ -60,8 +59,8 @@ static void create()
     }
 
     /* connections */
-    USERD->set_binary_manager(0, find_object(BINARYD));
-    USERD->set_telnet_manager(0, find_object(TELNETD));
+    USERD->set_binary_manager(0, find_object(BinaryServer));
+    USERD->set_telnet_manager(0, find_object(TelnetServer));
 }
 
 /*
@@ -110,7 +109,7 @@ void reboot()
 void add_wiztool(object user)
 {
     if (SYSTEM()) {
-	user->add_wiztool(clone_object(WIZTOOL, user->query_name()));
+	user->add_wiztool(clone_object(WizTool, user->query_name()));
     }
 }
 
