@@ -1,7 +1,7 @@
+# include <kernel/kernel.h>
 # include <kernel/user.h>
-# include <config.h>
 
-inherit "~/lib/interface/telnet";
+inherit "~/lib/telnet";
 
 
 int last_activity;	/* time of last activity */

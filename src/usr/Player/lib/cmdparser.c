@@ -1,4 +1,4 @@
-# include <cmdparser.h>
+# include "cmdparser.h"
 
 private inherit "/lib/util/language";
 
@@ -11,7 +11,7 @@ private object parser;	/* central command parser */
  */
 static void create()
 {
-    parser = find_object("/sys/cmdparser");
+    parser = find_object("~/sys/cmdparser");
 }
 
 /*

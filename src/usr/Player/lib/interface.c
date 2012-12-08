@@ -1,12 +1,12 @@
-# include <kernel/kernel.h>
 # include <kernel/user.h>
 
-inherit user LIB_USER;
+inherit user "~System/lib/user";
 inherit soul "/lib/base/soul";
 
 private inherit "/lib/util/string";
 
-# define TELNETD	"/usr/System/sys/telnetd"
+# define TELNETD	"/usr/Player/sys/telnetd"
+# define INITD		"/usr/System/initd"
 
 
 private object body;		/* current body */
@@ -20,13 +20,10 @@ static void login(object connection, string name)
 {
     ::connection(connection);
     ::login(name);
-    while (connection <- LIB_USER) {
-	connection = connection->query_conn();
-    }
-    DRIVER->message("Connection: " + capitalize(name) + " from " +
-		    user::query_ip_name(connection) + "\n");
+    log_connection("Connection: " + capitalize(name) + " from " + connected() +
+		   "\n");
     if (name == "admin" && !wiztool) {
-	TELNETD->add_wiztool(this_object());
+	admin_wiztool();
     }
 }
 
@@ -56,7 +53,7 @@ static void set_current_body(object obj)
  */
 void add_wiztool(object obj)
 {
-    if (previous_program() == TELNETD) {
+    if (previous_program() == INITD) {
 	add_body(wiztool = obj);
     }
 }
@@ -67,7 +64,7 @@ void add_wiztool(object obj)
  */
 void remove_wiztool()
 {
-    if (previous_program() == TELNETD) {
+    if (previous_program() == INITD) {
 	remove_body(wiztool);
 	wiztool = nil;
     }

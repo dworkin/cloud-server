@@ -1,9 +1,14 @@
 # include <kernel/kernel.h>
 # include <kernel/access.h>
+# include <kernel/user.h>
 # include <kernel/rsrc.h>
 
 inherit access API_ACCESS;
 inherit rsrc API_RSRC;
+
+# define BINARYD	"/usr/WWW/sys/server"
+# define TELNETD	"/usr/Player/sys/userd"
+# define WIZTOOL	"/usr/System/obj/wiztool"
 
 
 /*
@@ -29,16 +34,12 @@ static void create()
 
     /* server objects */
     compile_object("sys/errord");
-    compile_object("sys/telnetd");
-    compile_object("sys/binaryd");
     compile_object("sys/upgraded");
 
     /* clonables */
     compile_object("obj/wiztool");
 
     /* mudlib objects */
-    compile_object("/sys/cmdparser");
-    compile_object("/sys/sould");
     compile_object("/obj/body/human");
     compile_object("/data/strbuffer");
 
@@ -57,6 +58,10 @@ static void create()
 	    compile_object("/usr/" + domain + "/initd");
 	}
     }
+
+    /* connections */
+    USERD->set_binary_manager(0, find_object(BINARYD));
+    USERD->set_telnet_manager(0, find_object(TELNETD));
 }
 
 /*
@@ -94,5 +99,32 @@ void reboot()
 		      rsrc_get(owners[i], "filequota")[RSRC_USAGE],
 		      TRUE);
 	}
+    }
+}
+
+
+/*
+ * NAME:	add_wiztool()
+ * DESCRIPTION:	give user a wiztool
+ */
+void add_wiztool(object user)
+{
+    if (SYSTEM()) {
+	user->add_wiztool(clone_object(WIZTOOL, user->query_name()));
+    }
+}
+
+/*
+ * NAME:	remove_wiztool()
+ * DESCRIPTION:	remove user's wiztool
+ */
+void remove_wiztool(object user)
+{
+    if (SYSTEM()) {
+	object wiztool;
+
+	wiztool = user->query_wiztool();
+	user->remove_wiztool();
+	destruct_object(wiztool);
     }
 }

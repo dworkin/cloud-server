@@ -1,11 +1,11 @@
 # include <kernel/user.h>
 # include <messages.h>
-# include <cmdparser.h>
 # include <type.h>
+# include "cmdparser.h"
 
-inherit interface "~System/lib/interface";
+inherit interface "~/lib/interface";
 inherit user	  "~/lib/api/user";
-inherit parser	  "/lib/cmdparser";
+inherit parser	  "~/lib/cmdparser";
 
 private inherit "/lib/util/string";
 private inherit "/lib/util/language";

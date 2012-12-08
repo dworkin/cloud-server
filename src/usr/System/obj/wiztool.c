@@ -11,7 +11,7 @@ inherit body	"/lib/base/body";
 
 private inherit	"/lib/util/string";
 
-# define TELNETD	"/usr/System/sys/telnetd"
+# define INITD		"/usr/System/initd"
 # define PLAYERD	"/usr/Player/sys/userd"
 # define OBJECTD	"/usr/System/sys/objectd"
 # define UPGRADED	"/usr/System/sys/upgraded"
@@ -351,7 +351,7 @@ static void cmd_grant(object user, string cmd, string str)
 	    ::add_user(who);
 	    ::add_owner(who);
 	    wiztool::make_dir("/usr/" + who);
-	    TELNETD->add_wiztool(user);
+	    INITD->add_wiztool(user);
 	}
     } else {
 	/*
@@ -410,7 +410,7 @@ static void cmd_ungrant(object user, string cmd, string str)
 	    message(capitalize(who) + " has no file access.\n");
 	} else {
 	    remove_user(who);
-	    TELNETD->remove_wiztool(user);
+	    INITD->remove_wiztool(user);
 	}
     } else {
 	/*

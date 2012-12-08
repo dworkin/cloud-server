@@ -1,5 +1,5 @@
 # include <type.h>
-# include <cmdparser.h>
+# include "cmdparser.h"
 
 
 mapping verbs;		/* verb -> refcount */

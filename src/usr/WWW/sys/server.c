@@ -1,41 +1,103 @@
-# include <http.h>
+# include <kernel/kernel.h>
+# include <kernel/user.h>
+# include "http.h"
+
+inherit "~System/lib/user";
 
 
+object userd;		/* user daemon */
 string httphost;
 string ftphost;
 mapping urlmap;
+string errormessage;	/* message returned in case of a login error */
 
 static void create()
 {
+    userd = find_object(USERD);
     httphost = "localhost:8080";
     ftphost = "ftphost:8080";
     urlmap = ([ "" : HTTP_HANDLER ]);
+    errormessage = "<HTML>\n" +
+		   "<HEAD><TITLE>400 Bad Request</TITLE></HEAD>\n" +
+		   "<BODY><H1>400 Bad Request</H1></BODY>\n" +
+		   "</HTML>\n";
 }
 
 string *query_host() { return ({ httphost, ftphost }); }
 
-object request(string str)
+static object request(string str)
 {
-    if (previous_program() == "/usr/System/sys/binaryd") {
-	mixed *request;
-	object obj;
-	string *dirs;
-	int i, sz;
+    mixed *request;
+    object obj;
+    string *dirs;
+    int i, sz;
 
-	request = HTTP_REQUEST->parse_request(str);
-	if (request) {
-	    dirs = map_indices(urlmap);
-	    str = nil;
-	    for (i = 0, sz = sizeof(dirs); i < sz; i++) {
-		if (sscanf(request[HTTPREQ_PATH], dirs[i] + "/%*s") != 0) {
-		    str = urlmap[dirs[i]];
-		}
-	    }
-	    if (str != nil) {
-		obj = clone_object(str);
-		obj->request(request);
-		return obj;
+    request = HTTP_REQUEST->parse_request(str);
+    if (request) {
+	dirs = map_indices(urlmap);
+	str = nil;
+	for (i = 0, sz = sizeof(dirs); i < sz; i++) {
+	    if (sscanf(request[HTTPREQ_PATH], dirs[i] + "/%*s") != 0) {
+		str = urlmap[dirs[i]];
 	    }
 	}
+	if (str != nil) {
+	    obj = clone_object(str);
+	    obj->request(request);
+	    return obj;
+	}
     }
+}
+
+/*
+ * NAME:	select()
+ * DESCRIPTION:	select user object based on loginname
+ */
+object select(string str)
+{
+    if (previous_object() == userd) {
+	object obj;
+
+	obj = request(str);
+	return (obj) ? obj : this_object();
+    }
+}
+
+/*
+ * NAME:	query_timeout()
+ * DESCRIPTION:	return login timeout
+ */
+int query_timeout(object obj)
+{
+    return 30;
+}
+
+/*
+ * NAME:	query_banner()
+ * DESCRIPTION:	return login banner
+ */
+string query_banner(object obj)
+{
+    return nil;
+}
+
+/*
+ * NAME:	set_errormessage()
+ * DESCRIPTION:	set the errormessage shown in case of a login error
+ */
+void set_errormessage(string str)
+{
+    if (SYSTEM()) {
+	errormessage = str;
+    }
+}
+
+/*
+ * NAME:	login()
+ * DESCRIPTION:	display an errormessage and disconnect
+ */
+int login(string str)
+{
+    previous_object()->message(errormessage);
+    return MODE_DISCONNECT;
 }

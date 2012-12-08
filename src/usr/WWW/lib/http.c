@@ -1,9 +1,8 @@
 # include <kernel/kernel.h>
 # include <kernel/user.h>
-# include <http.h>
+# include "http.h"
 
-inherit		"auto";
-inherit	user	LIB_USER;
+inherit	user "~System/lib/user";
 
 
 private mixed *request;	/* HTTP request */
@@ -73,11 +72,11 @@ private int respond(int code)
     if (!host) {
 	host = "";
     }
-    DRIVER->message("Connection: HTTP from " +
-		    user::query_ip_name(previous_object()) + ", " + code +
-		    ((code == HTTP_OK || code == HTTP_NOT_MODIFIED) ?
+    log_connection("Connection: HTTP from " + connected() + ", " + code +
+		   ((code == HTTP_OK || code == HTTP_NOT_MODIFIED) ?
 		     " " + this_object()->query_method() + " " + host +
-		     this_object()->query_path() : "") + "\n");
+		     this_object()->query_path() : "") +
+		   "\n");
 
     mesg = call_limited("message", mesg);
     return MODE_RAW;
