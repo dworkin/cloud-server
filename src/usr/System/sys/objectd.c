@@ -463,7 +463,7 @@ void compile(string owner, string path, mixed source, string inherited...)
  */
 void compile_failed(string owner, string path)
 {
-    if (previous_object() == driver) {
+    if (previous_object() == driver && notify) {
 	notify->compile_failed(path);
     }
 }
@@ -534,7 +534,7 @@ mixed include_file(string compiled, string from, string path)
 		/*
 		 * special include file
 		 */
-		return "/usr/System/include/std.h";
+		return ({ "inherit \"/usr/System/lib/auto\";\n" });
 	    } else {
 		return ({ "" });
 	    }
