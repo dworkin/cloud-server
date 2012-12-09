@@ -3,7 +3,9 @@
 # include <trace.h>
 # include <type.h>
 
-inherit "~/lib/auto";
+# define SystemAuto	"/usr/System/lib/auto"
+
+inherit SystemAuto;
 
 private inherit "/lib/util/string";
 
@@ -41,9 +43,11 @@ void runtime_error(string error, int caught, mixed **trace)
 
 	for (i = 0; i < sz; i++) {
 	    ftrace = trace[i];
-	    progname = ftrace[TRACE_PROGNAME];
 	    objname = ftrace[TRACE_OBJNAME];
-	    if (sscanf(progname, "/kernel/%*s") == 0) {
+	    progname = ftrace[TRACE_PROGNAME];
+	    str = ftrace[TRACE_FUNCTION];
+	    if (progname != AUTO &&
+		(progname != SystemAuto || str[.. 2] != "_F_")) {
 		if (objname != last_obj) {
 		    lines[j++] = objname;
 		    last_obj = objname;
@@ -51,8 +55,7 @@ void runtime_error(string error, int caught, mixed **trace)
 
 		line = ftrace[TRACE_LINE];
 		str = ((line != 0) ? pad_left(line, 5) : "     ") +
-		      ((i + 1 == caught) ? " * " : "   ") +
-		      ftrace[TRACE_FUNCTION];
+		      ((i + 1 == caught) ? " * " : "   ") + str;
 		if (strlen(str) > maxlen) {
 		    maxlen = strlen(str);
 		}
@@ -98,9 +101,11 @@ void atomic_error(string error, int atom, mixed **trace)
 
 	for (i = atom; i < sz; i++) {
 	    ftrace = trace[i];
-	    progname = ftrace[TRACE_PROGNAME];
 	    objname = ftrace[TRACE_OBJNAME];
-	    if (sscanf(progname, "/kernel/%*s") == 0) {
+	    progname = ftrace[TRACE_PROGNAME];
+	    str = ftrace[TRACE_FUNCTION];
+	    if (progname != AUTO &&
+		(progname != SystemAuto || str[.. 2] != "_F_")) {
 		if (objname != last_obj) {
 		    lines[j++] = objname;
 		    last_obj = objname;

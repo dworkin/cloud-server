@@ -762,11 +762,10 @@ private void _runtime_error(mixed tls, string str, int caught, int ticks,
 
 	    func = trace[i][TRACE_FUNCTION];
 	    len = strlen(func);
-	    if (progname == AUTO && i != sz - 1 && len > 3) {
+	    if (progname == AUTO && i != sz - 1) {
 		switch (func[.. 2]) {
 		case "bad":
 		case "_F_":
-		case "_Q_":
 		    continue;
 		}
 	    }
@@ -861,11 +860,10 @@ static void atomic_error(string str, int atom, int ticks)
 
 	    func = trace[i][TRACE_FUNCTION];
 	    len = strlen(func);
-	    if (progname == AUTO && i != sz - 1 && len > 3) {
+	    if (progname == AUTO && i != sz - 1) {
 		switch (func[.. 2]) {
 		case "bad":
 		case "_F_":
-		case "_Q_":
 		    continue;
 		}
 	    }
