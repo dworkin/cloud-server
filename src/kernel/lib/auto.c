@@ -9,7 +9,6 @@
 
 # define TLS(tls, n)		tls[-1 - n]
 # define TLSVAR(n)		::call_trace()[1][TRACE_FIRSTARG][-1 - n]
-# define LONG_TIME		(365 * 24 * 60 * 60)
 # define CHECKARG(arg, n, func)	if (!(arg)) badarg((n), (func))
 
 /*
