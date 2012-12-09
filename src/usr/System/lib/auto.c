@@ -14,7 +14,7 @@ nomask int _F_init()
     if (previous_program() == AUTO) {
 	mixed *args;
 
-	args = DRIVER->get_tlvar(0);
+	args = ::tls_get(0);
 	if (args) {
 	    create(args...);
 	} else {
@@ -30,7 +30,7 @@ nomask int _F_init()
  */
 static object clone_object(string path, mixed args...)
 {
-    DRIVER->set_tlvar(0, args);
+    ::tls_set(0, args);
     return ::clone_object(path);
 }
 
@@ -42,7 +42,7 @@ static object new_object(string path, mixed args...)
 {
     object new;
 
-    DRIVER->set_tlvar(0, args);
+    ::tls_set(0, args);
     return ::new_object(path);
 }
 
@@ -53,10 +53,30 @@ static object new_object(string path, mixed args...)
 static object copy_object(object obj)
 {
     if (!obj || sscanf(object_name(obj), "%*s#-1") == 0) {
-	error("Bad argument 1 for function copy_object");
+	error("Not a light-weight object");
     }
     return ::new_object(obj);
 }
+
+
+/*
+ * NAME:	tls_set()
+ * DESCRIPTION:	set TLS value
+ */
+static void tls_set(string index, mixed value)
+{
+    ::tls_set(index, value);
+}
+
+/*
+ * NAME:	tls_get()
+ * DESCRIPTION:	get TLS value
+ */
+static mixed tls_get(string index)
+{
+    return ::tls_get(index);
+}
+
 
 /*
  * NAME:	_F_touch()

@@ -62,7 +62,7 @@ int query_mode()
  * NAME:	open()
  * DESCRIPTION:	open the connection
  */
-static void open(mixed *tls)
+static void open(mapping tls)
 {
     int timeout;
     string banner;
@@ -90,7 +90,7 @@ static void open(mixed *tls)
  * NAME:	close()
  * DESCRIPTION:	close the connection
  */
-static void close(mixed *tls, int dest)
+static void close(mapping tls, int dest)
 {
     rlimits (-1; -1) {
 	if (user) {
@@ -119,7 +119,7 @@ void disconnect()
  * NAME:	_unconnected()
  * DESCRIPTION:	an outbound connection could not be established
  */
-private void _unconnected(mixed *tls, int refused)
+private void _unconnected(mapping tls, int refused)
 {
     this_object()->connect_failed(refused);
 }
@@ -131,7 +131,7 @@ private void _unconnected(mixed *tls, int refused)
 static nomask void unconnected(int refused)
 {
     if (!previous_program()) {
-	_unconnected(allocate(DRIVER->query_tls_size()), refused);
+	_unconnected(([ ]), refused);
     }
 }
 
@@ -196,7 +196,7 @@ nomask object query_user()
  * NAME:	timeout()
  * DESCRIPTION:	if the connection timed out, disconnect
  */
-static void timeout(mixed *tls)
+static void timeout(mapping tls)
 {
     if (!user || user->query_conn() != this_object()) {
 	destruct_object(this_object());
@@ -207,7 +207,7 @@ static void timeout(mixed *tls)
  * NAME:	receive_message()
  * DESCRIPTION:	forward a message to user object
  */
-static int receive_message(mixed *tls, string str)
+static int receive_message(mapping tls, string str)
 {
     int mode;
 
@@ -251,7 +251,7 @@ int message(string str)
  * NAME:	message_done()
  * DESCRIPTION:	called when output is completed
  */
-static void message_done(mixed *tls)
+static void message_done(mapping tls)
 {
     if (buffer) {
 	send_message(buffer);
@@ -276,7 +276,7 @@ void datagram_challenge(string str)
  * NAME:	open_datagram()
  * DESCRIPTION:	open a datagram channel for this connection
  */
-static void open_datagram(mixed *tls)
+static void open_datagram(mapping tls)
 {
     if (user) {
 	user->open_datagram();
@@ -287,7 +287,7 @@ static void open_datagram(mixed *tls)
  * NAME:	receive_datagram()
  * DESCRIPTION:	forward a datagram to the user
  */
-static void receive_datagram(mixed *tls, string str)
+static void receive_datagram(mapping tls, string str)
 {
     if (user) {
 	user->receive_datagram(str);

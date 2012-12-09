@@ -67,7 +67,7 @@ void add_detail(mixed detail, string desc, varargs int plural, int scope,
 	break;
 
     default:
-	error("Bad argument 1 for function add_detail");
+	error("Bad detail");
     }
 }
 

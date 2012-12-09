@@ -2,16 +2,13 @@
 # include <kernel/rsrc.h>
 # include <kernel/access.h>
 # include <kernel/user.h>
-# include <kernel/tls.h>
 # include <status.h>
 # include <trace.h>
 # include <type.h>
 
+# define TLS(tls, n)	tls[-1 - n]
+# define TLSVAR(n)	call_trace()[1][TRACE_FIRSTARG][-1 - n]
 
-# define TLSVAR2	call_trace()[1][TRACE_FIRSTARG][1]
-# define TLSVAR3	call_trace()[1][TRACE_FIRSTARG][2]
-
-# define TLS_RESERVED	5
 
 object rsrcd;		/* resource manager object */
 object accessd;		/* access manager object */
@@ -19,7 +16,6 @@ object userd;		/* user manager object */
 object initd;		/* init manager object */
 object objectd;		/* object manager object */
 object errord;		/* error manager object */
-int tls_size;		/* task local storage size */
 
 /*
  * NAME:	creator()
@@ -194,7 +190,7 @@ void compiling(string path)
 	    if (objectd) {
 		objectd->compiling(AUTO);
 	    }
-	    TLSVAR3 = ({ AUTO });
+	    TLSVAR(2) = ({ AUTO });
 	    err = catch(compile_object(AUTO));
 	    if (err) {
 		if (objectd) {
@@ -210,7 +206,7 @@ void compiling(string path)
 	if (objectd) {
 	    objectd->compiling(path);
 	}
-	TLSVAR3 = ({ path });
+	TLSVAR(2) = ({ path });
     }
 }
 
@@ -222,7 +218,7 @@ void compile(string path, string owner, string source...)
 {
     if (previous_program() == AUTO) {
 	if (objectd) {
-	    objectd->compile(owner, path, source, TLSVAR3[1 ..]...);
+	    objectd->compile(owner, path, source, TLSVAR(2)[1 ..]...);
 	}
     }
 }
@@ -271,48 +267,6 @@ string query_owner()
     return "System";
 }
 
-/*
- * NAME:	set_tls_size()
- * DESCRIPTION:	set the task local storage size
- */
-void set_tls_size(int size)
-{
-    if (previous_program() == API_TLS) {
-	tls_size = size + TLS_RESERVED;
-    }
-}
-
-/*
- * NAME:	query_tls_size()
- * DESCRIPTION:	return the task local storage size
- */
-int query_tls_size()
-{
-    return tls_size;
-}
-
-/*
- * NAME:	get_tlvar()
- * DESCRIPTION:	return value of task local variable
- */
-mixed get_tlvar(int index)
-{
-    if (previous_program() == API_TLS) {
-	return call_trace()[1][TRACE_FIRSTARG][index + TLS_RESERVED];
-    }
-}
-
-/*
- * NAME:	set_tlvar()
- * DESCRIPTION:	set value of task local variable
- */
-void set_tlvar(int index, mixed value)
-{
-    if (previous_program() == API_TLS) {
-	call_trace()[1][TRACE_FIRSTARG][index + TLS_RESERVED] = value;
-    }
-}
-
 
 /*
  * NAME:	message()
@@ -337,7 +291,7 @@ private object load(string path)
     if (obj) {
 	return obj;
     }
-    TLSVAR3 = ({ path });
+    TLSVAR(2) = ({ path });
     return compile_object(path);
 }
 
@@ -345,7 +299,7 @@ private object load(string path)
  * NAME:	_initialize()
  * DESCRIPTION:	initialize system, with proper TLS on the stack
  */
-private void _initialize(mixed *tls)
+private void _initialize(mapping tls)
 {
     string *users;
     int i;
@@ -402,7 +356,7 @@ private void _initialize(mixed *tls)
 static void initialize()
 {
     catch {
-	_initialize(allocate(tls_size = TLS_RESERVED));
+	_initialize(([ ]));
 	message("Initialization complete.\n\n");
     } : {
 	message("Initialization failed.\n");
@@ -429,7 +383,7 @@ void prepare_reboot()
  * NAME:	_restored()
  * DESCRIPTION:	re-initialize the system, with proper TLS on the stack
  */
-private void _restored(mixed *tls, int hotboot)
+private void _restored(mapping tls, int hotboot)
 {
     if (hotboot) {
 	if (initd) {
@@ -453,7 +407,7 @@ static void restored(varargs int hotboot)
     message(status()[ST_VERSION] + "\n");
 
     catch {
-	_restored(allocate(tls_size), hotboot);
+	_restored(([ ]), hotboot);
     }
 
     message("State restored.\n\n");
@@ -500,7 +454,7 @@ static string path_write(string path)
 	    (creator == "System" ||
 	     (accessd->access(oname, path, WRITE_ACCESS) &&
 	      (rsrc[RSRC_USAGE] < rsrc[RSRC_MAX] || rsrc[RSRC_MAX] < 0)))) {
-	    TLSVAR2 = ({ path, file_size(path) });
+	    TLSVAR(1) = ({ path, file_size(path) });
 	    return path;
 	}
     }
@@ -541,7 +495,7 @@ static string object_type(string file, string type)
  * NAME:	_touch()
  * DESCRIPTION:	touch an object that has been flagged with call_touch()
  */
-private int _touch(mixed *tls, object obj, string func)
+private int _touch(mapping tls, object obj, string func)
 {
     return objectd->touch(obj, func);
 }
@@ -552,12 +506,12 @@ private int _touch(mixed *tls, object obj, string func)
  */
 static int touch(object obj, string func)
 {
-    mixed *tls;
+    mapping tls;
     string prog;
 
     if (objectd) {
 	if (!previous_object()) {
-	    tls = allocate(tls_size);
+	    tls = ([ ]);
 	} else if (KERNEL()) {
 	    prog = function_object(func, obj);
 	    if (prog && sscanf(prog, "/kernel/%*s") != 0 &&
@@ -627,7 +581,7 @@ static object inherit_program(string from, string path, int priv)
 	if (objectd) {
 	    objectd->compiling(path);
 	}
-	TLSVAR3 = ({ path });
+	TLSVAR(2) = ({ path });
 	if (str) {
 	    str = catch(obj = compile_object(path, str...));
 	} else {
@@ -641,13 +595,13 @@ static object inherit_program(string from, string path, int priv)
 	}
 	rsrcd->rsrc_incr(creator, "objects", nil, 1);
 	if (objectd) {
-	    objectd->compile(creator, path, ({ }), TLSVAR3[1 ..]...);
+	    objectd->compile(creator, path, ({ }), TLSVAR(2)[1 ..]...);
 
 	    objectd->compiling(from);
 	}
-	TLSVAR3 = ({ from });
+	TLSVAR(2) = ({ from });
     } else {
-	TLSVAR3 += ({ path });
+	TLSVAR(2) += ({ path });
     }
     return obj;
 }
@@ -676,7 +630,7 @@ static mixed include_file(string from, string path)
     if (objectd) {
 	mixed result;
 
-	result = objectd->include_file(TLSVAR3[0], from, path);
+	result = objectd->include_file(TLSVAR(2)[0], from, path);
 	if (sscanf(from, "/kernel/%*s") == 0) {
 	    return result;
 	}
@@ -722,7 +676,7 @@ static void recompile(object obj)
  */
 static object telnet_connect(int port)
 {
-    return userd->telnet_connection(allocate(tls_size), port);
+    return userd->telnet_connection(([ ]), port);
 }
 
 /*
@@ -731,14 +685,14 @@ static object telnet_connect(int port)
  */
 static object binary_connect(int port)
 {
-    return userd->binary_connection(allocate(tls_size), port);
+    return userd->binary_connection(([ ]), port);
 }
 
 /*
  * NAME:	_interrupt()
  * DESCRIPTION:	handle interrupt signal, with proper TLS on the stack
  */
-private void _interrupt(mixed *tls)
+private void _interrupt(mapping tls)
 {
     message("Interrupt.\n");
 
@@ -755,7 +709,7 @@ private void _interrupt(mixed *tls)
  */
 static void interrupt()
 {
-    _interrupt(allocate(tls_size));
+    _interrupt(([ ]));
 }
 
 /*
@@ -774,7 +728,7 @@ private void _runtime_error(mixed tls, string str, int caught, int ticks,
     if (ticks >= 0) {
 	mixed *limits;
 
-	limits = tls[0];
+	limits = TLS(tls, 0);
 	while (--i >= caught) {
 	    if (trace[i][TRACE_FUNCTION] == "_F_call_limited" &&
 		trace[i][TRACE_PROGNAME] == AUTO) {
@@ -785,7 +739,7 @@ private void _runtime_error(mixed tls, string str, int caught, int ticks,
 		limits = limits[LIM_NEXT];
 	    }
 	}
-	tls[0] = limits;
+	TLS(tls, 0) = limits;
     }
 
     if (errord) {
@@ -853,13 +807,14 @@ private void _runtime_error(mixed tls, string str, int caught, int ticks,
  */
 static void runtime_error(string str, int caught, int ticks)
 {
-    mixed **trace, tls;
+    mixed **trace;
+    mapping tls;
 
     trace = call_trace();
 
     if (sizeof(trace) == 1) {
 	/* top-level error */
-	tls = allocate(tls_size);
+	tls = ([ ]);
     } else {
 	tls = trace[1][TRACE_FIRSTARG];
 	trace[1][TRACE_FIRSTARG] = nil;
@@ -867,7 +822,7 @@ static void runtime_error(string str, int caught, int ticks)
 	    caught = 0;		/* ignore top-level catch */
 	} else if (ticks < 0 && sscanf(trace[caught - 1][TRACE_PROGNAME],
 				       "/kernel/%*s") != 0) {
-	    tls[1] = str;
+	    TLS(tls, 1) = str;
 	    return;
 	}
     }

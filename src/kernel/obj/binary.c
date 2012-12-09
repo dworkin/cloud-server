@@ -3,6 +3,7 @@
 
 inherit LIB_CONN;	/* basic connection object */
 
+# define TLS(tls, n)	tls[-1 - n]
 
 object driver;		/* driver object */
 string buffer;		/* buffered input */
@@ -25,7 +26,7 @@ static void create()
  */
 static void open()
 {
-    ::open(allocate(driver->query_tls_size()));
+    ::open(([ ]));
 }
 
 /*
@@ -34,7 +35,7 @@ static void open()
  */
 static void close(int dest)
 {
-    ::close(allocate(driver->query_tls_size()), dest);
+    ::close(([ ]), dest);
 }
 
 /*
@@ -43,14 +44,14 @@ static void close(int dest)
  */
 static void timeout()
 {
-    ::timeout(allocate(driver->query_tls_size()));
+    ::timeout(([ ]));
 }
 
 /*
  * NAME:	add_to_buffer()
  * DESCRIPTION:	do this where an error is allowed to happen
  */
-private void add_to_buffer(mixed *tls, string str)
+private void add_to_buffer(mapping tls, string str)
 {
     catch {
 	buffer += str;
@@ -65,9 +66,9 @@ static void receive_message(string str)
 {
     int mode, len;
     string head, pre;
-    mixed *tls;
+    mapping tls;
 
-    add_to_buffer(tls = allocate(driver->query_tls_size()), str);
+    add_to_buffer(tls = ([ ]), str);
 
     while (this_object() &&
 	   (mode=query_mode()) != MODE_BLOCK && mode != MODE_DISCONNECT) {
@@ -130,14 +131,14 @@ void set_mode(int mode)
 static void raw_message()
 {
     string str;
-    mixed *tls;
+    mapping tls;
 
     raw = FALSE;
     if (query_mode() == MODE_RAW && strlen(buffer) != 0) {
 	str = buffer;
 	buffer = "";
-	tls = allocate(driver->query_tls_size());
-	tls[3] = this_object();
+	tls = ([ ]);
+	TLS(tls, 3) = this_object();
 	::receive_message(tls, str);
     }
 }
@@ -160,7 +161,7 @@ int message(string str)
  */
 static void message_done()
 {
-    ::message_done(allocate(driver->query_tls_size()));
+    ::message_done(([ ]));
 }
 
 /*
@@ -169,7 +170,7 @@ static void message_done()
  */
 static void open_datagram()
 {
-    ::open_datagram(allocate(driver->query_tls_size()));
+    ::open_datagram(([ ]));
 }
 
 /*
@@ -178,5 +179,5 @@ static void open_datagram()
  */
 static void receive_datagram(string str)
 {
-    ::receive_datagram(allocate(driver->query_tls_size()), str);
+    ::receive_datagram(([ ]), str);
 }

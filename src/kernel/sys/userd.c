@@ -33,7 +33,7 @@ static void create()
  * NAME:	telnet_connection()
  * DESCRIPTION:	return a new telnet connection object
  */
-object telnet_connection(mixed *tls, int port)
+object telnet_connection(mapping tls, int port)
 {
     if (previous_program() == DRIVER) {
 	object conn;
@@ -48,7 +48,7 @@ object telnet_connection(mixed *tls, int port)
  * NAME:	binary_connection()
  * DESCRIPTION:	return a new binary connection object
  */
-object binary_connection(mixed *tls, int port)
+object binary_connection(mapping tls, int port)
 {
     if (previous_program() == DRIVER) {
 	object conn;

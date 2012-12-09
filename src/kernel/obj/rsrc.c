@@ -4,6 +4,8 @@
 # include <status.h>
 # include <trace.h>
 
+# define TLS(tls, n)	tls[-1 - n]
+
 
 object rsrcd;		/* resource manager */
 mapping resources;	/* registered resources */
@@ -167,10 +169,9 @@ int rsrc_incr(string name, object obj, int incr, int *grsrc, int force)
 	    mixed *arr;
 	    mapping map, pending;
 
-	    arr = call_trace(1)[TRACE_FIRSTARG];
-	    map = arr[4];
+	    map = TLS(call_trace(1)[TRACE_FIRSTARG], 4);
 	    if (!map) {
-		map = arr[4] = ([ ]);
+		map = ([ ]);
 	    }
 	    pending = map[this_object()];
 	    if (!pending) {

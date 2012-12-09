@@ -1,11 +1,9 @@
 # include <kernel/kernel.h>
 # include <kernel/access.h>
-# include <kernel/tls.h>
 # include <status.h>
 # include <type.h>
 
-inherit access API_ACCESS;
-inherit tls API_TLS;
+inherit API_ACCESS;
 
 # define ObjectServer	"/usr/System/sys/objectd"
 
@@ -22,8 +20,7 @@ int factor;			/* 2nd level divisor */
  */
 static void create()
 {
-    access::create();
-    tls::create();
+    ::create();
 
     objectd = find_object(ObjectServer);
     factor = status(ST_ARRAYSIZE);
@@ -183,7 +180,7 @@ string *recompile(string *names, mapping *leaves, mapping *depend, int atom,
     mapping failed;
 
     objectd->notify_compiling(this_object());
-    set_tlvar(0, TRUE);
+    tls_set(0, TRUE);
 
     /*
      * Destruct inherited lib objects among the ones that are being upgraded.
@@ -393,5 +390,5 @@ void destruct(string path)
  */
 int query_upgrading()
 {
-    return !!get_tlvar(0);
+    return !!tls_get(0);
 }

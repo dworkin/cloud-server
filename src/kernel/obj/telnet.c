@@ -22,7 +22,7 @@ static void create()
  */
 static int open()
 {
-    ::open(allocate(driver->query_tls_size()));
+    ::open(([ ]));
     return FALSE;
 }
 
@@ -32,7 +32,7 @@ static int open()
  */
 static void close(int dest)
 {
-    ::close(allocate(driver->query_tls_size()), dest);
+    ::close(([ ]), dest);
 }
 
 /*
@@ -41,7 +41,7 @@ static void close(int dest)
  */
 static void timeout()
 {
-    ::timeout(allocate(driver->query_tls_size()));
+    ::timeout(([ ]));
 }
 
 /*
@@ -50,7 +50,7 @@ static void timeout()
  */
 static void receive_message(string str)
 {
-    ::receive_message(allocate(driver->query_tls_size()), str);
+    ::receive_message(([ ]), str);
 }
 
 /*
@@ -77,5 +77,5 @@ void set_mode(int newmode)
  */
 static void message_done()
 {
-    ::message_done(allocate(driver->query_tls_size()));
+    ::message_done(([ ]));
 }
