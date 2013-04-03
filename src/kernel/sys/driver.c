@@ -310,7 +310,7 @@ private void _initialize(mapping tls)
     /* load initial objects */
     load(AUTO);
     call_other(rsrcd = load(RSRCD), "???");
-    call_other(load(RSRCOBJ), "???");
+    load(RSRCOBJ);
 
     /* initialize some resources */
     rsrcd->set_rsrc("stack",	        50, 0, 0);
@@ -344,6 +344,7 @@ private void _initialize(mapping tls)
     /* system-specific initialization */
     if (file_size(USR_DIR + "/System/initd.c") != 0) {
 	initd = rsrcd->initd();
+	call_other(initd, "???");
     }
 }
 
@@ -472,8 +473,6 @@ static object call_object(string path)
 	path = normalize_path(path, oname + "/..", creator(oname));
     }
     if (sscanf(path, "%*s" + INHERITABLE_SUBDIR) != 0 ||
-	sscanf(path, "%*s" + CLONABLE_SUBDIR + "%*s#") == 1 ||
-	sscanf(path, "%*s" + LIGHTWEIGHT_SUBDIR) != 0 ||
 	(objectd && objectd->forbid_call(path))) {
 	error("Illegal use of call_other");
     }
@@ -539,8 +538,6 @@ static object inherit_program(string from, string path, int priv)
 
     path = normalize_path(path, from + "/..", creator = creator(from));
     if (sscanf(path, "%*s" + INHERITABLE_SUBDIR) == 0 ||
-	sscanf(path, "%*s" + CLONABLE_SUBDIR) != 0 ||
-	sscanf(path, "%*s" + LIGHTWEIGHT_SUBDIR) != 0 ||
 	(sscanf(path, "/kernel/%*s") != 0 && creator != "System") ||
 	!accessd->access(from, path, READ_ACCESS)) {
 	return nil;

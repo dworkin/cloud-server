@@ -277,15 +277,13 @@ static object clone_object(string path)
 static int destruct_object(mixed obj)
 {
     string path, oowner;
-    int lib, class;
+    int lib;
 
     switch (typeof(obj)) {
     case T_STRING:
 	path = obj = driver->normalize_path(obj, directory, owner);
 	lib = sscanf(path, "%*s" + INHERITABLE_SUBDIR);
-	class = (lib || sscanf(path, "%*s" + CLONABLE_SUBDIR) != 0 ||
-		 sscanf(path, "%*s" + LIGHTWEIGHT_SUBDIR) != 0);
-	if (class) {
+	if (lib) {
 	    oowner = driver->creator(path);
 	} else {
 	    obj = find_object(path);

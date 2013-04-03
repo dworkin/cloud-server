@@ -144,9 +144,7 @@ static object find_object(string path)
 						 object_name(this_object()) +
 						 "/..",
 						 creator);
-    if (sscanf(path, "%*s" + INHERITABLE_SUBDIR) != 0 ||
-	sscanf(path, "%*s" + CLONABLE_SUBDIR + "%*s#") == 1 ||
-	sscanf(path, "%*s" + LIGHTWEIGHT_SUBDIR) != 0) {
+    if (sscanf(path, "%*s" + INHERITABLE_SUBDIR) != 0) {
 	/*
 	 * It is not possible to find a class object by name, or to call a
 	 * function in it.
@@ -164,7 +162,7 @@ static int destruct_object(mixed obj)
 {
     object driver;
     string oname, oowner;
-    int clone, lib, class;
+    int clone, lib;
 
     /* check and translate argument */
     driver = ::find_object(DRIVER);
@@ -195,10 +193,7 @@ static int destruct_object(mixed obj)
 	error("Cannot destruct non-persistent object");
     }
     lib = sscanf(oname, "%*s" + INHERITABLE_SUBDIR);
-    class = (!clone &&
-	     (lib || sscanf(oname, "%*s" + CLONABLE_SUBDIR) != 0 ||
-	      sscanf(oname, "%*s" + LIGHTWEIGHT_SUBDIR) != 0));
-    oowner = (class) ? driver->creator(oname) : obj->query_owner();
+    oowner = (lib) ? driver->creator(oname) : obj->query_owner();
     if ((sscanf(oname, "/kernel/%*s") != 0 && !lib && !KERNEL()) ||
 	(creator != "System" && owner != oowner)) {
 	error("Cannot destruct object: not owner");
@@ -214,7 +209,7 @@ static int destruct_object(mixed obj)
 		::find_object(RSRCD)->rsrc_incr(owner, "objects", nil, -1);
 	    }
 	}
-	if (!class) {
+	if (!lib) {
 	    obj->_F_destruct();
 	}
 	::destruct_object(obj);
@@ -228,9 +223,9 @@ static int destruct_object(mixed obj)
  */
 static object compile_object(string path, string source...)
 {
-    string oname, uid;
+    string str, uid;
     object driver, rsrcd, obj;
-    int *rsrc, class, kernel, new, stack, ticks;
+    int *rsrc, lib, kernel, new;
 
     CHECKARG(path, 1, "compile_object");
     if (!this_object()) {
@@ -240,24 +235,19 @@ static object compile_object(string path, string source...)
     /*
      * check access
      */
-    oname = object_name(this_object());
+    str = object_name(this_object());
     driver = ::find_object(DRIVER);
-    path = driver->normalize_path(path, oname + "/..", creator);
-    class = sscanf(path, "%*s" + INHERITABLE_SUBDIR);
+    path = driver->normalize_path(path, str + "/..", creator);
+    lib = sscanf(path, "%*s" + INHERITABLE_SUBDIR);
     kernel = sscanf(path, "/kernel/%*s");
     uid = driver->creator(path);
     if ((sizeof(source) != 0 && kernel) ||
 	(creator != "System" &&
-	 !::find_object(ACCESSD)->access(oname, path,
-					 ((class || !uid) &&
+	 !::find_object(ACCESSD)->access(str, path,
+					 ((lib || !uid) &&
 					  sizeof(source) == 0 && !kernel) ?
 					  READ_ACCESS : WRITE_ACCESS))) {
 	error("Access denied");
-    }
-    class += sscanf(path, "%*s" + CLONABLE_SUBDIR) +
-	     sscanf(path, "%*s" + LIGHTWEIGHT_SUBDIR);
-    if (class > 1) {
-	error("Ambiguous object");
     }
 
     /*
@@ -273,8 +263,6 @@ static object compile_object(string path, string source...)
      * do the compiling
      */
     new = !::find_object(path);
-    stack = ::status()[ST_STACKDEPTH];
-    ticks = ::status()[ST_TICKS];
     rlimits (-1; -1) {
 	catch {
 	    driver->compiling(path);
@@ -288,17 +276,16 @@ static object compile_object(string path, string source...)
 	    }
 	    driver->compile(path, uid, source...);
 	} : {
+	    str = TLSVAR(1);
 	    driver->compile_failed(path, uid);
-	    rlimits (stack; ticks) {
-		error(TLSVAR(1));
-	    }
+	    obj = nil;
 	}
     }
-    if (new && !class) {
-	call_other(obj, "???");		/* initialize */
+    if (!obj) {
+	error(str);
     }
 
-    return (class) ? nil : obj;
+    return (lib) ? nil : obj;
 }
 
 /*
@@ -999,9 +986,7 @@ static mixed **get_dir(string path)
     dir = implode(names[.. sizeof(names) - 2], "/");
     names = list[0];
     olist = allocate(sz = sizeof(names));
-    if (sscanf(path, "%*s" + INHERITABLE_SUBDIR) != 0 ||
-	sscanf(path, "%*s" + CLONABLE_SUBDIR + "%*s#") == 1 ||
-	sscanf(path, "%*s" + LIGHTWEIGHT_SUBDIR) != 0) {
+    if (sscanf(path, "%*s" + INHERITABLE_SUBDIR) != 0) {
 	/* class objects */
 	for (i = sz; --i >= 0; ) {
 	    path = dir + "/" + names[i];
@@ -1072,9 +1057,7 @@ static mixed *file_info(string path)
     info = ({ info[1][i], info[2][i], nil });
     if ((sz=strlen(path)) >= 2 && path[sz - 2 ..] == ".c" &&
 	(obj=::find_object(path[.. sz - 3]))) {
-	info[2] = (sscanf(path, "%*s" + INHERITABLE_SUBDIR) != 0 ||
-		   sscanf(path, "%*s" + CLONABLE_SUBDIR + "%*s#") == 1 ||
-		   sscanf(path, "%*s" + LIGHTWEIGHT_SUBDIR) != 0) ? TRUE : obj;
+	info[2] = (sscanf(path, "%*s" + INHERITABLE_SUBDIR) != 0) ? TRUE : obj;
     }
     return info;
 }

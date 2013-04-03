@@ -52,7 +52,7 @@ static void create()
 	    add_owner(domain);
 	    rsrc_incr(domain, "filequota", nil,
 		      DRIVER->file_size("/usr/" + domain, TRUE), TRUE);
-	    compile_object("/usr/" + domain + "/initd");
+	    call_other(compile_object("/usr/" + domain + "/initd"), "???");
 	}
     }
 
