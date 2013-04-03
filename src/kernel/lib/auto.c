@@ -144,7 +144,7 @@ static object find_object(string path)
 						 object_name(this_object()) +
 						 "/..",
 						 creator);
-    if (sscanf(path, "%*s" + INHERITABLE_SUBDIR) != 0) {
+    if (sscanf(path, "%*s/lib/") != 0) {
 	/*
 	 * It is not possible to find a class object by name, or to call a
 	 * function in it.
@@ -192,7 +192,7 @@ static int destruct_object(mixed obj)
     if (clone && lib < 0) {
 	error("Cannot destruct non-persistent object");
     }
-    lib = sscanf(oname, "%*s" + INHERITABLE_SUBDIR);
+    lib = sscanf(oname, "%*s/lib/");
     oowner = (lib) ? driver->creator(oname) : obj->query_owner();
     if ((sscanf(oname, "/kernel/%*s") != 0 && !lib && !KERNEL()) ||
 	(creator != "System" && owner != oowner)) {
@@ -238,7 +238,7 @@ static object compile_object(string path, string source...)
     str = object_name(this_object());
     driver = ::find_object(DRIVER);
     path = driver->normalize_path(path, str + "/..", creator);
-    lib = sscanf(path, "%*s" + INHERITABLE_SUBDIR);
+    lib = sscanf(path, "%*s/lib/");
     kernel = sscanf(path, "/kernel/%*s");
     uid = driver->creator(path);
     if ((sizeof(source) != 0 && kernel) ||
@@ -326,11 +326,10 @@ static object clone_object(string path, varargs string uid)
     /*
      * check if object can be cloned
      */
-    if (!owner || !(obj=::find_object(path)) ||
-	sscanf(path, "%*s" + CLONABLE_SUBDIR + "%*s#") != 1) {
+    if (!owner || !(obj=::find_object(path)) || sscanf(path, "%*s#") != 0 ||
+	sscanf(path, "%*s/lib/") != 0) {
 	/*
-	 * no owner for clone, master object not compiled, or not path of
-	 * clonable
+	 * no owner for clone, master object not compiled, or not clonable
 	 */
 	error("Cannot clone " + path);
     }
@@ -415,9 +414,9 @@ static object new_object(mixed obj, varargs string uid)
 	/*
 	 * check if object can be created
 	 */
-	if (!obj || sscanf(str, "%*s" + LIGHTWEIGHT_SUBDIR) == 0) {
+	if (!obj || sscanf(str, "%*s/lib/") != 0) {
 	    /*
-	     * master object not compiled, or not path of non-persistent object
+	     * master object not compiled, or not suitable
 	     */
 	    error("Cannot create new instance of " + str);
 	}
@@ -986,7 +985,7 @@ static mixed **get_dir(string path)
     dir = implode(names[.. sizeof(names) - 2], "/");
     names = list[0];
     olist = allocate(sz = sizeof(names));
-    if (sscanf(path, "%*s" + INHERITABLE_SUBDIR) != 0) {
+    if (sscanf(path, "%*s/lib/") != 0) {
 	/* class objects */
 	for (i = sz; --i >= 0; ) {
 	    path = dir + "/" + names[i];
@@ -1057,7 +1056,7 @@ static mixed *file_info(string path)
     info = ({ info[1][i], info[2][i], nil });
     if ((sz=strlen(path)) >= 2 && path[sz - 2 ..] == ".c" &&
 	(obj=::find_object(path[.. sz - 3]))) {
-	info[2] = (sscanf(path, "%*s" + INHERITABLE_SUBDIR) != 0) ? TRUE : obj;
+	info[2] = (sscanf(path, "%*s/lib/") != 0) ? TRUE : obj;
     }
     return info;
 }

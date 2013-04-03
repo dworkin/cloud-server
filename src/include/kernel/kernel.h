@@ -1,7 +1,7 @@
 # include <config.h>
 
 # define DRIVER		"/kernel/sys/driver"
-# define AUTO		("/kernel" + INHERITABLE_SUBDIR + "auto")
+# define AUTO		"/kernel/lib/auto"
 
 /*
  * privilege levels

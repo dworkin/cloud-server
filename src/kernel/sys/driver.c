@@ -472,7 +472,7 @@ static object call_object(string path)
 	oname = object_name(previous_object());
 	path = normalize_path(path, oname + "/..", creator(oname));
     }
-    if (sscanf(path, "%*s" + INHERITABLE_SUBDIR) != 0 ||
+    if (sscanf(path, "%*s/lib/") != 0 ||
 	(objectd && objectd->forbid_call(path))) {
 	error("Illegal use of call_other");
     }
@@ -537,7 +537,7 @@ static object inherit_program(string from, string path, int priv)
     mixed str;
 
     path = normalize_path(path, from + "/..", creator = creator(from));
-    if (sscanf(path, "%*s" + INHERITABLE_SUBDIR) == 0 ||
+    if (sscanf(path, "%*s/lib/") == 0 ||
 	(sscanf(path, "/kernel/%*s") != 0 && creator != "System") ||
 	!accessd->access(from, path, READ_ACCESS)) {
 	return nil;

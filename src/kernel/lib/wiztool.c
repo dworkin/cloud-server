@@ -246,7 +246,7 @@ static object compile_object(string path, string source...)
     kernel = sscanf(path, "/kernel/%*s");
     if ((sizeof(source) != 0 && kernel) ||
 	!access(owner, path,
-		((sscanf(path, "%*s" + INHERITABLE_SUBDIR) != 0 ||
+		((sscanf(path, "%*s/lib/") != 0 ||
 		  !driver->creator(path)) && sizeof(source) == 0 && !kernel) ?
 		 READ_ACCESS : WRITE_ACCESS)) {
 	message(path + ": Permission denied.\n");
@@ -282,7 +282,7 @@ static int destruct_object(mixed obj)
     switch (typeof(obj)) {
     case T_STRING:
 	path = obj = driver->normalize_path(obj, directory, owner);
-	lib = sscanf(path, "%*s" + INHERITABLE_SUBDIR);
+	lib = sscanf(path, "%*s/lib/");
 	if (lib) {
 	    oowner = driver->creator(path);
 	} else {
@@ -1034,7 +1034,7 @@ static void cmd_clone(object user, string cmd, string str)
 	break;
     }
 
-    if (sscanf(str, "%*s" + CLONABLE_SUBDIR + "%*s#") != 1) {
+    if (sscanf(str, "%*s#") != 0 || sscanf(str, "%*s/lib/") != 0) {
 	message("Not a master object.\n");
     } else if (status(str, O_INDEX) == nil) {
 	message("No such object.\n");
@@ -1099,8 +1099,8 @@ static void cmd_new(object user, string cmd, string str)
 	break;
     }
 
-    if (sscanf(str, "%*s" + LIGHTWEIGHT_SUBDIR + "%*s#%d", num) != 1 &&
-	num != -1) {
+    if ((sscanf(str, "%*s#%d", num) != 0 && num != -1) ||
+	sscanf(str, "%*s/lib/") != 0) {
 	message("Not a lightweight master object.\n");
     } else if (!obj) {
 	message("No such object.\n");
