@@ -21,8 +21,6 @@ static void create()
       "ticks" :		({ -1,  0,    0 }),
       "tick usage" :	({ -1, 10, 3600 }),
       "filequota" :	({ -1,  0,    0 }),
-      "create stack" :	({ -1,  0,    0 }),
-      "create ticks" :	({ -1,  0,    0 }),
     ]);
 
     owners = ([ ]);		/* no resource owners yet */

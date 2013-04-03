@@ -315,8 +315,6 @@ private void _initialize(mapping tls)
     /* initialize some resources */
     rsrcd->set_rsrc("stack",	        50, 0, 0);
     rsrcd->set_rsrc("ticks",	    250000, 0, 0);
-    rsrcd->set_rsrc("create stack",      5, 0, 0);
-    rsrcd->set_rsrc("create ticks",  10000, 0, 0);
 
     /* create initial resource owners */
     rsrcd->add_owner("System");

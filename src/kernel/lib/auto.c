@@ -277,15 +277,6 @@ static object compile_object(string path, string source...)
     ticks = ::status()[ST_TICKS];
     rlimits (-1; -1) {
 	catch {
-	    if (new && !class) {
-		if ((stack >= 0 &&
-		     stack - 2 < rsrcd->rsrc_get(uid,
-						 "create stack")[RSRC_MAX]) ||
-		    (ticks >= 0 &&
-		     ticks < rsrcd->rsrc_get(uid, "create ticks")[RSRC_MAX])) {
-		    error("Insufficient stack or ticks to create object");
-		}
-	    }
 	    driver->compiling(path);
 	    if (sizeof(source) != 0) {
 		obj = ::compile_object(path, source...);
@@ -318,7 +309,7 @@ static object clone_object(string path, varargs string uid)
 {
     string oname;
     object rsrcd, obj;
-    int *rsrc, stack, ticks;
+    int *rsrc;
 
     CHECKARG(path, 1, "clone_object");
     if (uid) {
@@ -374,16 +365,8 @@ static object clone_object(string path, varargs string uid)
     /*
      * do the cloning
      */
-    stack = ::status()[ST_STACKDEPTH];
-    ticks = ::status()[ST_TICKS];
     catch {
 	rlimits (-1; -1) {
-	    if ((stack >= 0 &&
-		 stack - 2 < rsrcd->rsrc_get(uid, "create stack")[RSRC_MAX]) ||
-		(ticks >= 0 &&
-		 ticks < rsrcd->rsrc_get(uid, "create ticks")[RSRC_MAX])) {
-		error("Insufficient stack or ticks to create object");
-	    }
 	    if (path != BINARY_CONN && path != TELNET_CONN && path != RSRCOBJ) {
 		rsrcd->rsrc_incr(uid, "objects", nil, 1);
 	    }
@@ -400,8 +383,7 @@ static object clone_object(string path, varargs string uid)
 static object new_object(mixed obj, varargs string uid)
 {
     string oname, str;
-    object rsrcd;
-    int new, stack, ticks;
+    int new;
 
     if (!this_object()) {
 	error("Permission denied");
@@ -453,21 +435,7 @@ static object new_object(mixed obj, varargs string uid)
 	    error("Cannot create new instance of " + str);
 	}
 
-	rsrcd = ::find_object(RSRCD);
-	stack = ::status()[ST_STACKDEPTH];
-	ticks = ::status()[ST_TICKS];
-	catch {
-	    rlimits (-1; -1) {
-		if ((stack >= 0 &&
-		     stack - 2 < rsrcd->rsrc_get(uid,
-						 "create stack")[RSRC_MAX]) ||
-		    (ticks >= 0 &&
-		     ticks < rsrcd->rsrc_get(uid, "create ticks")[RSRC_MAX])) {
-		    error("Insufficient stack or ticks to create object");
-		}
-		TLSVAR(1) = uid;
-	    }
-	} : error(TLSVAR(1));
+	TLSVAR(1) = uid;
     }
     return ::new_object(obj);
 }
