@@ -6,6 +6,7 @@
 inherit API_ACCESS;
 
 # define ObjectServer	"/usr/System/sys/objectd"
+# define SystemAuto	"/usr/System/lib/auto"
 
 
 object objectd;			/* object server */
@@ -213,7 +214,14 @@ string *recompile(string *names, mapping *leaves, mapping *depend, int atom,
 		/* recompile a leaf object */
 		name = objects[j];
 		catch {
-		    compile_object(name);
+		    string head, tail;
+
+		    if (sscanf(name, "%s/@@@/%s", head, tail) != 0) {
+			compile_object(name, "inherit \"" + head + "/lib/" +
+					     tail + "\";\n");
+		    } else {
+			compile_object(name);
+		    }
 		    if (patch) {
 			/*
 			 * patch objects after upgrade
@@ -336,7 +344,7 @@ mixed upgrade(string owner, string *names, int atom, int patch)
 			inherited = nil;
 			return str + ": Access denied.";
 		    }
-		    if (!file_info(str)) {
+		    if (!file_info(str) && sscanf(str, "%*s/@@@/") == 0) {
 			inherited = nil;
 			return str + ": Missing source file.";
 		    }
@@ -391,4 +399,26 @@ void destruct(string path)
 int query_upgrading()
 {
     return !!tls_get(0);
+}
+
+
+/*
+ * NAME:	generate_leaf()
+ * DESCRIPTION:	generate a leaf object
+ */
+string generate_leaf(string path)
+{
+    if (previous_program() == SystemAuto) {
+	string str, tail;
+
+	if (!access(object_name(previous_object()), path, READ_ACCESS)) {
+	    error("Access denied");
+	}
+	sscanf(path, "%s/lib/%s", str, tail);
+	str += "/@@@/" + tail;
+	if (!find_object(str)) {
+	    compile_object(str, "inherit \"" + path + "\";\n");
+	}
+	return str;
+    }
 }

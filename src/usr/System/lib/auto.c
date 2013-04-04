@@ -30,6 +30,14 @@ nomask int _F_init()
  */
 static object clone_object(string path, mixed args...)
 {
+    if (path) {
+	if (sscanf(path, "%*s/lib/") != 0 && status(path, O_INDEX) != nil) {
+	    /* let upgrade server generate a leaf object */
+	    path = UpgradeServer->generate_leaf(path);
+	} else if (sscanf(path, "%*s/obj/") == 0) {
+	    error("Invalid path");
+	}
+    }
     ::tls_set(0, args);
     return ::clone_object(path);
 }
@@ -40,8 +48,14 @@ static object clone_object(string path, mixed args...)
  */
 static object new_object(string path, mixed args...)
 {
-    object new;
-
+    if (path) {
+	if (sscanf(path, "%*s/lib/") != 0 && status(path, O_INDEX) != nil) {
+	    /* let upgrade server generate a leaf object */
+	    path = UpgradeServer->generate_leaf(path);
+	} else if (sscanf(path, "%*s/data/") == 0) {
+	    error("Invalid path");
+	}
+    }
     ::tls_set(0, args);
     return ::new_object(path);
 }
@@ -56,6 +70,29 @@ static object copy_object(object obj)
 	error("Not a light-weight object");
     }
     return ::new_object(obj);
+}
+
+/*
+ * NAME:	compile_object()
+ * DESCRIPTION:	compile an object
+ */
+static object compile_object(string path)
+{
+    object obj;
+
+    if (path) {
+	if (sscanf(path, "%*s/@@@/") != 0) {
+	    error("Cannot compile leaf object");
+	}
+	if (sscanf(path, "%*s/lib/") + sscanf(path, "%*s/obj/") +
+	    sscanf(path, "%*s/data/") > 1) {
+	    error("Ambiguous object");
+	}
+    }
+    obj = ::compile_object(path);
+    if (obj) {
+	call_other(obj, "???");
+    }
 }
 
 

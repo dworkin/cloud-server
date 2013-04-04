@@ -73,6 +73,19 @@ static object new_object(string path, mixed args...)
     return auto::new_object(path, args...);
 }
 
+/*
+ * NAME:	compile_object()
+ * DESCRIPTION:	compile an object
+ */
+static object compile_object(string path, string source...)
+{
+    if (path && sscanf(path, "%*s/@@@/") != 0) {
+	message(path + ": Cannot compile leaf object.\n");
+	return nil;
+    }
+    return wiztool::compile_object(path, source...);
+}
+
 
 /*
  * NAME:	cmd_issues()
