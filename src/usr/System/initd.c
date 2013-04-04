@@ -12,6 +12,15 @@ inherit rsrc API_RSRC;
 
 
 /*
+ * NAME:	load()
+ * DESCRIPTION:	compile and initialize an object
+ */
+private void load(string path)
+{
+    call_other(compile_object(path), "???");
+}
+
+/*
  * NAME:	create()
  * DESCRIPTION:	initialize the system
  */
@@ -25,14 +34,14 @@ static void create()
     rsrc::create();
 
     /* object registry */
-    compile_object("sys/objectd");
+    load("sys/objectd");
 
     /* global access */
     set_global_access("System", TRUE);
 
     /* server objects */
-    compile_object("sys/errord");
-    compile_object("sys/upgraded");
+    load("sys/errord");
+    load("sys/upgraded");
 
     /* clonables */
     compile_object("obj/wiztool");
@@ -52,7 +61,7 @@ static void create()
 	    add_owner(domain);
 	    rsrc_incr(domain, "filequota", nil,
 		      DRIVER->file_size("/usr/" + domain, TRUE), TRUE);
-	    call_other(compile_object("/usr/" + domain + "/initd"), "???");
+	    load("/usr/" + domain + "/initd");
 	}
     }
 
