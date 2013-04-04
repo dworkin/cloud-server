@@ -90,7 +90,8 @@ static object compile_object(string path)
 	}
     }
     obj = ::compile_object(path);
-    if (obj) {
+    if (obj && sscanf(path, "%*s/obj/") == 0 && sscanf(path, "%*s/data/") == 0)
+    {
 	call_other(obj, "???");
     }
 }
