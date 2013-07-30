@@ -1,4 +1,4 @@
-telnet_port	= ([ "localhost" : 8021 ]);
+telnet_port	= ([ "localhost" : 8023 ]);
 					/* telnet port number */
 binary_port	= ([ "*" : 8080 ]);	/* binary port number */
 directory	= "/home/cloud/server/src";
