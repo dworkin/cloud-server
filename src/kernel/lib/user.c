@@ -83,6 +83,17 @@ string query_name()
 }
 
 /*
+ * NAME:	set_message_length()
+ * DESCRIPTION:	set receive buffer length
+ */
+static void set_message_length(int len)
+{
+    if (connection) {
+	connection->set_message_length(len);
+    }
+}
+
+/*
  * NAME:	message()
  * DESCRIPTION:	forward a message to the connection object
  */

@@ -7,6 +7,7 @@ inherit LIB_CONN;	/* basic connection object */
 
 object driver;		/* driver object */
 string buffer;		/* buffered input */
+int length;		/* length of message to receive */
 int raw;		/* pending raw input? */
 
 /*
@@ -45,6 +46,17 @@ static void close(int dest)
 static void timeout()
 {
     ::timeout(([ ]));
+}
+
+/*
+ * NAME:	set_message_length()
+ * DESCRIPTION:	set the size of the receive buffer
+ */
+void set_message_length(int len)
+{
+    if (previous_program() == LIB_USER) {
+	length = len;
+    }
 }
 
 /*
@@ -100,8 +112,20 @@ static void receive_message(string str)
 	    }
 	} else {
 	    if (strlen(buffer) != 0) {
-		str = buffer;
-		buffer = "";
+		if (length > 0) {
+		    if (length < strlen(buffer)) {
+			str = buffer[.. length - 1];
+			buffer = buffer[length ..];
+			length = 0;
+		    } else {
+			length -= strlen(buffer);
+			str = buffer;
+			buffer = "";
+		    }
+		} else {
+		    str = buffer;
+		    buffer = "";
+		}
 		::receive_message(tls, str);
 	    }
 	    break;
@@ -135,8 +159,20 @@ static void raw_message()
 
     raw = FALSE;
     if (query_mode() == MODE_RAW && strlen(buffer) != 0) {
-	str = buffer;
-	buffer = "";
+	if (length > 0) {
+	    if (length < strlen(buffer)) {
+		str = buffer[.. length - 1];
+		buffer = buffer[length ..];
+		length = 0;
+	    } else {
+		length -= strlen(buffer);
+		str = buffer;
+		buffer = "";
+	    }
+	} else {
+	    str = buffer;
+	    buffer = "";
+	}
 	tls = ([ ]);
 	TLS(tls, 3) = this_object();
 	::receive_message(tls, str);
