@@ -52,7 +52,8 @@ static object new_object(string path, mixed args...)
 	if (sscanf(path, "%*s/lib/") != 0 && status(path, O_INDEX) != nil) {
 	    /* let upgrade server generate a leaf object */
 	    path = UpgradeServer->generate_leaf(path);
-	} else if (sscanf(path, "%*s/data/") == 0) {
+	} else if (sscanf(path, "%*s/obj/") != 0 ||
+		   sscanf(path, "%*s/sys/") != 0) {
 	    error("Invalid path");
 	}
     }
@@ -85,13 +86,12 @@ static object compile_object(string path)
 	    error("Cannot compile leaf object");
 	}
 	if (sscanf(path, "%*s/lib/") + sscanf(path, "%*s/obj/") +
-	    sscanf(path, "%*s/data/") > 1) {
+	    sscanf(path, "%*s/sys/") > 1) {
 	    error("Ambiguous object");
 	}
     }
     obj = ::compile_object(path);
-    if (obj && sscanf(path, "%*s/obj/") == 0 && sscanf(path, "%*s/data/") == 0)
-    {
+    if (obj && sscanf(path, "%*s/sys/") != 0) {
 	call_other(obj, "???");
     }
 }
