@@ -34,7 +34,7 @@ static object clone_object(string path, mixed args...)
 	if (sscanf(path, "%*s/lib/") != 0 && status(path, O_INDEX) != nil) {
 	    /* let upgrade server generate a leaf object */
 	    path = UpgradeServer->generate_leaf(path);
-	} else if (sscanf(path, "%*s/obj/") == 0) {
+	} else if (sscanf(path, "%*s/sys/") != 0) {
 	    error("Invalid path");
 	}
     }
@@ -52,8 +52,7 @@ static object new_object(string path, mixed args...)
 	if (sscanf(path, "%*s/lib/") != 0 && status(path, O_INDEX) != nil) {
 	    /* let upgrade server generate a leaf object */
 	    path = UpgradeServer->generate_leaf(path);
-	} else if (sscanf(path, "%*s/obj/") != 0 ||
-		   sscanf(path, "%*s/sys/") != 0) {
+	} else if (sscanf(path, "%*s/sys/") != 0) {
 	    error("Invalid path");
 	}
     }
@@ -85,8 +84,7 @@ static object compile_object(string path)
 	if (sscanf(path, "%*s/@@@/") != 0) {
 	    error("Cannot compile leaf object");
 	}
-	if (sscanf(path, "%*s/lib/") + sscanf(path, "%*s/obj/") +
-	    sscanf(path, "%*s/sys/") > 1) {
+	if (sscanf(path, "%*s/lib/") + sscanf(path, "%*s/sys/") > 1) {
 	    error("Ambiguous object");
 	}
     }
