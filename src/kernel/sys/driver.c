@@ -37,6 +37,9 @@ string normalize_path(string file, string dir, varargs string creator)
     int i, j, sz;
 
     if (strlen(file) == 0) {
+	if (!dir) {
+	    dir = object_name(previous_object()) + "/..";
+	}
 	file = dir;
     }
     switch (file[0]) {
@@ -58,7 +61,7 @@ string normalize_path(string file, string dir, varargs string creator)
 
     default:
 	/* relative path */
-	if (sscanf(file, "%*s//") == 0 && sscanf(file, "%*s/.") == 0 &&
+	if (sscanf(file, "%*s//") == 0 && sscanf(file, "%*s/.") == 0 && dir &&
 	    sscanf(dir, "%*s/..") == 0) {
 	    /*
 	     * simple relative path
@@ -70,6 +73,9 @@ string normalize_path(string file, string dir, varargs string creator)
 	/*
 	 * complex relative path
 	 */
+	if (!dir) {
+	    dir = object_name(previous_object()) + "/..";
+	}
 	path = explode(dir + "/" + file, "/");
 	break;
     }
@@ -425,7 +431,7 @@ static string path_read(string path)
     }
     if (path) {
 	creator = creator(oname = object_name(previous_object()));
-	path = normalize_path(path, oname, creator);
+	path = normalize_path(path, oname + "/..", creator);
 	return ((creator == "System" ||
 		 accessd->access(oname, path, READ_ACCESS)) ? path : nil);
     }
@@ -446,7 +452,7 @@ static string path_write(string path)
     }
     if (path) {
 	creator = creator(oname = object_name(previous_object()));
-	path = normalize_path(path, oname, creator);
+	path = normalize_path(path, oname + "/..", creator);
 	rsrc = rsrcd->rsrc_get(creator, "filequota");
 	if (sscanf(path, "/kernel/%*s") == 0 &&
 	    sscanf(path, "/include/kernel/%*s") == 0 &&

@@ -140,10 +140,7 @@ static object find_object(string path)
 	return nil;
     }
 
-    path = ::find_object(DRIVER)->normalize_path(path,
-						 object_name(this_object()) +
-						 "/..",
-						 creator);
+    path = ::find_object(DRIVER)->normalize_path(path, nil, creator);
     if (sscanf(path, "%*s/lib/") != 0) {
 	/*
 	 * It is not possible to find a class object by name, or to call a
@@ -170,10 +167,7 @@ static int destruct_object(mixed obj)
 	if (!this_object()) {
 	    return FALSE;
 	}
-	obj = ::find_object(driver->normalize_path(obj,
-						   object_name(this_object()) +
-						   "/..",
-						   creator));
+	obj = ::find_object(driver->normalize_path(obj, nil, creator));
 	if (!obj) {
 	    return FALSE;
 	}
@@ -223,7 +217,7 @@ static int destruct_object(mixed obj)
  */
 static object compile_object(string path, string source...)
 {
-    string str, uid;
+    string uid, err;
     object driver, rsrcd, obj;
     int *rsrc, lib, kernel, new;
 
@@ -235,15 +229,14 @@ static object compile_object(string path, string source...)
     /*
      * check access
      */
-    str = object_name(this_object());
     driver = ::find_object(DRIVER);
-    path = driver->normalize_path(path, str + "/..", creator);
+    path = driver->normalize_path(path, nil, creator);
     lib = sscanf(path, "%*s/lib/");
     kernel = sscanf(path, "/kernel/%*s");
     uid = driver->creator(path);
     if ((sizeof(source) != 0 && kernel) ||
 	(creator != "System" &&
-	 !::find_object(ACCESSD)->access(str, path,
+	 !::find_object(ACCESSD)->access(object_name(this_object()), path,
 					 ((lib || !uid) &&
 					  sizeof(source) == 0 && !kernel) ?
 					  READ_ACCESS : WRITE_ACCESS))) {
@@ -266,23 +259,16 @@ static object compile_object(string path, string source...)
     rlimits (-1; -1) {
 	catch {
 	    driver->compiling(path);
-	    if (sizeof(source) != 0) {
-		obj = ::compile_object(path, source...);
-	    } else {
-		obj = ::compile_object(path);
-	    }
+	    obj = ::compile_object(path, source...);
 	    if (new) {
 		rsrcd->rsrc_incr(uid, "objects", nil, 1);
 	    }
 	    driver->compile(path, uid, source...);
 	} : {
-	    str = TLSVAR(1);
+	    err = TLSVAR(1);
 	    driver->compile_failed(path, uid);
-	    obj = nil;
+	    error(err);
 	}
-    }
-    if (!obj) {
-	error(str);
     }
 
     return (lib) ? nil : obj;
@@ -294,7 +280,6 @@ static object compile_object(string path, string source...)
  */
 static object clone_object(string path, varargs string uid)
 {
-    string oname;
     object rsrcd, obj;
     int *rsrc;
 
@@ -311,11 +296,11 @@ static object clone_object(string path, varargs string uid)
     /*
      * check access
      */
-    oname = object_name(this_object());
-    path = ::find_object(DRIVER)->normalize_path(path, oname + "/..", creator);
+    path = ::find_object(DRIVER)->normalize_path(path, nil, creator);
     if ((sscanf(path, "/kernel/%*s") != 0 && !KERNEL()) ||
 	(creator != "System" &&
-	 !::find_object(ACCESSD)->access(oname, path, READ_ACCESS))) {
+	 !::find_object(ACCESSD)->access(object_name(this_object()), path,
+					 READ_ACCESS))) {
 	/*
 	 * kernel objects can only be cloned by kernel objects, and cloning
 	 * in general requires read access
@@ -368,7 +353,7 @@ static object clone_object(string path, varargs string uid)
  */
 static object new_object(mixed obj, varargs string uid)
 {
-    string oname, str;
+    string str;
     int new;
 
     if (!this_object()) {
@@ -376,9 +361,7 @@ static object new_object(mixed obj, varargs string uid)
     }
     switch (typeof(obj)) {
     case T_STRING:
-	oname = object_name(this_object());
-	str = ::find_object(DRIVER)->normalize_path(obj, oname + "/..",
-			    creator);
+	str = ::find_object(DRIVER)->normalize_path(obj, nil, creator);
 	obj = ::find_object(str);
 	new = TRUE;
 	break;
@@ -407,7 +390,8 @@ static object new_object(mixed obj, varargs string uid)
 	 * check access
 	 */
 	if ((creator != "System" &&
-	     !::find_object(ACCESSD)->access(oname, str, READ_ACCESS))) {
+	     !::find_object(ACCESSD)->access(object_name(this_object()), str,
+					     READ_ACCESS))) {
 	    error("Access denied");
 	}
 
@@ -568,10 +552,7 @@ static mixed status(varargs mixed obj, mixed index)
     case T_STRING:
 	/* get corresponding object */
 	driver = ::find_object(DRIVER);
-	obj = ::find_object(driver->normalize_path(obj,
-						   object_name(this_object()) +
-						   "/..",
-						   creator));
+	obj = ::find_object(driver->normalize_path(obj, nil, creator));
 	if (!obj) {
 	    return nil;
 	}
@@ -803,17 +784,15 @@ nomask void _F_callout(string func, mixed *args)
  */
 static string read_file(string path, varargs int offset, int size)
 {
-    string oname;
-
     CHECKARG(path, 1, "read_file");
     if (!this_object()) {
 	error("Permission denied");
     }
 
-    oname = object_name(this_object());
-    path = ::find_object(DRIVER)->normalize_path(path, oname + "/..", creator);
+    path = ::find_object(DRIVER)->normalize_path(path, nil, creator);
     if (creator != "System" &&
-	!::find_object(ACCESSD)->access(oname, path, READ_ACCESS)) {
+	!::find_object(ACCESSD)->access(object_name(this_object()), path,
+					READ_ACCESS)) {
 	error("Access denied");
     }
 
@@ -826,7 +805,7 @@ static string read_file(string path, varargs int offset, int size)
  */
 static int write_file(string path, string str, varargs int offset)
 {
-    string oname, fcreator;
+    string fcreator;
     object driver, rsrcd;
     int size, result, *rsrc;
 
@@ -836,13 +815,13 @@ static int write_file(string path, string str, varargs int offset)
 	error("Permission denied");
     }
 
-    oname = object_name(this_object());
     driver = ::find_object(DRIVER);
-    path = driver->normalize_path(path, oname + "/..", creator);
+    path = driver->normalize_path(path, nil, creator);
     if (sscanf(path, "/kernel/%*s") != 0 ||
 	sscanf(path, "/include/kernel/%*s") != 0 ||
 	(creator != "System" &&
-	 !::find_object(ACCESSD)->access(oname, path, WRITE_ACCESS))) {
+	 !::find_object(ACCESSD)->access(object_name(this_object()), path,
+					 WRITE_ACCESS))) {
 	error("Access denied");
     }
 
@@ -873,7 +852,6 @@ static int write_file(string path, string str, varargs int offset)
  */
 static int remove_file(string path)
 {
-    string oname;
     object driver;
     int size, result;
 
@@ -882,13 +860,13 @@ static int remove_file(string path)
 	error("Permission denied");
     }
 
-    oname = object_name(this_object());
     driver = ::find_object(DRIVER);
-    path = driver->normalize_path(path, oname + "/..", creator);
+    path = driver->normalize_path(path, nil, creator);
     if (sscanf(path, "/kernel/%*s") != 0 ||
 	sscanf(path, "/include/kernel/%*s") != 0 ||
 	(creator != "System" &&
-	 !::find_object(ACCESSD)->access(oname, path, WRITE_ACCESS))) {
+	 !::find_object(ACCESSD)->access(object_name(this_object()), path,
+					 WRITE_ACCESS))) {
 	error("Access denied");
     }
 
@@ -964,7 +942,7 @@ static int rename_file(string from, string to)
  */
 static mixed **get_dir(string path)
 {
-    string oname, *names, dir;
+    string *names, dir;
     mixed **list, *olist;
     int i, sz;
 
@@ -973,10 +951,10 @@ static mixed **get_dir(string path)
 	error("Permission denied");
     }
 
-    oname = object_name(this_object());
-    path = ::find_object(DRIVER)->normalize_path(path, oname + "/..", creator);
+    path = ::find_object(DRIVER)->normalize_path(path, nil, creator);
     if (creator != "System" &&
-	!::find_object(ACCESSD)->access(oname, path, READ_ACCESS)) {
+	!::find_object(ACCESSD)->access(object_name(this_object()), path,
+					READ_ACCESS)) {
 	error("Access denied");
     }
 
@@ -1025,10 +1003,10 @@ static mixed *file_info(string path)
 	error("Permission denied");
     }
 
-    name = object_name(this_object());
-    path = ::find_object(DRIVER)->normalize_path(path, name + "/..", creator);
+    path = ::find_object(DRIVER)->normalize_path(path, nil, creator);
     if (creator != "System" &&
-	!::find_object(ACCESSD)->access(name, path, READ_ACCESS)) {
+	!::find_object(ACCESSD)->access(object_name(this_object()), path,
+					READ_ACCESS)) {
 	error("Access denied");
     }
 
@@ -1067,7 +1045,7 @@ static mixed *file_info(string path)
  */
 static int make_dir(string path)
 {
-    string oname, fcreator;
+    string fcreator;
     object driver, rsrcd;
     int result, *rsrc;
 
@@ -1076,13 +1054,13 @@ static int make_dir(string path)
 	error("Permission denied");
     }
 
-    oname = object_name(this_object());
     driver = ::find_object(DRIVER);
-    path = driver->normalize_path(path, oname + "/..", creator);
+    path = driver->normalize_path(path, nil, creator);
     if (sscanf(path, "/kernel/%*s") != 0 ||
 	sscanf(path, "/include/kernel/%*s") != 0 ||
 	(creator != "System" &&
-	 !::find_object(ACCESSD)->access(oname, path, WRITE_ACCESS))) {
+	 !::find_object(ACCESSD)->access(object_name(this_object()), path,
+					 WRITE_ACCESS))) {
 	error("Access denied");
     }
 
@@ -1111,7 +1089,6 @@ static int make_dir(string path)
  */
 static int remove_dir(string path)
 {
-    string oname;
     object driver;
     int result;
 
@@ -1120,13 +1097,13 @@ static int remove_dir(string path)
 	error("Permission denied");
     }
 
-    oname = object_name(this_object());
     driver = ::find_object(DRIVER);
-    path = driver->normalize_path(path, oname + "/..", creator);
+    path = driver->normalize_path(path, nil, creator);
     if (sscanf(path, "/kernel/%*s") != 0 ||
 	sscanf(path, "/include/kernel/%*s") != 0 ||
 	(creator != "System" &&
-	 !::find_object(ACCESSD)->access(oname, path, WRITE_ACCESS))) {
+	 !::find_object(ACCESSD)->access(object_name(this_object()), path,
+					 WRITE_ACCESS))) {
 	error("Access denied");
     }
 
@@ -1148,17 +1125,15 @@ static int remove_dir(string path)
  */
 static int restore_object(string path)
 {
-    string oname;
-
     CHECKARG(path, 1, "restore_object");
     if (!this_object()) {
 	error("Permission denied");
     }
 
-    oname = object_name(this_object());
-    path = ::find_object(DRIVER)->normalize_path(path, oname + "/..", creator);
+    path = ::find_object(DRIVER)->normalize_path(path, nil, creator);
     if (creator != "System" &&
-	!::find_object(ACCESSD)->access(oname, path, READ_ACCESS)) {
+	!::find_object(ACCESSD)->access(object_name(this_object()), path,
+					READ_ACCESS)) {
 	error("Access denied");
     }
 
