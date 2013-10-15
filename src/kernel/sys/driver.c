@@ -46,7 +46,7 @@ string normalize_path(string file, varargs string dir, string creator)
     case '~':
 	/* ~path */
 	if (!creator) {
-	    creator = creator(object_name(this_object()));
+	    creator = creator(object_name(previous_object()));
 	}
 	if (creator && (strlen(file) == 1 || file[1] == '/')) {
 	    file = USR_DIR + "/" + creator + file[1 ..];
