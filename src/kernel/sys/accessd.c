@@ -70,10 +70,10 @@ int access(string user, string file, int type)
 	int i, sz;
 
 	sscanf(file, USR_DIR + "/%s/%s/", dir, str);
-	if (type == READ_ACCESS && (!dir || gaccess[dir] || str == "open") &&
+	if (type == READ_ACCESS && (!dir || gaccess[dir] || str == "api") &&
 	    sscanf(file, "/kernel/data/%*s") == 0) {
 	    /*
-	     * read access outside /usr, in /usr/foo/open and in selected
+	     * read access outside /usr, in /usr/foo/api and in selected
 	     * other directories in /usr
 	     */
 	    return TRUE;
