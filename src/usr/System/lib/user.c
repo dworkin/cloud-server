@@ -39,14 +39,3 @@ static string address()
 
     return ::query_ip_name(obj);
 }
-
-/*
- * NAME:	admin_wiztool()
- * DESCRIPTION:	create a wiztool when the admin first logs in
- */
-static void admin_wiztool()
-{
-    if (query_conn()) {
-	Init->add_wiztool(this_object());
-    }
-}

@@ -22,7 +22,7 @@ static void login(object connection, string name)
     log_connection("Connection: " + capitalize(name) + " from " + address() +
 		   "\n");
     if (name == "admin" && !wiztool) {
-	admin_wiztool();
+	SystemInit->add_wiztool(this_object());
     }
 }
 

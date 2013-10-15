@@ -115,7 +115,9 @@ void reboot()
  */
 void add_wiztool(object user)
 {
-    if (SYSTEM()) {
+    if (SYSTEM() ||
+	(previous_program() == "/usr/Player/lib/interface" &&
+	 user->query_name() == "admin" && user->query_conn())) {
 	user->add_wiztool(clone_object(WizTool, user->query_name()));
     }
 }
