@@ -73,10 +73,8 @@ private int respond(int code)
 	host = "";
     }
     log_connection("Connection: HTTP from " + connected() + ", " + code +
-		   ((code == HTTP_OK || code == HTTP_NOT_MODIFIED) ?
-		     " " + this_object()->query_method() + " " + host +
-		     this_object()->query_path() : "") +
-		   "\n");
+		    " " + this_object()->query_method() + " " + host +
+		    this_object()->query_path() + "\n");
 
     mesg = call_limited("message", mesg);
     return MODE_RAW;
