@@ -45,6 +45,9 @@ string normalize_path(string file, varargs string dir, string creator)
     switch (file[0]) {
     case '~':
 	/* ~path */
+	if (!creator) {
+	    creator = creator(object_name(this_object()));
+	}
 	if (creator && (strlen(file) == 1 || file[1] == '/')) {
 	    file = USR_DIR + "/" + creator + file[1 ..];
 	} else {
@@ -473,10 +476,7 @@ static string path_write(string path)
 static object call_object(string path)
 {
     if (path[0] != '/') {
-	string oname;
-
-	oname = object_name(previous_object());
-	path = normalize_path(path, oname + "/..", creator(oname));
+	path = normalize_path(path);
     }
     if (sscanf(path, "%*s/lib/") != 0 ||
 	(objectd && objectd->forbid_call(path))) {
