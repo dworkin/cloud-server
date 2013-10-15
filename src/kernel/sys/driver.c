@@ -31,7 +31,7 @@ string creator(string file)
  * NAME:	normalize_path()
  * DESCRIPTION:	reduce a path to its minimal absolute form
  */
-string normalize_path(string file, string dir, varargs string creator)
+string normalize_path(string file, varargs string dir, string creator)
 {
     string *path;
     int i, j, sz;
