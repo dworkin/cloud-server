@@ -1,6 +1,6 @@
 # include <kernel/kernel.h>
 # include <kernel/user.h>
-# include "~HTTP/open/include/http.h"
+# include "~HTTP/api/include/http.h"
 
 inherit "~System/lib/user";
 
