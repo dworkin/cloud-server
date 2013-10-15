@@ -25,10 +25,10 @@ static void log_connection(string str)
 }
 
 /*
- * NAME:	connected()
+ * NAME:	address()
  * DESCRIPTION:	return the address this object is connected to
  */
-static nomask string connected()
+static string address()
 {
     object obj;
 
@@ -46,7 +46,7 @@ static nomask string connected()
  */
 static void admin_wiztool()
 {
-    if (connected()) {
+    if (query_conn()) {
 	Init->add_wiztool(this_object());
     }
 }

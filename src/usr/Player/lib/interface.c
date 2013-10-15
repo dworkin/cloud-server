@@ -19,7 +19,7 @@ static void login(object connection, string name)
 {
     ::connection(connection);
     ::login(name);
-    log_connection("Connection: " + capitalize(name) + " from " + connected() +
+    log_connection("Connection: " + capitalize(name) + " from " + address() +
 		   "\n");
     if (name == "admin" && !wiztool) {
 	admin_wiztool();

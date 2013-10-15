@@ -72,7 +72,7 @@ private int respond(int code)
     if (!host) {
 	host = "";
     }
-    log_connection("Connection: HTTP from " + connected() + ", " + code +
+    log_connection("Connection: HTTP from " + address() + ", " + code +
 		    " " + this_object()->query_method() + " " + host +
 		    this_object()->query_path() + "\n");
 
