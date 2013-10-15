@@ -31,6 +31,7 @@ nomask int _F_init()
 static object clone_object(string path, mixed args...)
 {
     if (path) {
+	path = DRIVER->normalize_path(path);
 	if (sscanf(path, "%*s/lib/") != 0 && status(path, O_INDEX) != nil) {
 	    /* let upgrade server generate a leaf object */
 	    path = UpgradeServer->generate_leaf(path);
@@ -49,6 +50,7 @@ static object clone_object(string path, mixed args...)
 static object new_object(string path, mixed args...)
 {
     if (path) {
+	path = DRIVER->normalize_path(path);
 	if (sscanf(path, "%*s/lib/") != 0 && status(path, O_INDEX) != nil) {
 	    /* let upgrade server generate a leaf object */
 	    path = UpgradeServer->generate_leaf(path);
@@ -81,6 +83,7 @@ static object compile_object(string path)
     object obj;
 
     if (path) {
+	path = DRIVER->normalize_path(path);
 	if (sscanf(path, "%*s/@@@/") != 0) {
 	    error("Cannot compile leaf object");
 	}
