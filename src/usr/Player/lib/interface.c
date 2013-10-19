@@ -18,22 +18,9 @@ private object wiztool;		/* wiztool, if any */
 static void login(object connection, string name)
 {
     ::connection(connection);
-    ::login(name);
-    log_connection("Connection: " + capitalize(name) + " from " + address() +
-		   "\n");
+    ::login("Connection: " + capitalize(name) + " from " + address() + "\n");
     if (name == "admin" && !wiztool) {
 	SystemInit->add_wiztool(this_object());
-    }
-}
-
-/*
- * NAME:	logout()
- * DESCRIPTION:	logout user
- */
-static void logout()
-{
-    if (query_conn()) {
-	::logout();
     }
 }
 

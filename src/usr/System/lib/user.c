@@ -16,12 +16,20 @@ static void set_mode(int mode)
 }
 
 /*
- * NAME:	log_connection()
- * DESCRIPTION:	log this connection
+ * NAME:	login()
+ * DESCRIPTION:	login this user
  */
-static void log_connection(string str)
+static void login(string str)
 {
     DRIVER->message(str);
+}
+
+/*
+ * NAME:	logout()
+ * DESCRIPTION:	logout this user
+ */
+static void logout()
+{
 }
 
 /*

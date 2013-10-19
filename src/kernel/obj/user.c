@@ -109,12 +109,21 @@ void logout(int quit)
 		tell_audience(Name + " disconnected.\n");
 	    }
 	}
-	::logout();
+	::logout(name);
 	if (wiztool) {
 	    destruct_object(wiztool);
 	}
 	destruct_object(this_object());
     }
+}
+
+/*
+ * NAME:	query_name()
+ * DESCRIPTION:	return this user's name
+ */
+string query_name()
+{
+    return name;
 }
 
 /*

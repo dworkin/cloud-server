@@ -98,6 +98,15 @@ static void logout(int quit)
 }
 
 /*
+ * NAME:	query_name()
+ * DESCRIPTION:	return this user's name
+ */
+string query_name()
+{
+    return name;
+}
+
+/*
  * NAME:	message()
  * DESCRIPTION:	handle a message
  */

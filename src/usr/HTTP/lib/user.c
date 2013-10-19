@@ -72,9 +72,9 @@ private int respond(int code)
     if (!host) {
 	host = "";
     }
-    log_connection("Connection: HTTP from " + address() + ", " + code +
-		    " " + this_object()->query_method() + " " + host +
-		    this_object()->query_path() + "\n");
+    ::login("Connection: HTTP from " + address() + ", " + code + " " +
+	    this_object()->query_method() + " " + host +
+	    this_object()->query_path() + "\n");
 
     mesg = call_limited("message", mesg);
     return MODE_RAW;
