@@ -17,6 +17,7 @@ private inherit "/lib/util/language";
 # define STATE_NEWPASSWD2	4
 # define STATE_PASTING		5
 
+# define PlayerServer		"/usr/Player/sys/userd"
 # define BaseBody		"/lib/base/body"
 
 
@@ -581,7 +582,7 @@ static int receive_message(string str)
 		break;
 
 	    case "@users":
-		users = users();
+		users = PlayerServer->query_logins();
 		str = "Logged on:";
 		for (i = 0, sz = sizeof(users); i < sz; i++) {
 		    cmd = users[i]->query_name();

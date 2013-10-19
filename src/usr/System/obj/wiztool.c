@@ -86,6 +86,15 @@ static object compile_object(string path, string source...)
     return wiztool::compile_object(path, source...);
 }
 
+/*
+ * NAME:	ident()
+ * DESCRIPTION:	find user
+ */
+static object ident(string str)
+{
+    return PlayerServer->find_user(str);
+}
+
 
 /*
  * NAME:	cmd_issues()
@@ -506,7 +515,7 @@ static void cmd_people(object user, string cmd, string str)
 	return;
     }
 
-    users = users();
+    users = PlayerServer->query_logins();
     sz = sizeof(users);
     hosts = allocate(sz);
     names = allocate(sz);
@@ -612,7 +621,7 @@ static void cmd_wiz(object user, string cmd, string str)
 	break;
     }
 
-    users = users();
+    users = PlayerServer->query_logins();
     for (i = 0, sz = sizeof(users); i < sz; i++) {
 	usr = users[i];
 	if (usr->query_wiztool()) {

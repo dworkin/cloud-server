@@ -5,9 +5,11 @@ inherit "~System/lib/user";
 
 private inherit "/lib/util/string";
 
+# define Interface	"/usr/Player/lib/interface"
 
 object userd;		/* user daemon */
 mapping users;		/* 2-step mapping for user objects */
+mapping logins;		/* logged-in users */
 string banner;		/* login message */
 
 /*
@@ -18,6 +20,7 @@ static void create()
 {
     userd = find_object(USERD);
     users = ([ ]);
+    logins = ([ ]);
     banner = "\n" +
 	     "Welcome to the Cloud Server.\n" +
 	     "\n" +
@@ -40,6 +43,37 @@ object find_user(string name)
     name = lower_case(name);
     map = users[name[0 .. 1]];
     return (map) ? map[name] : nil;
+}
+
+/*
+ * NAME:	user_login()
+ * DESCRIPTION:	login a user
+ */
+void user_login(object obj)
+{
+    if (previous_program() == Interface) {
+	logins[obj] = 1;
+    }
+}
+
+/*
+ * NAME:	user_logout()
+ * DESCRIPTION:	logout a user
+ */
+void user_logout(object obj)
+{
+    if(previous_program() == Interface) {
+	logins[obj] = nil;
+    }
+}
+
+/*
+ * NAME:	query_logins()
+ * DESCRIPTION:	return array of logged-in users
+ */
+object *query_logins()
+{
+    return map_indices(logins);
 }
 
 /*

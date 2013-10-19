@@ -5,6 +5,7 @@ inherit soul "/lib/base/soul";
 
 private inherit "/lib/util/string";
 
+# define PlayerServer	"/usr/Player/sys/userd"
 # define SystemInit	"/usr/System/initd"
 
 
@@ -19,8 +20,21 @@ static void login(object connection, string name)
 {
     ::connection(connection);
     ::login("Connection: " + capitalize(name) + " from " + address() + "\n");
+    PlayerServer->user_login(this_object());
     if (name == "admin" && !wiztool) {
 	SystemInit->add_wiztool(this_object());
+    }
+}
+
+/*
+ * NAME:	logout()
+ * DESCRIPTION:	logout user
+ */
+static void logout()
+{
+    if (query_conn()) {
+	PlayerServer->user_logout(this_object());
+	::logout();
     }
 }
 
