@@ -153,7 +153,7 @@ nomask int receive_message(string str)
 	    if (code == 0) {
 		length = call_limited("query_content_length");
 		if (length >= 0) {
-		    mesg = new_object("/data/strbuffer", "");
+		    mesg = new_object("/lib/strbuffer", "");
 		    if (length > 0) {
 			return MODE_RAW;
 		    }

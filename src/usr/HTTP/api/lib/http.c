@@ -19,7 +19,7 @@ static object response(int code, string str, varargs string type, int length,
     if (!body) {
 	body = "";
     }
-    return new_object("/data/strbuffer",
+    return new_object("/lib/strbuffer",
 		      http_response(code, str, type, length, modtime) + body);
 }
 

@@ -48,7 +48,7 @@ static void create()
 
     /* mudlib objects */
     compile_object("/obj/body/human");
-    compile_object("/data/strbuffer");
+    compile_object("/lib/strbuffer");
 
     /* Domain stuff */
     rsrc_incr(nil, "filequota", nil,
