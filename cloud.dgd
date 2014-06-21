@@ -20,7 +20,7 @@ hotboot		= ({ "../bin/dgd",	/* hotboot binary */
 
 typechecking	= 2;			/* global typechecking */
 include_file	= "/include/std.h";	/* standard include file */
-include_dirs	= ({ "/include", "~/include" });
+include_dirs	= ({ "/include", "~/include", "~/api/include" });
 					/* include directories to search */
 auto_object	= "/kernel/lib/auto";	/* automatically inherited object */
 driver_object	= "/kernel/sys/driver";	/* driver object */
