@@ -219,7 +219,7 @@ static object compile_object(string path, string source...)
 {
     string uid, err;
     object driver, rsrcd, obj;
-    int *rsrc, lib, kernel, new;
+    int *rsrc, lib, kernel, add;
 
     CHECKARG(path, 1, "compile_object");
     if (!this_object()) {
@@ -255,12 +255,12 @@ static object compile_object(string path, string source...)
     /*
      * do the compiling
      */
-    new = !::find_object(path);
+    add = !::find_object(path);
     rlimits (-1; -1) {
 	catch {
 	    driver->compiling(path);
 	    obj = ::compile_object(path, source...);
-	    if (new) {
+	    if (add) {
 		rsrcd->rsrc_incr(uid, "objects", nil, 1);
 	    }
 	    driver->compile(path, uid, source...);
@@ -354,7 +354,7 @@ static object clone_object(string path, varargs string uid)
 static object new_object(mixed obj, varargs string uid)
 {
     string str;
-    int new;
+    int create;
 
     if (!this_object()) {
 	error("Permission denied");
@@ -363,13 +363,13 @@ static object new_object(mixed obj, varargs string uid)
     case T_STRING:
 	str = ::find_object(DRIVER)->normalize_path(obj, nil, creator);
 	obj = ::find_object(str);
-	new = TRUE;
+	create = TRUE;
 	break;
 
     case T_OBJECT:
 	str = object_name(obj);
 	if (sscanf(str, "%*s#-1") != 0) {
-	    new = FALSE;
+	    create = FALSE;
 	    break;
 	}
 	/* fall through */
@@ -377,7 +377,7 @@ static object new_object(mixed obj, varargs string uid)
 	badarg(1, "new_object");
     }
     if (uid) {
-	CHECKARG(new && creator == "System", 1, "new_object");
+	CHECKARG(create && creator == "System", 1, "new_object");
     } else {
 	uid = owner;
     }
@@ -385,7 +385,7 @@ static object new_object(mixed obj, varargs string uid)
     /*
      * create the object
      */
-    if (new) {
+    if (create) {
 	/*
 	 * check access
 	 */
