@@ -1,5 +1,6 @@
 # include <kernel/kernel.h>
 # include <kernel/user.h>
+# include <strbuffer.h>
 # include "~/api/include/http.h"
 
 inherit	user "~System/lib/user";
@@ -153,7 +154,7 @@ nomask int receive_message(string str)
 	    if (code == 0) {
 		length = call_limited("query_content_length");
 		if (length >= 0) {
-		    mesg = new_object("/lib/strbuffer", "");
+		    mesg = new StrBuffer("");
 		    if (length > 0) {
 			return MODE_RAW;
 		    }

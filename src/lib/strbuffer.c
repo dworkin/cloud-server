@@ -1,10 +1,8 @@
-# include <limits.h>
-
 # define CHUNK_SIZE	65535
 
 
-int length;		/* total length of strings in buffer */
-string *buffer;		/* string buffer */
+private int length;	/* total length of strings in buffer */
+private string *buffer;	/* string buffer */
 
 /*
  * NAME:	create()
@@ -73,6 +71,15 @@ string chunk()
     } else {
 	return nil;
     }
+}
+
+/*
+ * NAME:	chunks()
+ * DESCRIPTION:	return all chunks in buffer
+ */
+string *chunks()
+{
+    return (buffer) ? buffer[..] : ({ });
 }
 
 /*
