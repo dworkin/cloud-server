@@ -187,6 +187,28 @@ void set_error_manager(object obj)
 }
 
 /*
+ * NAME:	_compile()
+ * DESCRIPTION:	low-level compilation function
+ */
+private atomic object _compile(string path, string creator,
+			       varargs string *source)
+{
+    object obj;
+
+    TLSVAR(2) = ({ path });
+    if (source) {
+	obj = compile_object(path, source...);
+    } else {
+	obj = compile_object(path);
+    }
+    rsrcd->rsrc_incr(creator, "objects", nil, 1);
+    if (objectd) {
+	objectd->compile(creator, path, ({ }), TLSVAR(2)[1 ..]...);
+    }
+    return obj;
+}
+
+/*
  * NAME:	compiling()
  * DESCRIPTION:	object being compiled
  */
@@ -199,17 +221,12 @@ void compiling(string path)
 	    if (objectd) {
 		objectd->compiling(AUTO);
 	    }
-	    TLSVAR(2) = ({ AUTO });
-	    err = catch(compile_object(AUTO));
+	    err = catch(_compile(AUTO, "System"));
 	    if (err) {
 		if (objectd) {
 		    objectd->compile_failed("System", AUTO);
 		}
 		error(err);
-	    }
-	    rsrcd->rsrc_incr("System", "objects", nil, 1);
-	    if (objectd) {
-		objectd->compile("System", AUTO, ({ }));
 	    }
 	}
 	if (objectd) {
@@ -582,22 +599,14 @@ static object inherit_program(string from, string path, int priv)
 	if (objectd) {
 	    objectd->compiling(path);
 	}
-	TLSVAR(2) = ({ path });
-	if (str) {
-	    str = catch(obj = compile_object(path, str...));
-	} else {
-	    str = catch(obj = compile_object(path));
-	}
+	str = catch(obj = _compile(path, creator, str));
 	if (str) {
 	    if (objectd) {
 		objectd->compile_failed(creator, path);
 	    }
 	    error(str);
 	}
-	rsrcd->rsrc_incr(creator, "objects", nil, 1);
 	if (objectd) {
-	    objectd->compile(creator, path, ({ }), TLSVAR(2)[1 ..]...);
-
 	    objectd->compiling(from);
 	}
 	TLSVAR(2) = ({ from });
@@ -842,51 +851,52 @@ static void atomic_error(string str, int atom, int ticks)
     object obj;
 
     trace = call_trace();
-    sz = sizeof(trace) - 1;
+    if (sscanf(trace[atom][TRACE_PROGNAME], "/kernel/%*s") == 0) {
+	if (errord) {
+	    errord->atomic_error(str, atom, trace);
+	} else {
+	    str += " [atomic]\n";
 
-    if (errord) {
-	errord->atomic_error(str, atom, trace);
-    } else {
-	str += " [atomic]\n";
+	    for (i = atom, sz = sizeof(trace) - 1; i < sz; i++) {
+		progname = trace[i][TRACE_PROGNAME];
+		len = trace[i][TRACE_LINE];
+		if (len == 0) {
+		    line = "    ";
+		} else {
+		    line = "    " + len;
+		    line = line[strlen(line) - 4 ..];
+		}
 
-	for (i = atom; i < sz; i++) {
-	    progname = trace[i][TRACE_PROGNAME];
-	    len = trace[i][TRACE_LINE];
-	    if (len == 0) {
-		line = "    ";
-	    } else {
-		line = "    " + len;
-		line = line[strlen(line) - 4 ..];
-	    }
+		func = trace[i][TRACE_FUNCTION];
+		len = strlen(func);
+		if (progname == AUTO && i != sz - 1) {
+		    switch (func[.. 2]) {
+		    case "bad":
+		    case "_F_":
+			continue;
+		    }
+		}
+		if (len < 17) {
+		    func += "                 "[len ..];
+		}
 
-	    func = trace[i][TRACE_FUNCTION];
-	    len = strlen(func);
-	    if (progname == AUTO && i != sz - 1) {
-		switch (func[.. 2]) {
-		case "bad":
-		case "_F_":
-		    continue;
+		objname = trace[i][TRACE_OBJNAME];
+		if (progname != objname) {
+		    len = strlen(progname);
+		    if (len < strlen(objname) &&
+			progname == objname[.. len - 1] && objname[len] == '#')
+		    {
+			objname = objname[len ..];
+		    }
+		    str += line + " " + func + " " + progname + " (" + objname +
+			   ")\n";
+		} else {
+		    str += line + " " + func + " " + progname + "\n";
 		}
 	    }
-	    if (len < 17) {
-		func += "                 "[len ..];
-	    }
 
-	    objname = trace[i][TRACE_OBJNAME];
-	    if (progname != objname) {
-		len = strlen(progname);
-		if (len < strlen(objname) && progname == objname[.. len - 1] &&
-		    objname[len] == '#') {
-		    objname = objname[len ..];
-		}
-		str += line + " " + func + " " + progname + " (" + objname +
-		       ")\n";
-	    } else {
-		str += line + " " + func + " " + progname + "\n";
-	    }
+	    message(str);
 	}
-
-	message(str);
     }
 }
 

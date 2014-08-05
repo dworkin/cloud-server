@@ -212,6 +212,25 @@ static int destruct_object(mixed obj)
 }
 
 /*
+ * NAME:	_compile()
+ * DESCRIPTION:	reversible low-level compile
+ */
+private atomic object _compile(object driver, object rsrcd, string path,
+			       string uid, string *source)
+{
+    int add;
+    object obj;
+
+    add = !::find_object(path);
+    obj = ::compile_object(path, source...);
+    if (add) {
+	rsrcd->rsrc_incr(uid, "objects", nil, 1);
+    }
+    driver->compile(path, uid, source...);
+    return obj;
+}
+
+/*
  * NAME:	compile_object()
  * DESCRIPTION:	compile a master object
  */
@@ -219,7 +238,7 @@ static object compile_object(string path, string source...)
 {
     string uid, err;
     object driver, rsrcd, obj;
-    int *rsrc, lib, kernel, add;
+    int *rsrc, lib, kernel;
 
     CHECKARG(path, 1, "compile_object");
     if (!this_object()) {
@@ -255,17 +274,10 @@ static object compile_object(string path, string source...)
     /*
      * do the compiling
      */
-    add = !::find_object(path);
     rlimits (-1; -1) {
-	catch {
-	    driver->compiling(path);
-	    obj = ::compile_object(path, source...);
-	    if (add) {
-		rsrcd->rsrc_incr(uid, "objects", nil, 1);
-	    }
-	    driver->compile(path, uid, source...);
-	} : {
-	    err = TLSVAR(1);
+	driver->compiling(path);
+	err = catch(obj = _compile(driver, rsrcd, path, uid, source));
+	if (err) {
 	    driver->compile_failed(path, uid);
 	    error(err);
 	}
