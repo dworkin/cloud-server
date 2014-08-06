@@ -106,8 +106,12 @@ static void tls_set(string index, mixed value)
 {
     string program;
 
-    if (sscanf(index, "%s::", program) != 0 && program != previous_program()) {
-	error("Illegal use of tls_set() for private variable");
+    if (sscanf(index, "%s::%s", program, index) != 0) {
+	if (program != "") {
+	    error("Illegal use of tls_set() for private variable");
+	} else {
+	    index = previous_program() + "::" + index;
+	}
     }
     ::tls_set(index, value);
 }
@@ -120,8 +124,12 @@ static mixed tls_get(string index)
 {
     string program;
 
-    if (sscanf(index, "%s::", program) != 0 && program != previous_program()) {
-	error("Illegal use of tls_get() for private variable");
+    if (sscanf(index, "%s::%s", program, index) != 0) {
+	if (program != "") {
+	    error("Illegal use of tls_get() for private variable");
+	} else {
+	    index = previous_program() + "::" + index;
+	}
     }
     return ::tls_get(index);
 }
