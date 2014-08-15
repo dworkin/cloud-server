@@ -196,11 +196,7 @@ private atomic object _compile(string path, string creator,
     object obj;
 
     TLSVAR(2) = ({ path });
-    if (source) {
-	obj = compile_object(path, source...);
-    } else {
-	obj = compile_object(path);
-    }
+    obj = (source) ? compile_object(path, source...) : compile_object(path);
     rsrcd->rsrc_incr(creator, "objects", nil, 1);
     if (objectd) {
 	objectd->compile(creator, path, ({ }), TLSVAR(2)[1 ..]...);
@@ -599,14 +595,12 @@ static object inherit_program(string from, string path, int priv)
 	if (objectd) {
 	    objectd->compiling(path);
 	}
-	str = catch(obj = _compile(path, creator, str));
-	if (str) {
-	    if (objectd) {
-		objectd->compile_failed(creator, path);
-	    }
-	    error(str);
-	}
+	TLSVAR(2) = ({ path });
+	obj = (str) ? compile_object(path, str...) : compile_object(path);
+	rsrcd->rsrc_incr(creator, "objects", nil, 1);
 	if (objectd) {
+	    objectd->compile(creator, path, ({ }), TLSVAR(2)[1 ..]...);
+
 	    objectd->compiling(from);
 	}
 	TLSVAR(2) = ({ from });
@@ -726,12 +720,11 @@ static void interrupt()
  * NAME:	_runtime_error()
  * DESCRIPTION:	handle runtime error, with proper TLS on the stack
  */
-private void _runtime_error(mixed tls, string str, int caught, int ticks,
-			    mixed **trace)
+private void _runtime_error(mapping tls, string str, int caught, int ticks,
+			    mixed **trace, object user)
 {
     string line, func, progname, objname;
     int i, sz, len;
-    object user;
 
     i = sz = sizeof(trace) - 1;
 
@@ -798,14 +791,8 @@ private void _runtime_error(mixed tls, string str, int caught, int ticks,
 	}
 
 	message(str);
-	if (caught == 0) {
-	    user = this_user();
-	    while (user && function_object("query_user", user) == LIB_CONN) {
-		user = user->query_user();
-	    }
-	    if (user) {
-		user->message(str);
-	    }
+	if (caught == 0 && user) {
+	    user->message(str);
 	}
     }
 }
@@ -814,12 +801,41 @@ private void _runtime_error(mixed tls, string str, int caught, int ticks,
  * NAME:	runtime_error()
  * DESCRIPTION:	log a runtime error
  */
-static void runtime_error(string str, int caught, int ticks)
+static string runtime_error(string str, int caught, int ticks)
 {
+    object user;
+    string *messages;
+    int i, sz;
     mixed **trace;
     mapping tls;
 
+    user = this_user();
+    while (user && function_object("query_user", user) == LIB_CONN) {
+	user = user->query_user();
+    }
+    messages = explode(str, "\n");
+    for (i = 0, sz = sizeof(messages) - 1; i < sz; i++) {
+	string file;
+	int line;
+
+	if (sscanf(messages[i], "\0%s\0%d\0%s", file, line, str) != 0) {
+	    if (errord) {
+		errord->compile_error(file, line, str);
+	    } else {
+		send_message(file += ", " + line + ": " + str + "\n");
+		if (user) {
+		    user->message(file);
+		}
+	    }
+	    messages[i] = nil;
+	} else {
+	    messages[i] = messages[i][1 ..];
+	}
+    }
+    str = messages[sz];
+    messages[i] = nil;
     trace = call_trace();
+    TLS(trace[1][TRACE_FIRSTARG], 4) = messages - ({ nil });
 
     if (sizeof(trace) == 1) {
 	/* top-level error */
@@ -831,26 +847,34 @@ static void runtime_error(string str, int caught, int ticks)
 	    caught = 0;		/* ignore top-level catch */
 	} else if (ticks < 0 && sscanf(trace[caught - 1][TRACE_PROGNAME],
 				       "/kernel/%*s") != 0) {
-	    TLS(tls, 1) = str;
-	    return;
+	    return TLS(tls, 1) = str;
 	}
     }
 
-    _runtime_error(tls, str, caught, ticks, trace);
+    _runtime_error(tls, str, caught, ticks, trace, user);
+
+    return str;
 }
 
 /*
  * NAME:	atomic_error()
  * DESCRIPTION:	log a runtime error in atomic code
  */
-static void atomic_error(string str, int atom, int ticks)
+static string atomic_error(string str, int atom, int ticks)
 {
     mixed **trace;
-    string line, func, progname, objname;
+    string *messages, mesg, line, func, progname, objname;
     int i, sz, len;
     object obj;
 
     trace = call_trace();
+    messages = TLS(trace[1][TRACE_FIRSTARG], 3);
+    if (messages) {
+	mesg = implode(messages, "\n") + "\n" + str;
+    } else {
+	mesg = str;
+    }
+
     if (sscanf(trace[atom][TRACE_PROGNAME], "/kernel/%*s") == 0) {
 	if (errord) {
 	    errord->atomic_error(str, atom, trace);
@@ -898,6 +922,8 @@ static void atomic_error(string str, int atom, int ticks)
 	    message(str);
 	}
     }
+
+    return mesg;
 }
 
 /*
@@ -906,20 +932,18 @@ static void atomic_error(string str, int atom, int ticks)
  */
 static void compile_error(string file, int line, string err)
 {
-    object user;
+    string *mesg, *messages;
+    mapping tls;
 
-    if (errord) {
-	errord->compile_error(file, line, err);
+    mesg = ({ "\0" + file + "\0" + line + "\0" + err });
+    tls = call_trace()[1][TRACE_FIRSTARG];
+    messages = TLS(tls, 3);
+    if (messages) {
+	messages += mesg;
     } else {
-	send_message(file += ", " + line + ": " + err + "\n");
-	user = this_user();
-	while (user && function_object("query_user", user) == LIB_CONN) {
-	    user = user->query_user();
-	}
-	if (user) {
-	    user->message(file);
-	}
+	messages = mesg;
     }
+    TLS(tls, 3) = messages;
 }
 
 /*

@@ -702,7 +702,8 @@ private mixed _F_call_limited(mixed arg1, mixed *args)
     object rsrcd;
     int stack, ticks;
     string func;
-    mixed tls, *limits, result;
+    mapping tls;
+    mixed *limits, result;
 
     rsrcd = ::find_object(RSRCD);
     func = arg1;
@@ -1259,4 +1260,55 @@ static mixed tls_get(mixed index)
 	badarg(1, "tls_get");
     }
     return ::call_trace()[1][TRACE_FIRSTARG][index];
+}
+
+/*
+ * NAME:	add_atomic_message()
+ * DESCRIPTION:	add a message to be passed on through an atomic error
+ */
+static void add_atomic_message(string str)
+{
+    mapping tls;
+    string *mesg, *messages;
+
+    if (!str || sscanf(str, "*%s\n") != 0) {
+	badarg(1, "add_atomic_message");
+    }
+
+    mesg = ({ "." + str });
+    tls = ::call_trace()[1][TRACE_FIRSTARG];
+    messages = TLS(tls, 3);
+    if (messages) {
+	messages += mesg;
+    } else {
+	messages = mesg;
+    }
+    TLS(tls, 3) = messages;
+}
+
+/*
+ * NAME:	query_atomic_messages()
+ * DESCRIPTION:	retrieve messages after an atomic error
+ */
+static string *query_atomic_messages()
+{
+    mapping tls;
+    string *messages;
+
+    tls = ::call_trace()[1][TRACE_FIRSTARG];
+    messages = TLS(tls, 4);
+    TLS(tls, 4) = nil;
+    return (messages) ? messages : ({ });
+}
+
+/*
+ * NAME:	error()
+ * DESCRIPTION:	throw an error
+ */
+static void error(string str)
+{
+    if (!str || sscanf(str, "%*s\n") != 0) {
+	badarg(1, "error");
+    }
+    ::error(str);
 }
