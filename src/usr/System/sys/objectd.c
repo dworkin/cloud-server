@@ -434,6 +434,16 @@ void compile(string owner, string path, mixed source, string inherited...)
     if (previous_object() == driver) {
 	int i, *indices;
 
+	if (sscanf(path, "%*s/lib/") == 0) {
+	    mapping undefined;
+
+	    undefined = status(path, O_UNDEFINED);
+	    if (undefined) {
+		error("Function " + map_values(undefined)[0][0] +
+		      " not implemented by \"" + path + "\"");
+	    }
+	}
+
 	i = sizeof(inherited);
 	if (i != 0) {
 	    /* collect indices of inherited objects */
