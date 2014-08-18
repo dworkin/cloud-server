@@ -835,7 +835,7 @@ static string runtime_error(string str, int caught, int ticks)
     str = messages[sz];
     messages[i] = nil;
     trace = call_trace();
-    TLS(trace[1][TRACE_FIRSTARG], 4) = messages - ({ nil });
+    TLS(trace[1][TRACE_FIRSTARG], 6) = messages - ({ nil });
 
     if (sizeof(trace) == 1) {
 	/* top-level error */
@@ -868,7 +868,7 @@ static string atomic_error(string str, int atom, int ticks)
     object obj;
 
     trace = call_trace();
-    messages = TLS(trace[1][TRACE_FIRSTARG], 3);
+    messages = TLS(trace[1][TRACE_FIRSTARG], 5);
     if (messages) {
 	mesg = implode(messages, "\n") + "\n" + str;
     } else {
@@ -937,13 +937,13 @@ static void compile_error(string file, int line, string err)
 
     mesg = ({ "\0" + file + "\0" + line + "\0" + err });
     tls = call_trace()[1][TRACE_FIRSTARG];
-    messages = TLS(tls, 3);
+    messages = TLS(tls, 5);
     if (messages) {
 	messages += mesg;
     } else {
 	messages = mesg;
     }
-    TLS(tls, 3) = messages;
+    TLS(tls, 5) = messages;
 }
 
 /*

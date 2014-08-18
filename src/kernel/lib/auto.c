@@ -1277,13 +1277,13 @@ static void add_atomic_message(string str)
 
     mesg = ({ "." + str });
     tls = ::call_trace()[1][TRACE_FIRSTARG];
-    messages = TLS(tls, 3);
+    messages = TLS(tls, 5);
     if (messages) {
 	messages += mesg;
     } else {
 	messages = mesg;
     }
-    TLS(tls, 3) = messages;
+    TLS(tls, 5) = messages;
 }
 
 /*
@@ -1296,8 +1296,8 @@ static string *query_atomic_messages()
     string *messages;
 
     tls = ::call_trace()[1][TRACE_FIRSTARG];
-    messages = TLS(tls, 4);
-    TLS(tls, 4) = nil;
+    messages = TLS(tls, 6);
+    TLS(tls, 6) = nil;
     return (messages) ? messages : ({ });
 }
 
