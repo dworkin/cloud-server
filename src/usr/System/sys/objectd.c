@@ -405,18 +405,8 @@ void notify_compiling(object obj)
 void compiling(string path)
 {
     if (previous_object() == driver) {
-	int max;
-	object dbobj;
-
 	if (sscanf(path, "%*s.c/") != 0 || sscanf(path, "%*s.h/") != 0) {
 	    error("Invalid object name");
-	}
-
-	/* check if there's enough space for another one */
-	max = status(ST_ARRAYSIZE);
-	if ((dbobj=creator_map[driver->creator(path)]) ?
-	    !dbobj->test_space(path, max) : map_sizeof(creator_map) >= max) {
-	    error("Out of space");
 	}
 
 	if (notify) {
@@ -459,7 +449,9 @@ void compile(string owner, string path, mixed source, string inherited...)
 	    /* just the auto object */
 	    indices = ({ status(AUTO, O_INDEX) });
 	}
-	register_object(owner, path, status(path, O_INDEX), indices);
+	catch {
+	    register_object(owner, path, status(path, O_INDEX), indices);
+	} : error("Out of space for object \"" + path + "\"");
 
 	if (notify) {
 	    notify->compile(path);

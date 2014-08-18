@@ -36,27 +36,6 @@ void set_creator(string str)
 }
 
 /*
- * NAME:	test_space()
- * DESCRIPTION:	see if there's room for another one
- */
-int test_space(string path, int max)
-{
-    if (previous_object() == objectd) {
-	mixed issue;
-
-	if (map_sizeof(objects) >= max) {
-	    return FALSE;
-	}
-	sscanf(path, "/usr/%*s/%s", path);
-	issue = issues[path];
-	if (typeof(issue) == T_ARRAY && sizeof(issue) >= max) {
-	    return FALSE;
-	}
-    }
-    return TRUE;
-}
-
-/*
  * NAME:	add_inherited()
  * DESCRIPTION:	register an inherited object
  */
