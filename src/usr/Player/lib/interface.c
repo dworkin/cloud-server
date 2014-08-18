@@ -5,8 +5,8 @@ inherit soul "/lib/base/soul";
 
 private inherit "/lib/util/string";
 
-# define PlayerServer	"/usr/Player/sys/userd"
-# define SystemInit	"/usr/System/initd"
+# define PLAYERSERVER	"/usr/Player/sys/userd"
+# define SYSTEMINIT	"/usr/System/initd"
 
 
 private object body;		/* current body */
@@ -20,9 +20,9 @@ static void login(object connection, string name)
 {
     ::connection(connection);
     ::login("Connection: " + capitalize(name) + " from " + address() + "\n");
-    PlayerServer->user_login(this_object());
+    PLAYERSERVER->user_login(this_object());
     if (name == "admin" && !wiztool) {
-	SystemInit->add_wiztool(this_object());
+	SYSTEMINIT->add_wiztool(this_object());
     }
 }
 
@@ -33,7 +33,7 @@ static void login(object connection, string name)
 static void logout()
 {
     if (query_conn()) {
-	PlayerServer->user_logout(this_object());
+	PLAYERSERVER->user_logout(this_object());
 	::logout();
     }
 }
@@ -53,7 +53,7 @@ static void set_current_body(object obj)
  */
 void add_wiztool(object obj)
 {
-    if (previous_program() == SystemInit) {
+    if (previous_program() == SYSTEMINIT) {
 	add_body(wiztool = obj);
     }
 }
@@ -64,7 +64,7 @@ void add_wiztool(object obj)
  */
 void remove_wiztool()
 {
-    if (previous_program() == SystemInit) {
+    if (previous_program() == SYSTEMINIT) {
 	remove_body(wiztool);
 	wiztool = nil;
     }

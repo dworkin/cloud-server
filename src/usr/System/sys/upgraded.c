@@ -5,8 +5,8 @@
 
 inherit API_ACCESS;
 
-# define ObjectServer	"/usr/System/sys/objectd"
-# define SystemAuto	"/usr/System/lib/auto"
+# define OBJECTSERVER	"/usr/System/sys/objectd"
+# define SYSTEMAUTO	"/usr/System/lib/auto"
 
 
 object objectd;			/* object server */
@@ -23,7 +23,7 @@ static void create()
 {
     ::create();
 
-    objectd = find_object(ObjectServer);
+    objectd = find_object(OBJECTSERVER);
     factor = status(ST_ARRAYSIZE);
 }
 
@@ -408,7 +408,7 @@ int query_upgrading()
  */
 string generate_leaf(string path)
 {
-    if (previous_program() == SystemAuto) {
+    if (previous_program() == SYSTEMAUTO) {
 	string str, tail;
 
 	if (!access(object_name(previous_object()), path, READ_ACCESS)) {

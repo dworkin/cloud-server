@@ -3,8 +3,6 @@
 
 inherit LIB_USER;
 
-# define Init	"/usr/System/initd"
-
 
 /*
  * NAME:	set_mode()

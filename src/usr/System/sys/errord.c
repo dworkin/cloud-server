@@ -3,9 +3,9 @@
 # include <trace.h>
 # include <type.h>
 
-# define SystemAuto	"/usr/System/lib/auto"
+# define SYSTEMAUTO	"/usr/System/lib/auto"
 
-inherit SystemAuto;
+inherit SYSTEMAUTO;
 
 private inherit "/lib/util/string";
 
@@ -47,7 +47,7 @@ void runtime_error(string error, int caught, mixed **trace)
 	    progname = ftrace[TRACE_PROGNAME];
 	    str = ftrace[TRACE_FUNCTION];
 	    if (progname != AUTO &&
-		(progname != SystemAuto || str[.. 2] != "_F_")) {
+		(progname != SYSTEMAUTO || str[.. 2] != "_F_")) {
 		if (objname != last_obj) {
 		    lines[j++] = objname;
 		    last_obj = objname;
@@ -105,7 +105,7 @@ void atomic_error(string error, int atom, mixed **trace)
 	    progname = ftrace[TRACE_PROGNAME];
 	    str = ftrace[TRACE_FUNCTION];
 	    if (progname != AUTO &&
-		(progname != SystemAuto || str[.. 2] != "_F_")) {
+		(progname != SYSTEMAUTO || str[.. 2] != "_F_")) {
 		if (objname != last_obj) {
 		    lines[j++] = objname;
 		    last_obj = objname;

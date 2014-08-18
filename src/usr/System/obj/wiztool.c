@@ -11,10 +11,10 @@ inherit body	"/lib/base/body";
 
 private inherit	"/lib/util/string";
 
-# define Init		"/usr/System/initd"
-# define PlayerServer	"/usr/Player/sys/userd"
-# define ObjectServer	"/usr/System/sys/objectd"
-# define UpgradeServer	"/usr/System/sys/upgraded"
+# define INIT		"/usr/System/initd"
+# define PLAYERSERVER	"/usr/Player/sys/userd"
+# define OBJECTSERVER	"/usr/System/sys/objectd"
+# define UPGRADESERVER	"/usr/System/sys/upgraded"
 
 
 object user;		/* associated user object */
@@ -27,7 +27,7 @@ static create()
 {
     wiztool::create(200);
     body::create();
-    user = PlayerServer->find_user(query_owner());
+    user = PLAYERSERVER->find_user(query_owner());
 }
 
 /*
@@ -92,7 +92,7 @@ static object compile_object(string path, string source...)
  */
 static object ident(string str)
 {
-    return PlayerServer->find_user(str);
+    return PLAYERSERVER->find_user(str);
 }
 
 
@@ -112,7 +112,7 @@ static void cmd_issues(object user, string cmd, string str)
 	return;
     }
     files = expand(str, -1, TRUE)[0]; /* May not exist, full filenames */
-    objectd = find_object(ObjectServer);
+    objectd = find_object(OBJECTSERVER);
 
     for (i = 0, sz = sizeof(files); i < sz; i++) {
 	file = files[i];
@@ -152,7 +152,7 @@ static void cmd_upgrade(object user, string cmd, string str)
 	atom = patch = sscanf(str, "-p %s", str);
     }
     names = expand(str, 1, TRUE)[0];
-    objectd = find_object(ObjectServer);
+    objectd = find_object(OBJECTSERVER);
 
     for (i = 0, sz = sizeof(names); i < sz; i++) {
 	str = names[i];
@@ -174,7 +174,7 @@ static void cmd_upgrade(object user, string cmd, string str)
     if (sizeof(names) != 0) {
 	mixed result;
 
-	result = UpgradeServer->upgrade(query_owner(), names, atom, patch);
+	result = UPGRADESERVER->upgrade(query_owner(), names, atom, patch);
 	if (typeof(result) == T_STRING) {
 	    message(result + "\n");
 	} else {
@@ -202,7 +202,7 @@ static void cmd_upgrade(object user, string cmd, string str)
  */
 void do_patch(object obj)
 {
-    if (previous_program() == UpgradeServer) {
+    if (previous_program() == UPGRADESERVER) {
 	call_limited("call_patch", obj);
     }
 }
@@ -363,7 +363,7 @@ static void cmd_grant(object user, string cmd, string str)
 	/*
 	 * file access
 	 */
-	if (!(user=PlayerServer->find_user(who))) {
+	if (!(user=PLAYERSERVER->find_user(who))) {
 	    message("No such user.\n");
 	} else if (sizeof(query_users() & ({ who })) != 0) {
 	    message(capitalize(who) + " already has file access.\n");
@@ -373,7 +373,7 @@ static void cmd_grant(object user, string cmd, string str)
 	    ::add_user(who);
 	    ::add_owner(who);
 	    wiztool::make_dir("/usr/" + who);
-	    Init->add_wiztool(user);
+	    INIT->add_wiztool(user);
 	}
     } else {
 	/*
@@ -426,13 +426,13 @@ static void cmd_ungrant(object user, string cmd, string str)
 	/*
 	 * file access
 	 */
-	if (!(user=PlayerServer->find_user(who))) {
+	if (!(user=PLAYERSERVER->find_user(who))) {
 	    message("No such user.\n");
 	} else if (sizeof(query_users() & ({ who })) == 0) {
 	    message(capitalize(who) + " has no file access.\n");
 	} else {
 	    remove_user(who);
-	    Init->remove_wiztool(user);
+	    INIT->remove_wiztool(user);
 	}
     } else {
 	/*
@@ -515,7 +515,7 @@ static void cmd_people(object user, string cmd, string str)
 	return;
     }
 
-    users = PlayerServer->query_logins();
+    users = PLAYERSERVER->query_logins();
     sz = sizeof(users);
     hosts = allocate(sz);
     names = allocate(sz);
@@ -621,7 +621,7 @@ static void cmd_wiz(object user, string cmd, string str)
 	break;
     }
 
-    users = PlayerServer->query_logins();
+    users = PLAYERSERVER->query_logins();
     for (i = 0, sz = sizeof(users); i < sz; i++) {
 	usr = users[i];
 	if (usr->query_wiztool()) {

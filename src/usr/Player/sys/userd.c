@@ -5,7 +5,7 @@ inherit "~System/lib/user";
 
 private inherit "/lib/util/string";
 
-# define Interface	"/usr/Player/lib/interface"
+# define INTERFACE	"/usr/Player/lib/interface"
 
 object userd;		/* user daemon */
 mapping users;		/* 2-step mapping for user objects */
@@ -51,7 +51,7 @@ object find_user(string name)
  */
 void user_login(object obj)
 {
-    if (previous_program() == Interface) {
+    if (previous_program() == INTERFACE) {
 	logins[obj] = 1;
     }
 }
@@ -62,7 +62,7 @@ void user_login(object obj)
  */
 void user_logout(object obj)
 {
-    if(previous_program() == Interface) {
+    if(previous_program() == INTERFACE) {
 	logins[obj] = nil;
     }
 }

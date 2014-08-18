@@ -5,9 +5,9 @@
 # include <limits.h>
 # include <status.h>
 
-# define Init		"/usr/System/initd"
-# define ObjectServer	"/usr/System/sys/objectd"
-# define ObjDBase	"/usr/System/obj/objectd"
+# define INIT		"/usr/System/initd"
+# define OBJECTSERVER	"/usr/System/sys/objectd"
+# define OBJDBASE	"/usr/System/obj/objectd"
 
 
 object driver;		/* driver object */
@@ -29,7 +29,7 @@ static void create()
     index_map = ([ ]);
     creator_map = ([ ]);
 
-    compile_object(ObjDBase);
+    compile_object(OBJDBASE);
     preregister_objects();
     driver->set_object_manager(this_object());
 }
@@ -85,7 +85,7 @@ private void register_object(string creator, string path, int index, int *list)
     /* get creator's dbase object */
     dbobj = creator_map[creator];
     if (!dbobj) {
-	creator_map[creator] = dbobj = clone_object(ObjDBase);
+	creator_map[creator] = dbobj = clone_object(OBJDBASE);
 	dbobj->set_creator(creator);
     }
 
@@ -179,10 +179,10 @@ private string *prereg_inherits(string path)
     case DEFAULT_WIZTOOL:
 	return ({ LIB_WIZTOOL });
 
-    case Init:
+    case INIT:
 	return ({ API_ACCESS, API_RSRC });
-    case ObjectServer:
-    case ObjDBase:
+    case OBJECTSERVER:
+    case OBJDBASE:
 	return ({ AUTO });
     }
 }
@@ -205,7 +205,7 @@ private void preregister_objects()
 	API_RSRC, API_ACCESS, API_USER, 
 	LIB_CONN, LIB_USER, LIB_WIZTOOL,
 	RSRCOBJ, BINARY_CONN, TELNET_CONN, DEFAULT_USER, DEFAULT_WIZTOOL,
-	Init, ObjectServer, ObjDBase
+	INIT, OBJECTSERVER, OBJDBASE
     });
     sz = sizeof(list);
     indices = ([ ]);

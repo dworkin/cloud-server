@@ -1,8 +1,8 @@
 # include <kernel/kernel.h>
 # include <status.h>
 
-# define ObjectServer	"/usr/System/sys/objectd"
-# define UpgradeServer	"/usr/System/sys/upgraded"
+# define OBJECTSERVER	"/usr/System/sys/objectd"
+# define UPGRADESERVER	"/usr/System/sys/upgraded"
 
 
 /*
@@ -34,7 +34,7 @@ static object clone_object(string path, mixed args...)
 	path = DRIVER->normalize_path(path);
 	if (sscanf(path, "%*s/lib/") != 0 && status(path, O_INDEX) != nil) {
 	    /* let upgrade server generate a leaf object */
-	    path = UpgradeServer->generate_leaf(path);
+	    path = UPGRADESERVER->generate_leaf(path);
 	} else if (sscanf(path, "%*s/sys/") != 0) {
 	    error("Invalid path");
 	}
@@ -53,7 +53,7 @@ static object new_object(string path, mixed args...)
 	path = DRIVER->normalize_path(path);
 	if (sscanf(path, "%*s/lib/") != 0 && status(path, O_INDEX) != nil) {
 	    /* let upgrade server generate a leaf object */
-	    path = UpgradeServer->generate_leaf(path);
+	    path = UPGRADESERVER->generate_leaf(path);
 	} else if (sscanf(path, "%*s/sys/") != 0) {
 	    error("Invalid path");
 	}
@@ -141,8 +141,8 @@ static mixed tls_get(string index)
  */
 nomask int _F_touch()
 {
-    if (previous_program() == ObjectServer) {
-	if (UpgradeServer->query_upgrading()) {
+    if (previous_program() == OBJECTSERVER) {
+	if (UPGRADESERVER->query_upgrading()) {
 	    return TRUE;	/* still upgrading */
 	}
 

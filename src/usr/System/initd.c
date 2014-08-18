@@ -6,9 +6,9 @@
 inherit access API_ACCESS;
 inherit rsrc API_RSRC;
 
-# define BinaryServer	"/usr/WWW/sys/server"
-# define TelnetServer	"/usr/Player/sys/userd"
-# define WizTool	"/usr/System/obj/wiztool"
+# define BINARYSERVER	"/usr/WWW/sys/server"
+# define TELNETSERVER	"/usr/Player/sys/userd"
+# define WIZTOOL	"/usr/System/obj/wiztool"
 
 
 /*
@@ -66,8 +66,8 @@ static void create()
     }
 
     /* connections */
-    USERD->set_binary_manager(0, find_object(BinaryServer));
-    USERD->set_telnet_manager(0, find_object(TelnetServer));
+    USERD->set_binary_manager(0, find_object(BINARYSERVER));
+    USERD->set_telnet_manager(0, find_object(TELNETSERVER));
 }
 
 /*
@@ -118,7 +118,7 @@ void add_wiztool(object user)
     if (SYSTEM() ||
 	(previous_program() == "/usr/Player/lib/interface" &&
 	 user->query_name() == "admin" && user->query_conn())) {
-	user->add_wiztool(clone_object(WizTool, user->query_name()));
+	user->add_wiztool(clone_object(WIZTOOL, user->query_name()));
     }
 }
 
