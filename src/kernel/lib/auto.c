@@ -1287,10 +1287,10 @@ static void add_atomic_message(string str)
 }
 
 /*
- * NAME:	query_atomic_messages()
+ * NAME:	get_atomic_messages()
  * DESCRIPTION:	retrieve messages after an atomic error
  */
-static string *query_atomic_messages()
+static string *get_atomic_messages()
 {
     mapping tls;
     string *messages;
