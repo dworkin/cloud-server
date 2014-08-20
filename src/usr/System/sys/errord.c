@@ -11,6 +11,7 @@ private inherit "/lib/util/string";
 
 
 object driver;
+object notify;
 
 /*
  * NAME:	create()
@@ -23,6 +24,17 @@ static void create()
 }
 
 /*
+ * NAME:	notify_error()
+ * DESCRIPTION:	object to notify about errors
+ */
+void notify_error(object obj)
+{
+    if (SYSTEM()) {
+	notify = obj;
+    }
+}
+
+/*
  * NAME:	runtime_error()
  * DESCRIPTION:	report a runtime error
  */
@@ -32,6 +44,11 @@ void runtime_error(string error, int caught, mixed **trace)
 	int i, j, sz, maxlen, line;
 	string progname, objname, last_obj, str;
 	mixed *ftrace, *lines;
+	object user;
+
+	if (notify) {
+	    notify->runtime_error(error);
+	}
 
 	if (caught != 0) {
 	    error += " [caught]";
@@ -77,8 +94,8 @@ void runtime_error(string error, int caught, mixed **trace)
 	}
 
 	driver->message(str);
-	if (caught == 0 && this_user()) {
-	    this_user()->message(MSG_FORMATTED, str);
+	if (caught == 0 && (user=this_user())) {
+	    user->message(MSG_FORMATTED, str);
 	}
     }
 }
@@ -146,11 +163,17 @@ void compile_error(string file, int line, string error)
 {
     if (previous_object() == driver) {
 	string str;
+	object user;
 
-	str = file + ", " + line + ": " + error + "\n";
+	str = file + ", " + line + ": " + error;
+	if (notify) {
+	    notify->compile_error(str);
+	}
+	str += "\n";
 	driver->message(str);
-	if (this_user()) {
-	    this_user()->message(MSG_FORMATTED, str);
+	user = this_user();
+	if (user) {
+	    user->message(MSG_FORMATTED, str);
 	}
     }
 }
