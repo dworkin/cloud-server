@@ -1,15 +1,18 @@
 # include <kernel/kernel.h>
 # include <kernel/access.h>
+# include <messages.h>
 # include <status.h>
 # include <type.h>
 
 inherit API_ACCESS;
 
 # define OBJECTSERVER	"/usr/System/sys/objectd"
+# define ERRORMANAGER	"/usr/System/sys/errord"
 # define SYSTEMAUTO	"/usr/System/lib/auto"
 
 
 object objectd;			/* object server */
+object errord;			/* error manager */
 string compfailed;		/* compilation of this object failed */
 mapping inherited;		/* Not yet compiled lib-objects */
 mapping *patching;		/* objects left to patch */
@@ -24,6 +27,7 @@ static void create()
     ::create();
 
     objectd = find_object(OBJECTSERVER);
+    errord = find_object(ERRORMANAGER);
     factor = status(ST_ARRAYSIZE);
 }
 
@@ -169,6 +173,41 @@ static void patcher(object patchtool)
 }
 
 /*
+ * NAME:	compile()
+ * DESCRIPTION:	compile one object
+ */
+private void compile(string name, mapping map, int patch)
+{
+    string head, tail;
+    object obj;
+
+    if (sscanf(name, "%s/@@@/%s", head, tail) != 0) {
+	obj = compile_object(name,
+			     "inherit \"" + head + "/lib/" + tail + "\";\n");
+    } else {
+	obj = compile_object(name);
+    }
+
+    if (patch) {
+	/*
+	 * patch object after compilation
+	 */
+	if (sscanf(name, "%*s/obj/") != 0) {
+	    if (sscanf(name, "/kernel/%*s") == 0 &&
+		name != "/usr/System/obj/objectd") {
+		map[name] = touch_clones(name);
+		return;
+	    }
+	} else if (obj && obj <- "~/lib/auto") {
+	    call_touch(obj);
+	    return;
+	}
+
+	map[name] = nil;
+    }
+}
+
+/*
  * NAME:	recompile()
  * DESCRIPTION:	recompile leaf objects
  */
@@ -181,6 +220,9 @@ string *recompile(string *names, mapping *leaves, mapping *depend, int atom,
     mapping failed;
 
     objectd->notify_compiling(this_object());
+    if (atom) {
+	errord->notify_error(this_object());
+    }
     tls_set(0, TRUE);
 
     /*
@@ -201,7 +243,7 @@ string *recompile(string *names, mapping *leaves, mapping *depend, int atom,
     do {
 	int *indices, *issues;
 	mapping *values, map;
-	object obj;
+	string err;
 
 	/*
 	 * recompile leaf objects
@@ -213,34 +255,10 @@ string *recompile(string *names, mapping *leaves, mapping *depend, int atom,
 	    for (j = 0, sz = sizeof(objects); j < sz; j++) {
 		/* recompile a leaf object */
 		name = objects[j];
-		catch {
-		    string head, tail;
-
-		    if (sscanf(name, "%s/@@@/%s", head, tail) != 0) {
-			compile_object(name, "inherit \"" + head + "/lib/" +
-					     tail + "\";\n");
-		    } else {
-			compile_object(name);
-		    }
-		    if (patch) {
-			/*
-			 * patch objects after upgrade
-			 */
-			if (sscanf(name, "%*s/obj/") != 0) {
-			    if (sscanf(name, "/kernel/%*s") == 0 &&
-				name != "/usr/System/obj/objectd") {
-				map[objects[j]] = touch_clones(name);
-				continue;
-			    }
-			} else if ((obj=find_object(name)) &&
-				   obj <- "~/lib/auto") {
-			    call_touch(obj);
-			    continue;
-			}
-			map[objects[j]] = nil;
-		    }
-		} : {
+		err = catch(compile(name, map, patch));
+		if (err) {
 		    int index, k;
+		    object user;
 
 		    /* recompile failed */
 		    failed[compfailed] = 1;
@@ -254,6 +272,12 @@ string *recompile(string *names, mapping *leaves, mapping *depend, int atom,
 			if (map && map[name]) {
 			    names[k] = nil;
 			}
+		    }
+
+		    if (atom) {
+			add_atomic_message(err);
+		    } else if ((user=this_user())) {
+			user->message(MSG_FORMATTED, err + "\n");
 		    }
 		}
 	    }
@@ -284,13 +308,17 @@ string *recompile(string *names, mapping *leaves, mapping *depend, int atom,
 
     inherited = nil;
     objectd->notify_compiling(nil);
+    if (atom) {
+	errord->notify_error(nil);
+    }
 
     objects = map_indices(failed);
     if (sizeof(objects) != 0 && atom) {
 	/*
 	 * some objects could not be compiled -- fail atomically
 	 */
-	error("#" + implode(objects, "#"));
+	add_atomic_message("#" + implode(objects, "#"));
+	error("Upgrade failed");
     } else if (patching) {
 	/*
 	 * patch affected objects through callout
@@ -354,16 +382,30 @@ mixed upgrade(string owner, string *names, int atom, int patch)
 	    /*
 	     * recompile leaf objects
 	     */
-	    str = catch(list = recompile(names, leaves, depend, atom, patch));
-	    if (!str) {
-		/* return failed list */
-		return list;
-	    } else if (str[0] == '#') {
-		/* failed list returned in error message */
-		return explode(str, "#");
-	    } else {
-		/* return error */
-		return str;
+	    catch {
+		return recompile(names, leaves, depend, atom, patch);
+	    } : {
+		object user;
+
+		list = get_atomic_messages();
+		sz = sizeof(list);
+		if (sz != 0) {
+		    str = list[sz - 1];
+		    if (str[0] == '#') {
+			--sz;
+		    }
+		    user = this_user();
+		    if (user) {
+			for (i = 0; i < sz; i++) {
+			    user->message(MSG_FORMATTED, list[i] + "\n");
+			}
+		    }
+		    if (str[0] == '#') {
+			return explode(str, "#");
+		    }
+		}
+
+		return "Upgrade failed.";
 	    }
 	}
     }
@@ -389,6 +431,17 @@ void destruct(string path)
 {
     if (previous_object() == objectd && sscanf(path, "%*s/lib/") != 0) {
 	inherited[status(path, O_INDEX) / factor][path] = nil;
+    }
+}
+
+/*
+ * NAME:	compile_error()
+ * DESCRIPTION:	preserve a compile-time error
+ */
+void compile_error(string err)
+{
+    if (previous_object() == errord) {
+	add_atomic_message(err);
     }
 }
 
