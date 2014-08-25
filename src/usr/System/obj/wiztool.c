@@ -97,6 +97,87 @@ static object ident(string str)
 
 
 /*
+ * NAME:	cmd_clone()
+ * DESCRIPTION:	clone an object
+ */
+static void cmd_clone(object user, string cmd, string str)
+{
+    mixed obj;
+
+    obj = parse_obj(str);
+    switch (typeof(obj)) {
+    case T_INT:
+	message("Usage: " + cmd + " <obj> | $<ident>\n");
+    case T_NIL:
+	return;
+
+    case T_STRING:
+	str = obj;
+	break;
+
+    case T_OBJECT:
+	str = object_name(obj);
+	break;
+    }
+
+    if (sscanf(str, "%*s#") != 0) {
+	message("Not a master object.\n");
+    } else if (sscanf(str, "%*s/lib/") == 0 && status(str, O_INDEX) == nil) {
+	message("No such object.\n");
+    } else {
+	str = catch(obj = clone_object(str));
+	if (str) {
+	    message(str + ".\n");
+	} else if (obj) {
+	    store(obj);
+	}
+    }
+}
+
+/*
+ * NAME:	cmd_new()
+ * DESCRIPTION:	create a new object instance
+ */
+static void cmd_new(object user, string cmd, string str)
+{
+    mixed obj;
+    int num;
+
+    obj = parse_obj(str);
+    switch (typeof(obj)) {
+    case T_INT:
+	message("Usage: " + cmd + " <obj> | $<ident>\n");
+    case T_NIL:
+	return;
+
+    case T_STRING:
+	str = obj;
+	obj = find_object(str);
+	break;
+
+    case T_OBJECT:
+	str = object_name(obj);
+	break;
+    }
+
+    if (sscanf(str, "%*s#%d", num) != 0 && num != -1) {
+	message("Not a lightweight master object.\n");
+    } else if (sscanf(str, "%*s/lib/") == 0 && !obj) {
+	message("No such object.\n");
+    } else {
+	if (num != -1) {
+	    obj = str;
+	}
+	str = catch(obj = new_object(obj));
+	if (str) {
+	    message(str + ".\n");
+	} else if (obj) {
+	    store(obj);
+	}
+    }
+}
+
+/*
  * NAME:	cmd_issues()
  * DESCRIPTION:	list all object and include issues of a certain file
  */
