@@ -32,7 +32,7 @@ static object clone_object(string path, mixed args...)
 {
     if (path) {
 	path = DRIVER->normalize_path(path);
-	if (sscanf(path, "%*s/lib/") != 0 && status(path, O_INDEX) != nil) {
+	if (sscanf(path, "%*s/lib/") != 0) {
 	    /* let upgrade server generate a leaf object */
 	    path = UPGRADESERVER->generate_leaf(path);
 	} else if (sscanf(path, "%*s/sys/") != 0) {
@@ -51,7 +51,7 @@ static object new_object(string path, mixed args...)
 {
     if (path) {
 	path = DRIVER->normalize_path(path);
-	if (sscanf(path, "%*s/lib/") != 0 && status(path, O_INDEX) != nil) {
+	if (sscanf(path, "%*s/lib/") != 0) {
 	    /* let upgrade server generate a leaf object */
 	    path = UPGRADESERVER->generate_leaf(path);
 	} else if (sscanf(path, "%*s/sys/") != 0) {
