@@ -95,6 +95,7 @@ static object compile_object(string path)
     if (obj && sscanf(path, "%*s/sys/") != 0) {
 	call_other(obj, "???");
     }
+    return obj;
 }
 
 
