@@ -834,8 +834,8 @@ static string runtime_error(string str, int caught, int ticks)
     }
     str = messages[sz];
     messages[i] = nil;
+
     trace = call_trace();
-    TLS(trace[1][TRACE_FIRSTARG], 6) = messages - ({ nil });
 
     if (sizeof(trace) == 1) {
 	/* top-level error */
@@ -843,10 +843,12 @@ static string runtime_error(string str, int caught, int ticks)
     } else {
 	tls = trace[1][TRACE_FIRSTARG];
 	trace[1][TRACE_FIRSTARG] = nil;
+	TLS(tls, 6) = messages - ({ nil });
 	if (caught <= 1) {
 	    caught = 0;		/* ignore top-level catch */
 	} else if (ticks < 0 && sscanf(trace[caught - 1][TRACE_PROGNAME],
-				       "/kernel/%*s") != 0) {
+				       "/kernel/%*s") != 0 &&
+		   trace[caught - 1][TRACE_FUNCTION] != "cmd_code") {
 	    return TLS(tls, 1) = str;
 	}
     }
