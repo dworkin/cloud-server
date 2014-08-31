@@ -11,11 +11,11 @@ private StmtBlock body;			/* function body */
  * NAME:	create()
  * DESCRIPTION:	initialize function declaration
  */
-static void create(string type, string name, Declaration *decl, int flag,
+static void create(Type type, string name, Declaration *decls, int flag,
 		   StmtBlock stmt, varargs int line)
 {
     ::create(type, name, line);
-    parameters = decl;
+    parameters = decls;
     ellipsis = flag;
     body = stmt;
 }

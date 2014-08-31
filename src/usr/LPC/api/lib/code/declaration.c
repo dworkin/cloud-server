@@ -3,16 +3,18 @@
 inherit Code;
 
 
-private string declaration;	/* int* n */
+private Type type;	/* class + type + *** */
+private string name; 	/* name */
 
 /*
  * NAME:	create()
  * DESCRIPTION:	initialize declaration
  */
-static void create(string type, string name, varargs int line)
+static void create(Type t, string str, varargs int line)
 {
     ::create(line);
-    declaration = type + " " + name;
+    type = t;
+    name = str;
 }
 
 /*
@@ -21,5 +23,6 @@ static void create(string type, string name, varargs int line)
  */
 void code()
 {
-    emit(declaration, line());
+    type->code();
+    emit(name, line());
 }

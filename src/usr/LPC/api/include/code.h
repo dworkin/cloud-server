@@ -1,6 +1,9 @@
 /* code */
 # define Code		object "/usr/LPC/api/lib/code/code"
 
+/* type */
+# define Type		object "/usr/LPC/api/lib/code/type"
+
 /* expressions */
 # define Expression	object "/usr/LPC/api/lib/code/expression"
 # define Exp1		object "/usr/LPC/api/lib/code/exp1"
@@ -37,8 +40,8 @@
 
 /* declarations */
 # define Declaration	object "/usr/LPC/api/lib/code/declaration"
-# define DeclVariable	object "/usr/LPC/api/lib/code/variable"
-# define DeclFunction	object "/usr/LPC/api/lib/code/function"
+# define Variable	object "/usr/LPC/api/lib/code/variable"
+# define Function	object "/usr/LPC/api/lib/code/function"
 
 /* program */
 # define Inherit	object "/usr/LPC/api/lib/code/inherit"

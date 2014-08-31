@@ -3,15 +3,17 @@
 inherit Statement;
 
 
-private Statement sub;	/* linked list of statements inside the block */
+private Declaration *locals;	/* local declarations */
+private Statement sub;		/* linked list of statements inside the block */
 
 /*
  * NAME:	create()
  * DESCRITION:	initialize statement block
  */
-static void create(Statement stmt, varargs int line)
+static void create(Declaration *decls, Statement stmt, varargs int line)
 {
     ::create(line);
+    locals = decls;
     sub = stmt;
 }
 
@@ -21,9 +23,13 @@ static void create(Statement stmt, varargs int line)
  */
 void code()
 {
+    int i, sz;
     Statement stmt;
 
     emit("{");
+    for (i = 0, sz = sizeof(locals); i < sz; i++) {
+	locals[i]->code();
+    }
     for (stmt = sub; stmt; stmt = stmt->next()) {
 	stmt->code();
     }

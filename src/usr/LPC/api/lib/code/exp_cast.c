@@ -4,17 +4,17 @@
 inherit Expression;
 
 
-private string type;		/* type to cast to */
+private Type cast;		/* type to cast to */
 private Expression sub;		/* expression to cast */
 
 /*
  * NAME:	create()
  * DESCRIPTION:	initialize cast expression
  */
-static void create(string t, Expression exp, varargs int line)
+static void create(Type type, Expression exp, varargs int line)
 {
     ::create(EXP_CAST, line);
-    type = t;
+    cast = type;
     sub = exp;
 }
 
@@ -24,7 +24,9 @@ static void create(string t, Expression exp, varargs int line)
  */
 void code()
 {
-    emit("((" + type + ")");
+    emit("((");
+    cast->code();
+    emit(")");
     sub->code();
     emit(")");
 }
