@@ -14,9 +14,8 @@
 # define ExpArray	object "/usr/LPC/api/lib/code/exp_array"
 # define ExpMapping	object "/usr/LPC/api/lib/code/exp_mapping"
 # define ExpFuncall	object "/usr/LPC/api/lib/code/exp_func"
-# define ExpVar		object "/usr/LPC/api/lib/code/exp_var"
 # define ExpInhFuncall	object "/usr/LPC/api/lib/code/exp_ifunc"
-# define ExpInhVar	object "/usr/LPC/api/lib/code/exp_ivar"
+# define ExpVar		object "/usr/LPC/api/lib/code/exp_var"
 
 /* statements */
 # define Statement	object "/usr/LPC/api/lib/code/statement"
