@@ -29,8 +29,8 @@
 # define EXP_GE			125
 # define EXP_GT			126
 # define EXP_INDEX		127
-# define EXP_LAND		128
-# define EXP_LARROW		129
+# define EXP_INSTANCEOF		128
+# define EXP_LAND		129
 # define EXP_LE			130
 # define EXP_LOR		131
 # define EXP_LSHIFT		132
@@ -39,18 +39,17 @@
 # define EXP_MULT		135
 # define EXP_NE			136
 # define EXP_OR			137
-# define EXP_RARROW		138
-# define EXP_RSHIFT		139
-# define EXP_SUB		140
-# define EXP_XOR		141
+# define EXP_RSHIFT		138
+# define EXP_SUB		139
+# define EXP_XOR		140
 
 /* ternary */
-# define EXP_QUEST		142
-# define EXP_RANGE		143
+# define EXP_QUEST		141
+# define EXP_RANGE		142
 
 /* special */
-# define EXP_CAST		144
-# define EXP_ARRAY		145
-# define EXP_MAPPING		146
-# define EXP_FUNCALL		147
-# define EXP_VAR		148
+# define EXP_CAST		143
+# define EXP_ARRAY		144
+# define EXP_MAPPING		145
+# define EXP_FUNCALL		146
+# define EXP_VAR		147

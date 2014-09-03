@@ -105,12 +105,12 @@ void code()
 	emit("])");
 	return;
 
-    case EXP_LAND:
-	emit("&&");
+    case EXP_INSTANCEOF:
+	emit("<-");
 	break;
 
-    case EXP_LARROW:
-	emit("<-");
+    case EXP_LAND:
+	emit("&&");
 	break;
 
     case EXP_LE:
@@ -143,10 +143,6 @@ void code()
 
     case EXP_OR:
 	emit("|");
-	break;
-
-    case EXP_RARROW:
-	emit("->");
 	break;
 
     case EXP_RSHIFT:
