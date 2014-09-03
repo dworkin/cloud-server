@@ -12,7 +12,7 @@
 # define ExpList	object "/usr/LPC/api/lib/code/exp_list"
 # define ExpCast	object "/usr/LPC/api/lib/code/exp_cast"
 # define ExpArray	object "/usr/LPC/api/lib/code/exp_array"
-# define ExpMapping	object "/usr/LPC/api/lib/code/exp_mapping"
+# define ExpMapping	object "/usr/LPC/api/lib/code/exp_map"
 # define ExpFuncall	object "/usr/LPC/api/lib/code/exp_func"
 # define ExpInhFuncall	object "/usr/LPC/api/lib/code/exp_ifunc"
 # define ExpVar		object "/usr/LPC/api/lib/code/exp_var"
