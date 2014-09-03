@@ -28,7 +28,7 @@ int octalInt(string str)
     int result, i, sz;
 
     result = 0;
-    for (i = 0, sz = strlen(str); i < sz; i++) {
+    for (i = 1, sz = strlen(str); i < sz; i++) {
 	result = (result << 3) + str[i] - '0';
     }
     return result;
@@ -36,7 +36,7 @@ int octalInt(string str)
 
 /*
  * NAME:	hexadecimalInt()
- * DESCRIPTION:	convert dexadecimal int to integer
+ * DESCRIPTION:	convert hexadecimal string to integer
  */
 int hexadecimalInt(string str)
 {
@@ -48,7 +48,7 @@ int hexadecimalInt(string str)
 	  ".\xa\xb\xc\xd\xe\xf........................." +
 	  ".\xa\xb\xc\xd\xe\xf";
     result = 0;
-    for (i = 0, sz = strlen(str); i < sz; i++) {
+    for (i = 2, sz = strlen(str); i < sz; i++) {
 	result = (result << 4) + map[str[i]];
     }
     return result;
@@ -60,7 +60,11 @@ int hexadecimalInt(string str)
  */
 static mixed *octal(mixed *parsed)
 {
-    return ({ octalInt(parsed[0][1 ..]) });
+    string str;
+
+    str = " ";
+    str[0] = octalInt(parsed[0]);
+    return ({ str });
 }
 
 /*
@@ -69,7 +73,11 @@ static mixed *octal(mixed *parsed)
  */
 static mixed *hexadecimal(mixed *parsed)
 {
-    return ({ hexadecimalInt(parsed[0][2 ..]) });
+    string str;
+
+    str = " ";
+    str[0] = hexadecimalInt(parsed[0]);
+    return ({ str });
 }
 
 /*
