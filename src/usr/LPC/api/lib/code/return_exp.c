@@ -21,7 +21,7 @@ static void create(Expression exp, varargs int line)
  */
 void code()
 {
-    emit("return ");
+    emit("return");
     value->code();
     emit(";");
 }
