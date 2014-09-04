@@ -1,5 +1,7 @@
 # include "code.h"
 
+inherit Code;
+
 
 private Inherit *inherits;	/* inherit statements */
 private Declaration *globals;	/* function and variable declarations */
@@ -10,6 +12,7 @@ private Declaration *globals;	/* function and variable declarations */
  */
 static void create(Inherit *inh, Declaration *decl)
 {
+    ::create();
     inherits = inh;
     globals = decl;
 }

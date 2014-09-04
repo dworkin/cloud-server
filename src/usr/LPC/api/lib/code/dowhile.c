@@ -27,4 +27,5 @@ void code()
     statement->code();
     emit("while");
     loopCondition->code();
+    emit(";");
 }

@@ -9,8 +9,8 @@ private Statement statement;		/* case code */
 /*
  * NAME:	create()
  * DESCRIPTION:	initialize case statement
- /*
-static void create(int exp, Statement stmt, varargs int line)
+ */
+static void create(Expression exp, Statement stmt, varargs int line)
 {
     ::create(line);
     caseExpression = exp;
@@ -23,7 +23,7 @@ static void create(int exp, Statement stmt, varargs int line)
  */
 void code()
 {
-    emit("case ");
+    emit("case");
     caseExpression->code();
     emit(":");
     statement->code();

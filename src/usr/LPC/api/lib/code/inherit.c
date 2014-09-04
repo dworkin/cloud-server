@@ -28,9 +28,9 @@ void code()
     if (priv) {
 	emit("private ", line());
     }
-    emit("inherit ", line());
+    emit("inherit", line());
     if (label) {
-	emit(label + " ");
+	emit(" " + label);
     }
     class->code();
     emit(";");

@@ -28,7 +28,9 @@ void code()
 {
     emit("if");
     condExpression->code();
+    emit("{");
     ifStatement->code();
+    emit("}");
     if (elseStatement) {
 	emit("else ");
 	elseStatement->code();

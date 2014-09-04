@@ -25,7 +25,7 @@ static void create(Expression exp1, Expression exp2, Statement stmt,
  */
 void code()
 {
-    emit("case ");
+    emit("case");
     caseFrom->code();
     emit("..");
     caseTo->code();

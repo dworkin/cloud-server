@@ -23,7 +23,7 @@
 # define StmtBreak	object "/usr/LPC/api/lib/code/break"
 # define StmtContinue	object "/usr/LPC/api/lib/code/continue"
 # define StmtReturn	object "/usr/LPC/api/lib/code/return"
-# define StmtReturnVal	object "/usr/LPC/api/lib/code/return_val"
+# define StmtReturnExp	object "/usr/LPC/api/lib/code/return_exp"
 # define StmtCase	object "/usr/LPC/api/lib/code/stmt_case"
 # define StmtCaseRange	object "/usr/LPC/api/lib/code/stmt_case_range"
 # define StmtDefault	object "/usr/LPC/api/lib/code/stmt_default"
