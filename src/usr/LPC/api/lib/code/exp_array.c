@@ -1,18 +1,18 @@
 # include "code.h"
 # include "expression.h"
 
-inherit Expression;
+inherit LPCExpression;
 
 
-private Expression *elements;	/* array elements */ 
+private LPCExpression *elements;	/* array elements */ 
 
 /*
  * NAME:	create()
  * DESCRIPTION:	initialize array aggregate
  */
-static void create(Expression *arr, varargs int line)
+static void create(LPCExpression *arr, varargs int line)
 {
-    ::create(EXP_ARRAY, line);
+    ::create(LPC_EXP_ARRAY, line);
     elements = arr;
 }
 

@@ -2,7 +2,7 @@
 # include "expression.h"
 # include <type.h>
 
-inherit Code;
+inherit LPCCode;
 
 
 private mixed value;	/* expression value */

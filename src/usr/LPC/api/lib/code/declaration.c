@@ -1,16 +1,16 @@
 # include "code.h"
 
-inherit Code;
+inherit LPCCode;
 
 
-private Type type;	/* class + type + *** */
+private LPCType type;	/* class + type + *** */
 private string name; 	/* name */
 
 /*
  * NAME:	create()
  * DESCRIPTION:	initialize declaration
  */
-static void create(Type t, string str, varargs int line)
+static void create(LPCType t, string str, varargs int line)
 {
     ::create(line);
     type = t;

@@ -1,17 +1,17 @@
 # include "code.h"
 
-inherit Statement;
+inherit LPCStatement;
 
 
-private Expression initial, condition, increment;	/* expressions */
-private Statement statement;				/* statement */
+private LPCExpression initial, condition, increment;	/* expressions */
+private LPCStatement statement;				/* statement */
 
 /*
  * NAME:	create()
  * DESCRIPTION:	initialize for loop
  */
-static void create(Expression exp1, Expression exp2, Expression exp3,
-		   Statement stmt, varargs int line)
+static void create(LPCExpression exp1, LPCExpression exp2, LPCExpression exp3,
+		   LPCStatement stmt, varargs int line)
 {
     ::create(line);
     initial = exp1;

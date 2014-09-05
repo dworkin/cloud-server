@@ -1,16 +1,16 @@
 # include "code.h"
 
-inherit Statement;
+inherit LPCStatement;
 
 
-private Expression expression;	/* switch expression */
-private StmtBlock statement;	/* switch code */
+private LPCExpression expression;	/* switch expression */
+private LPCStmtBlock statement;		/* switch code */
 
 /*
  * NAME:	create()
  * DESCRIPTION:	initialize switch statement
  */
-static void create(Expression exp, StmtBlock stmt, varargs int line)
+static void create(LPCExpression exp, LPCStmtBlock stmt, varargs int line)
 {
     ::create(line);
     expression = exp;

@@ -1,16 +1,16 @@
 # include "code.h"
 
-inherit Statement;
+inherit LPCStatement;
 
 
 private string label;		/* label */
-private Statement statement;	/* code */
+private LPCStatement statement;	/* code */
 
 /*
  * NAME:	create()
  * DESCRIPTION:	initialize labelled statement
  */
-static void create(string str, Statement stmt, varargs int line)
+static void create(string str, LPCStatement stmt, varargs int line)
 {
     ::create(line);
     label = str;

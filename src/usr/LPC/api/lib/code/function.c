@@ -1,18 +1,18 @@
 # include "code.h"
 
-inherit Declaration;
+inherit LPCDeclaration;
 
 
-private Declaration *parameters;	/* function parameters */
+private LPCDeclaration *parameters;	/* function parameters */
 private int ellipsis;			/* function ellipsis */
-private StmtBlock body;			/* function body */
+private LPCStmtBlock body;		/* function body */
 
 /*
  * NAME:	create()
  * DESCRIPTION:	initialize function declaration
  */
-static void create(Type type, string name, Declaration *decls, int flag,
-		   StmtBlock stmt, varargs int line)
+static void create(LPCType type, string name, LPCDeclaration *decls, int flag,
+		   LPCStmtBlock stmt, varargs int line)
 {
     ::create(type, name, line);
     parameters = decls;

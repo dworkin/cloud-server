@@ -1,17 +1,17 @@
 # include "code.h"
 # include "expression.h"
 
-inherit Expression;
+inherit LPCExpression;
 
 
-private Expression sub1, sub2, sub3;	/* sub expressions */
+private LPCExpression sub1, sub2, sub3;	/* sub expressions */
 
 /*
  * NAME:	create()
  * DESCRIPTION:	initialize ternary expression
  */
-static void create(int operand, Expression exp1, Expression exp2,
-		   Expression exp3, varargs int line)
+static void create(int operand, LPCExpression exp1, LPCExpression exp2,
+		   LPCExpression exp3, varargs int line)
 {
     ::create(operand, line);
     sub1 = exp1;
@@ -28,14 +28,14 @@ void code()
     emit("(");
     sub1->code();
     switch ((int) value()) {
-    case EXP_QUEST:
+    case LPC_EXP_QUEST:
 	emit("?");
 	sub2->code();
 	emit(":");
 	sub3->code();
 	break;
 
-    case EXP_RANGE:
+    case LPC_EXP_RANGE:
 	emit("[");
 	if (sub2) {
 	    sub2->code();

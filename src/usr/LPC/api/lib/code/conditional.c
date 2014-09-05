@@ -1,17 +1,17 @@
 # include "code.h"
 
-inherit Statement;
+inherit LPCStatement;
 
 
-private Expression condExpression;	/* conditional */
-private Statement ifStatement;		/* if conditional is true */
-private Statement elseStatement;	/* if conditional is false */
+private LPCExpression condExpression;	/* conditional */
+private LPCStatement ifStatement;	/* if conditional is true */
+private LPCStatement elseStatement;	/* if conditional is false */
 
 /*
  * NAME:	create()
  * DESCRIPTION:	iniitialize if statement
  */
-static void create(Expression exp, Statement stmt1, Statement stmt2,
+static void create(LPCExpression exp, LPCStatement stmt1, LPCStatement stmt2,
 		   varargs int line)
 {
     ::create(line);

@@ -1,6 +1,6 @@
 # include "code.h"
 
-inherit Declaration;
+inherit LPCDeclaration;
 
 
 /*

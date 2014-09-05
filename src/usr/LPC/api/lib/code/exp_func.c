@@ -1,20 +1,20 @@
 # include "code.h"
 # include "expression.h"
 
-inherit Expression;
+inherit LPCExpression;
 
 
 private string name;		/* function name */
-private Expression *args;	/* arguments */
+private LPCExpression *args;	/* arguments */
 private int spread;		/* argument spread */
 
 /*
  * NAME:	create()
  * DESCRIPTION:	initialize function call
  */
-static void create(string str, Expression *list, int flag, varargs int line)
+static void create(string str, LPCExpression *list, int flag, varargs int line)
 {
-    ::create(EXP_FUNCALL, line);
+    ::create(LPC_EXP_FUNCALL, line);
     name = str;
     args = list;
     spread = flag;

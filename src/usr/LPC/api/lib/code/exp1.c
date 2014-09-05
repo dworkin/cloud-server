@@ -1,16 +1,16 @@
 # include "code.h"
 # include "expression.h"
 
-inherit Expression;
+inherit LPCExpression;
 
 
-private Expression sub;		/* sub-expression */
+private LPCExpression sub;	/* sub-expression */
 
 /*
  * NAME:	create()
  * DESCRIPTION:	initialize monadic expression
  */
-static void create(int operand, Expression exp, varargs int line)
+static void create(int operand, LPCExpression exp, varargs int line)
 {
     ::create(operand, line);
     sub = exp;
@@ -24,47 +24,47 @@ void code()
 {
     emit("(");
     switch ((int) value()) {
-    case EXP_CATCH:
+    case LPC_EXP_CATCH:
 	emit("catch");
 	sub->code();
 	break;
 
-    case EXP_NEG:
+    case LPC_EXP_NEG:
 	emit("~");
 	sub->code();
 	break;
 
-    case EXP_NOT:
+    case LPC_EXP_NOT:
 	emit("!");
 	sub->code();
 	break;
 
-    case EXP_UMIN:
+    case LPC_EXP_UMIN:
 	emit("-");
 	sub->code();
 	break;
 
-    case EXP_UPLUS:
+    case LPC_EXP_UPLUS:
 	emit("+");
 	sub->code();
 	break;
 
-    case EXP_PRE_INCR:
+    case LPC_EXP_PRE_INCR:
 	emit("++");
 	sub->code();
 	break;
 
-    case EXP_PRE_DECR:
+    case LPC_EXP_PRE_DECR:
 	emit("--");
 	sub->code();
 	break;
 
-    case EXP_POST_INCR:
+    case LPC_EXP_POST_INCR:
 	sub->code();
 	emit("++", line());
 	break;
 
-    case EXP_POST_DECR:
+    case LPC_EXP_POST_DECR:
 	sub->code();
 	emit("--", line());
 	break;

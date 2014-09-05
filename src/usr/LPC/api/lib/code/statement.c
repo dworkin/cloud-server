@@ -1,15 +1,15 @@
 # include "code.h"
 
-inherit Code;
+inherit LPCCode;
 
 
-private Statement next;		/* next in list */
+private LPCStatement next;	/* next in list */
 
 /*
  * NAME:	setNext()
  * DESCRIPTION:	set the next statement in the list
  */
-void setNext(Statement stmt)
+void setNext(LPCStatement stmt)
 {
     next = stmt;
 }
@@ -18,7 +18,7 @@ void setNext(Statement stmt)
  * NAME:	next()
  * DESCRIPTION:	return the next statement in the list
  */
-Statement next()
+LPCStatement next()
 {
     return next;
 }

@@ -1,16 +1,16 @@
 # include "code.h"
 
-inherit Statement;
+inherit LPCStatement;
 
 
-private Expression stack, ticks;	/* resource limits */
-private StmtBlock statement;		/* limited code */
+private LPCExpression stack, ticks;	/* resource limits */
+private LPCStmtBlock statement;		/* limited code */
 
 /*
  * NAME:	create()
  * DESCRIPTION:	initialize rlimits statement
  */
-static void create(Expression exp1, Expression exp2, StmtBlock stmt,
+static void create(LPCExpression exp1, LPCExpression exp2, LPCStmtBlock stmt,
 		   varargs int line)
 {
     ::create(line);

@@ -1,17 +1,17 @@
 # include "code.h"
 
-inherit Code;
+inherit LPCCode;
 
 
 private int priv;		/* private flag */
 private string label;		/* inherit label */
-private Expression class;	/* string constant */
+private LPCExpression class;	/* string constant */
 
 /*
  * NAME:	create()
  * DESCRIPTION:	initialize inherit statement
  */
-static void create(int flag, string l, Expression exp, varargs int line)
+static void create(int flag, string l, LPCExpression exp, varargs int line)
 {
     ::create(line);
     priv = flag;

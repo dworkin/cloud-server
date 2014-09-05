@@ -1,16 +1,16 @@
 # include "code.h"
 
-inherit Statement;
+inherit LPCStatement;
 
 
-private StmtBlock caught;	/* block inside catch */
-private Statement onError;	/* code executed on error */
+private LPCStmtBlock caught;	/* block inside catch */
+private LPCStatement onError;	/* code executed on error */
 
 /*
  * NAME:	create()
  * DESCRIPTION:	initialize catch statement
  */
-static void create(StmtBlock stmt1, Statement stmt2, varargs int line)
+static void create(LPCStmtBlock stmt1, LPCStatement stmt2, varargs int line)
 {
     ::create(line);
     caught = stmt1;

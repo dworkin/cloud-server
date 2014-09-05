@@ -1,16 +1,16 @@
 # include "code.h"
 
-inherit Statement;
+inherit LPCStatement;
 
 
-private Statement statement;		/* statement in loop */
-private Expression loopCondition;	/* loop condition */
+private LPCStatement statement;		/* statement in loop */
+private LPCExpression loopCondition;	/* loop condition */
 
 /*
  * NAME:	create()
  * DESCRIPTION:	initialize do-while statement
  */
-static void create(Statement stmt, Expression exp, varargs int line)
+static void create(LPCStatement stmt, LPCExpression exp, varargs int line)
 {
     ::create(line);
     statement = stmt;

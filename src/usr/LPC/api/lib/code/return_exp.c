@@ -1,15 +1,15 @@
 # include "code.h"
 
-inherit Statement;
+inherit LPCStatement;
 
 
-private Expression value;	/* value to return */
+private LPCExpression value;	/* value to return */
 
 /*
  * NAME:	create()
  * DESCRIPTION:	initialize return statement
  */
-static void create(Expression exp, varargs int line)
+static void create(LPCExpression exp, varargs int line)
 {
     ::create(line);
     value = exp;

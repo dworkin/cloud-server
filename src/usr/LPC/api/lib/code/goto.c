@@ -1,6 +1,6 @@
 # include "code.h"
 
-inherit Statement;
+inherit LPCStatement;
 
 
 private string label;	/* goto label */

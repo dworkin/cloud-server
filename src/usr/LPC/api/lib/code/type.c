@@ -1,17 +1,17 @@
 # include "code.h"
 
-inherit Code;
+inherit LPCCode;
 
 
 private string classType;	/* class + type */
-private Expression objType;	/* object type */
+private LPCExpression objType;	/* object type */
 private int indirection;	/* *** */
 
 /*
  * NAME:	create()
  * DESCRIPTION:	initialize declaration
  */
-static void create(string typeStr, Expression typeName, int ind,
+static void create(string typeStr, LPCExpression typeName, int ind,
 		   varargs int line)
 {
     ::create(line);

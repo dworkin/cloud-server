@@ -1,16 +1,16 @@
 # include "code.h"
 
-inherit Statement;
+inherit LPCStatement;
 
 
-private Expression caseFrom, caseTo;	/* case labels */
-private Statement statement;		/* case code */
+private LPCExpression caseFrom, caseTo;	/* case labels */
+private LPCStatement statement;		/* case code */
 
 /*
  * NAME:	create()
  * DESCRIPTION:	initialize case statement
  */
-static void create(Expression exp1, Expression exp2, Statement stmt,
+static void create(LPCExpression exp1, LPCExpression exp2, LPCStatement stmt,
 		   varargs int line)
 {
     ::create(line);

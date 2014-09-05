@@ -1,18 +1,18 @@
 # include "code.h"
 # include "expression.h"
 
-inherit Expression;
+inherit LPCExpression;
 
 
-private Expression *elements;	/* mapping aggregate elements */
+private LPCExpression *elements;	/* mapping aggregate elements */
 
 /*
  * NAME:	create()
  * DESCRIPTION:	initialize mapping aggrgate
  */
-static void create(Expression *arr, varargs int line)
+static void create(LPCExpression *arr, varargs int line)
 {
-    ::create(EXP_MAPPING, line);
+    ::create(LPC_EXP_MAPPING, line);
     elements = arr;
 }
 

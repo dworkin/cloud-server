@@ -1,7 +1,7 @@
 # include "code.h"
 # include "expression.h"
 
-inherit ExpFuncall;
+inherit LPCExpFuncall;
 
 
 private string label;	/* inherit label */
@@ -10,7 +10,7 @@ private string label;	/* inherit label */
  * NAME:	create()
  * DESCRIPTION:	initialize inherited function call
  */
-static void create(string str, string name, Expression *list,
+static void create(string str, string name, LPCExpression *list,
 		   varargs int line)
 {
     ::create(name, list, line);

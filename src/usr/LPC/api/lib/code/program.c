@@ -1,16 +1,16 @@
 # include "code.h"
 
-inherit Code;
+inherit LPCCode;
 
 
-private Inherit *inherits;	/* inherit statements */
-private Declaration *globals;	/* function and variable declarations */
+private LPCInherit *inherits;		/* inherit statements */
+private LPCDeclaration *globals;	/* function and variable declarations */
 
 /*
  * NAME:	create()
  * DESCRIPTION:	initialize program
  */
-static void create(Inherit *inh, Declaration *decl)
+static void create(LPCInherit *inh, LPCDeclaration *decl)
 {
     ::create();
     inherits = inh;

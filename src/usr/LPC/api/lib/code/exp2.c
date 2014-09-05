@@ -1,16 +1,16 @@
 # include "code.h"
 # include "expression.h"
 
-inherit Expression;
+inherit LPCExpression;
 
 
-private Expression sub1, sub2;	/* sub expressions */
+private LPCExpression sub1, sub2;	/* sub expressions */
 
 /*
  * NAME:	create()
  * DESCRIPTION:	initialize binary expression
  */
-static void create(int operand, Expression exp1, Expression exp2,
+static void create(int operand, LPCExpression exp1, LPCExpression exp2,
 		   varargs int line)
 {
     ::create(operand, line);
@@ -27,133 +27,133 @@ void code()
     emit("(");
     sub1->code();
     switch ((int) value()) {
-    case EXP_ADD:
+    case LPC_EXP_ADD:
 	emit("+");
 	break;
 
-    case EXP_AND:
+    case LPC_EXP_AND:
 	emit("&");
 	break;
 
-    case EXP_ASSIGN:
+    case LPC_EXP_ASSIGN:
 	emit("=");
 	break;
 
-    case EXP_ASSIGN_ADD:
+    case LPC_EXP_ASSIGN_ADD:
 	emit("+=");
 	break;
 
-    case EXP_ASSIGN_AND:
+    case LPC_EXP_ASSIGN_AND:
 	emit("&=");
 	break;
 
-    case EXP_ASSIGN_DIV:
+    case LPC_EXP_ASSIGN_DIV:
 	emit("/=");
 	break;
 
-    case EXP_ASSIGN_LSHIFT:
+    case LPC_EXP_ASSIGN_LSHIFT:
 	emit("<<=");
 	break;
 
-    case EXP_ASSIGN_MOD:
+    case LPC_EXP_ASSIGN_MOD:
 	emit("%=");
 	break;
 
-    case EXP_ASSIGN_MULT:
+    case LPC_EXP_ASSIGN_MULT:
 	emit("*=");
 	break;
 
-    case EXP_ASSIGN_OR:
+    case LPC_EXP_ASSIGN_OR:
 	emit("|=");
 	break;
 
-    case EXP_ASSIGN_RSHIFT:
+    case LPC_EXP_ASSIGN_RSHIFT:
 	emit(">>=");
 	break;
 
-    case EXP_ASSIGN_SUB:
+    case LPC_EXP_ASSIGN_SUB:
 	emit("-=");
 	break;
 
-    case EXP_ASSIGN_XOR:
+    case LPC_EXP_ASSIGN_XOR:
 	emit("^=");
 	break;
 
-    case EXP_COMMA:
+    case LPC_EXP_COMMA:
 	emit(",");
 	break;
 
-    case EXP_DIV:
+    case LPC_EXP_DIV:
 	emit("/");
 	break;
 
-    case EXP_EQ:
+    case LPC_EXP_EQ:
 	emit("==");
 	break;
 
-    case EXP_GE:
+    case LPC_EXP_GE:
 	emit(">=");
 	break;
 
-    case EXP_GT:
+    case LPC_EXP_GT:
 	emit(">");
 	break;
 
-    case EXP_INDEX:
+    case LPC_EXP_INDEX:
 	emit("[");
 	sub2->code();
 	emit("])");
 	return;
 
-    case EXP_INSTANCEOF:
+    case LPC_EXP_INSTANCEOF:
 	emit("<-");
 	break;
 
-    case EXP_LAND:
+    case LPC_EXP_LAND:
 	emit("&&");
 	break;
 
-    case EXP_LE:
+    case LPC_EXP_LE:
 	emit("<=");
 	break;
 
-    case EXP_LOR:
+    case LPC_EXP_LOR:
 	emit("||");
 	break;
 
-    case EXP_LSHIFT:
+    case LPC_EXP_LSHIFT:
 	emit(">>");
 	break;
 
-    case EXP_LT:
+    case LPC_EXP_LT:
 	emit("<");
 	break;
 
-    case EXP_MOD:
+    case LPC_EXP_MOD:
 	emit("%");
 	break;
 
-    case EXP_MULT:
+    case LPC_EXP_MULT:
 	emit("*");
 	break;
 
-    case EXP_NE:
+    case LPC_EXP_NE:
 	emit("!=");
 	break;
 
-    case EXP_OR:
+    case LPC_EXP_OR:
 	emit("|");
 	break;
 
-    case EXP_RSHIFT:
+    case LPC_EXP_RSHIFT:
 	emit(">>");
 	break;
 
-    case EXP_SUB:
+    case LPC_EXP_SUB:
 	emit("-");
 	break;
 
-    case EXP_XOR:
+    case LPC_EXP_XOR:
 	emit("^");
 	break;
     }

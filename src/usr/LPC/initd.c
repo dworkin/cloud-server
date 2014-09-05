@@ -6,5 +6,5 @@
  */
 static void create()
 {
-    compile_object(LPCPARSER);
+    compile_object(LPC_PARSER);
 }

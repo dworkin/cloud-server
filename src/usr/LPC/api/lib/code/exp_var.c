@@ -1,7 +1,7 @@
 # include "code.h"
 # include "expression.h"
 
-inherit Expression;
+inherit LPCExpression;
 
 
 private string name;	/* variable name */
@@ -12,7 +12,7 @@ private string name;	/* variable name */
  */
 static void create(string str, varargs int line)
 {
-    ::create(EXP_VAR, line);
+    ::create(LPC_EXP_VAR, line);
     name = str;
 }
 

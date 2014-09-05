@@ -1,19 +1,19 @@
 # include "code.h"
 # include "expression.h"
 
-inherit Expression;
+inherit LPCExpression;
 
 
-private Type cast;		/* type to cast to */
-private Expression sub;		/* expression to cast */
+private LPCType cast;		/* type to cast to */
+private LPCExpression sub;	/* expression to cast */
 
 /*
  * NAME:	create()
  * DESCRIPTION:	initialize cast expression
  */
-static void create(Type type, Expression exp, varargs int line)
+static void create(LPCType type, LPCExpression exp, varargs int line)
 {
-    ::create(EXP_CAST, line);
+    ::create(LPC_EXP_CAST, line);
     cast = type;
     sub = exp;
 }
