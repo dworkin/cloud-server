@@ -26,9 +26,9 @@ static void create(LPCExpression exp, LPCStatement stmt1, LPCStatement stmt2,
  */
 void code()
 {
-    emit("if");
+    emit("if(");
     condExpression->code();
-    emit("{");
+    emit("){");
     ifStatement->code();
     emit("}");
     if (elseStatement) {

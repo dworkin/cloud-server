@@ -32,7 +32,6 @@ mixed value()
  */
 void code()
 {
-    emit("(");
     switch (typeof(value)) {
     case T_NIL:
 	emit("nil", line());
@@ -50,5 +49,4 @@ void code()
 	emitString(value, line());
 	break;
     }
-    emit(")");
 }

@@ -25,7 +25,7 @@ static void create(LPCExpression exp1, LPCExpression exp2, LPCStatement stmt,
  */
 void code()
 {
-    emit("case");
+    emit("case ");
     caseFrom->code();
     emit("..");
     caseTo->code();

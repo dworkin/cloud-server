@@ -22,49 +22,50 @@ static void create(int operand, LPCExpression exp, varargs int line)
  */
 void code()
 {
-    emit("(");
     switch ((int) value()) {
     case LPC_EXP_CATCH:
-	emit("catch");
+	emit("catch(");
 	sub->code();
 	break;
 
     case LPC_EXP_NEG:
-	emit("~");
+	emit("(~");
 	sub->code();
 	break;
 
     case LPC_EXP_NOT:
-	emit("!");
+	emit("(!");
 	sub->code();
 	break;
 
     case LPC_EXP_UMIN:
-	emit("-");
+	emit("(-");
 	sub->code();
 	break;
 
     case LPC_EXP_UPLUS:
-	emit("+");
+	emit("(+");
 	sub->code();
 	break;
 
     case LPC_EXP_PRE_INCR:
-	emit("++");
+	emit("(++");
 	sub->code();
 	break;
 
     case LPC_EXP_PRE_DECR:
-	emit("--");
+	emit("(--");
 	sub->code();
 	break;
 
     case LPC_EXP_POST_INCR:
+	emit("(");
 	sub->code();
 	emit("++", line());
 	break;
 
     case LPC_EXP_POST_DECR:
+	emit("(");
 	sub->code();
 	emit("--", line());
 	break;

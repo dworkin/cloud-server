@@ -23,7 +23,7 @@ static void create(LPCExpression exp, LPCStatement stmt, varargs int line)
  */
 void code()
 {
-    emit("case");
+    emit("case ");
     caseExpression->code();
     emit(":");
     statement->code();

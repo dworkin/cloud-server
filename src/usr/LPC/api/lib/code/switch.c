@@ -23,7 +23,8 @@ static void create(LPCExpression exp, LPCStmtBlock stmt, varargs int line)
  */
 void code()
 {
-    emit("switch");
+    emit("switch(");
     expression->code();
+    emit(")");
     statement->code();
 }

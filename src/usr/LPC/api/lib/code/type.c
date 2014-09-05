@@ -29,6 +29,7 @@ void code()
     emit(classType + " ", line());
     if (objType) {
 	objType->code();
+	emit(" ");
     }
     if (indirection) {
 	emit("***************"[.. indirection - 1]);
