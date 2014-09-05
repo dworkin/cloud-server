@@ -493,6 +493,7 @@ static mixed *expFloat(mixed *parsed)
 /*
  * NAME:	simpleString()
  * DESCRIPTION:	({ "\"abc\"" })
+ */
 static mixed *simpleString(mixed *parsed)
 {
     string str;
@@ -517,7 +518,7 @@ static mixed *complexString(mixed *parsed)
 
 /*
  * NAME:	simpleChar()
- * DESCRIPTION:	({ 'a' })
+ * DESCRIPTION:	({ "'a'" })
  */
 static mixed *simpleChar(mixed *parsed)
 {
@@ -581,12 +582,15 @@ static mixed *expFuncall(mixed *parsed)
 {
     switch (sizeof(parsed)) {
     case 5:
+	/* func() */
 	return ({ new LPCExpFuncall(parsed[0], parsed[2], parsed[3]) });
 
     case 6:
+	/* ::func() */
 	return ({ new LPCExpInhFuncall(nil, parsed[1], parsed[3], parsed[4]) });
 
     case 7:
+	/* label::func() */
 	return ({ new LPCExpInhFuncall(parsed[0], parsed[2], parsed[4],
 				       parsed[5]) });
     }
