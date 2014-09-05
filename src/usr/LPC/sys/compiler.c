@@ -1,4 +1,4 @@
-# include "parser.h"
+# include "compiler.h"
 # include "code.h"
 # include "expression.h"
 
@@ -17,10 +17,10 @@ static void create()
 }
 
 /*
- * NAME:	parse()
- * DESCRIPTION:	parse LPC source code, return program
+ * NAME:	compile()
+ * DESCRIPTION:	compile LPC source code to program
  */
-LPCProgram parse(string source)
+LPCCode compile(string source)
 {
     mixed *parsed;
 

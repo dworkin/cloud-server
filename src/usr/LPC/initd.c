@@ -1,10 +1,11 @@
-# include "parser.h"
+# include "compiler.h"
 
 /*
  * NAME:	create()
- * DESCRIPTION:	initialize LPC parser
+ * DESCRIPTION:	initialize LPC compiler
  */
 static void create()
 {
-    compile_object(LPC_PARSER);
+    compile_object(LPC_COMPILER);
+    compile_object(LPC_CODEGEN);
 }
