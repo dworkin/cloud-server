@@ -702,8 +702,7 @@ private mixed _F_call_limited(mixed arg1, mixed *args)
     object rsrcd;
     int stack, ticks;
     string func;
-    mapping tls;
-    mixed *limits, result;
+    mixed tls, *limits, result;
 
     rsrcd = ::find_object(RSRCD);
     func = arg1;
