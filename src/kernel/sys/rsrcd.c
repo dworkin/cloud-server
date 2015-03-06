@@ -128,10 +128,13 @@ void set_rsrc(string name, int max, int decay, int period)
  */
 void remove_rsrc(string name)
 {
-    int *rsrc, i;
     object *objects;
+    int i;
 
-    if (previous_program() == API_RSRC && (rsrc=resources[name])) {
+    if (previous_program() == API_RSRC) {
+	if (!resources[name]) {
+	    error("No such resource: " + name);
+	}
 	objects = map_values(owners);
 	i = sizeof(objects);
 	rlimits (-1; -1) {
@@ -154,11 +157,13 @@ mixed *query_rsrc(string name)
 	object *objects;
 	int i;
 
-	rsrc = resources[name][..];
+	if (!(rsrc=resources[name])) {
+	    error("No such resource: " + name);
+	}
 	objects = map_values(owners);
 	usage = (rsrc[GRSRC_DECAY] == 0) ? 0 : 0.0;
 	for (i = sizeof(objects); --i >= 0; ) {
-	    usage += objects[i]->rsrc_get(name, resources[name])[RSRC_USAGE];
+	    usage += objects[i]->rsrc_get(name, rsrc)[RSRC_USAGE];
 	}
 
 	return ({ usage, rsrc[GRSRC_MAX], 0 }) +
@@ -186,11 +191,15 @@ void rsrc_set_limit(string owner, string name, int max)
 {
     if (previous_program() == API_RSRC) {
 	object obj;
+	mixed *rsrc;
 
 	if (!(obj=owners[owner])) {
 	    error("No such resource owner: " + owner);
 	}
-	obj->rsrc_set_limit(name, max, resources[name][GRSRC_DECAY]);
+	if (!(rsrc=resources[name])) {
+	    error("No such resource: " + name);
+	}
+	obj->rsrc_set_limit(name, max, rsrc[GRSRC_DECAY]);
     }
 }
 
@@ -202,11 +211,15 @@ mixed *rsrc_get(string owner, string name)
 {
     if (KERNEL()) {
 	object obj;
+	mixed *rsrc;
 
 	if (!(obj=owners[owner])) {
 	    error("No such resource owner: " + owner);
 	}
-	return obj->rsrc_get(name, resources[name]);
+	if (!(rsrc=resources[name])) {
+	    error("No such resource: " + name);
+	}
+	return obj->rsrc_get(name, rsrc);
     }
 }
 
@@ -220,11 +233,15 @@ int rsrc_incr(string owner, string name, object index, int incr,
 {
     if (KERNEL()) {
 	object obj;
+	mixed *rsrc;
 
 	if (!(obj=owners[owner])) {
 	    error("No such resource owner: " + owner);
 	}
-	return obj->rsrc_incr(name, index, incr, resources[name], force);
+	if (!(rsrc=resources[name])) {
+	    error("No such resource: " + name);
+	}
+	return obj->rsrc_incr(name, index, incr, rsrc, force);
     }
 }
 
