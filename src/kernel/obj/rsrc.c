@@ -19,10 +19,10 @@ int maxticks;		/* maximum number of ticks currently allowed */
 static void create()
 {
     resources = ([
-		    "stack" :	({   0, -1, 0 }),
-		    "ticks" :	({   0, -1, 0 }),
-		    "tick usage" :	({ 0.0, -1, 0 })
-		]);
+      "stack" :		({   0, -1, 0 }),
+      "ticks" :		({   0, -1, 0 }),
+      "tick usage" :	({ 0.0, -1, 0 })
+    ]);
     maxticks = -1;
     rsrcd = find_object(RSRCD);
 }

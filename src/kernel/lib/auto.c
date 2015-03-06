@@ -818,7 +818,7 @@ static int write_file(string path, string str, varargs int offset)
 
     fcreator = driver->creator(path);
     rsrcd = ::find_object(RSRCD);
-    rsrc = rsrcd->rsrc_get(fcreator, "filequota");
+    rsrc = rsrcd->rsrc_get(fcreator, "fileblocks");
     if (creator != "System" && rsrc[RSRC_USAGE] >= rsrc[RSRC_MAX] &&
 	rsrc[RSRC_MAX] >= 0) {
 	error("File quota exceeded");
@@ -829,7 +829,7 @@ static int write_file(string path, string str, varargs int offset)
 	rlimits (-1; -1) {
 	    result = ::write_file(path, str, offset);
 	    if (result != 0 && (size=driver->file_size(path) - size) != 0) {
-		rsrcd->rsrc_incr(fcreator, "filequota", nil, size);
+		rsrcd->rsrc_incr(fcreator, "fileblocks", nil, size);
 	    }
 	}
     } : error(TLSVAR(1));
@@ -867,7 +867,7 @@ static int remove_file(string path)
 	    result = ::remove_file(path);
 	    if (result != 0 && size != 0) {
 		::find_object(RSRCD)->rsrc_incr(driver->creator(path),
-						"filequota", nil, -size);
+						"fileblocks", nil, -size);
 	    }
 	}
     } : error(TLSVAR(1));
@@ -909,7 +909,7 @@ static int rename_file(string from, string to)
     tcreator = driver->creator(to);
     size = driver->file_size(from, TRUE);
     rsrcd = ::find_object(RSRCD);
-    rsrc = rsrcd->rsrc_get(tcreator, "filequota");
+    rsrc = rsrcd->rsrc_get(tcreator, "fileblocks");
     if (size != 0 && fcreator != tcreator && creator != "System" &&
 	rsrc[RSRC_USAGE] >= rsrc[RSRC_MAX] && rsrc[RSRC_MAX] >= 0) {
 	error("File quota exceeded");
@@ -919,8 +919,8 @@ static int rename_file(string from, string to)
 	rlimits (-1; -1) {
 	    result = ::rename_file(from, to);
 	    if (result != 0 && fcreator != tcreator) {
-		rsrcd->rsrc_incr(tcreator, "filequota", nil, size);
-		rsrcd->rsrc_incr(fcreator, "filequota", nil, -size);
+		rsrcd->rsrc_incr(tcreator, "fileblocks", nil, size);
+		rsrcd->rsrc_incr(fcreator, "fileblocks", nil, -size);
 	    }
 	}
     } : error(TLSVAR(1));
@@ -1057,7 +1057,7 @@ static int make_dir(string path)
 
     fcreator = driver->creator(path + "/");
     rsrcd = ::find_object(RSRCD);
-    rsrc = rsrcd->rsrc_get(fcreator, "filequota");
+    rsrc = rsrcd->rsrc_get(fcreator, "fileblocks");
     if (creator != "System" && rsrc[RSRC_USAGE] >= rsrc[RSRC_MAX] &&
 	rsrc[RSRC_MAX] >= 0) {
 	error("File quota exceeded");
@@ -1067,7 +1067,7 @@ static int make_dir(string path)
 	rlimits (-1; -1) {
 	    result = ::make_dir(path);
 	    if (result != 0) {
-		rsrcd->rsrc_incr(fcreator, "filequota", nil, 1);
+		rsrcd->rsrc_incr(fcreator, "fileblocks", nil, 1);
 	    }
 	}
     } : error(TLSVAR(1));
@@ -1103,7 +1103,7 @@ static int remove_dir(string path)
 	    result = ::remove_dir(path);
 	    if (result != 0) {
 		::find_object(RSRCD)->rsrc_incr(driver->creator(path + "/"),
-						"filequota", nil, -1);
+						"fileblocks", nil, -1);
 	    }
 	}
     } : error(TLSVAR(1));
@@ -1159,7 +1159,7 @@ static void save_object(string path)
 
     fcreator = driver->creator(path);
     rsrcd = ::find_object(RSRCD);
-    rsrc = rsrcd->rsrc_get(fcreator, "filequota");
+    rsrc = rsrcd->rsrc_get(fcreator, "fileblocks");
     if (creator != "System" && rsrc[RSRC_USAGE] >= rsrc[RSRC_MAX] &&
 	rsrc[RSRC_MAX] >= 0) {
 	error("File quota exceeded");
@@ -1170,7 +1170,7 @@ static void save_object(string path)
 	rlimits (-1; -1) {
 	    ::save_object(path);
 	    if ((size=driver->file_size(path) - size) != 0) {
-		rsrcd->rsrc_incr(fcreator, "filequota", nil, size);
+		rsrcd->rsrc_incr(fcreator, "fileblocks", nil, size);
 	    }
 	}
     } : error(TLSVAR(1));
@@ -1207,7 +1207,7 @@ static string editor(varargs string cmd)
 		::find_object(USERD)->remove_editor(this_object());
 	    }
 	    if (info) {
-		rsrcd->rsrc_incr(driver->creator(info[0]), "filequota", nil,
+		rsrcd->rsrc_incr(driver->creator(info[0]), "fileblocks", nil,
 				 driver->file_size(info[0]) - info[1]);
 	    }
 	}

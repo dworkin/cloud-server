@@ -20,7 +20,7 @@ static void create()
       "stack" :		({ -1,  0,    0 }),
       "ticks" :		({ -1,  0,    0 }),
       "tick usage" :	({ -1, 10, 3600 }),
-      "filequota" :	({ -1,  0,    0 }),
+      "fileblocks" :	({ -1,  0,    0 }),
     ]);
 
     owners = ([ ]);		/* no resource owners yet */
