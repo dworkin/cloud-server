@@ -200,7 +200,7 @@ static int destruct_object(mixed obj)
 		/*
 		 * non-clones are handled by driver->remove_program()
 		 */
-		::find_object(RSRCD)->rsrc_incr(owner, "objects", nil, -1);
+		::find_object(RSRCD)->rsrc_incr(oowner, "objects", nil, -1);
 	    }
 	}
 	if (!lib) {
