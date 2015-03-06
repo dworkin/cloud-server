@@ -877,7 +877,8 @@ static string atomic_error(string str, int atom, int ticks)
 	mesg = str;
     }
 
-    if (sscanf(trace[atom][TRACE_PROGNAME], "/kernel/%*s") == 0) {
+    if (trace[atom][TRACE_FUNCTION] != "_compile" ||
+	sscanf(trace[atom][TRACE_PROGNAME], "/kernel/%*s") == 0) {
 	if (errord) {
 	    errord->atomic_error(str, atom, trace);
 	} else {

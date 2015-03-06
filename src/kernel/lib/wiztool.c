@@ -175,21 +175,6 @@ static void remove_rsrc(string name)
 }
 
 /*
- * NAME:	query_rsrc()
- * DESCRIPTION:	query a resource
- */
-static mixed *query_rsrc(string name)
-{
-    mixed *rsrc;
-
-    rsrc = ::query_rsrc(name);
-    if (name == "objects") {
-	rsrc[RSRC_USAGE] += sizeof(query_connections());
-    }
-    return rsrc;
-}
-
-/*
  * NAME:	rsrc_set_limit()
  * DESCRIPTION:	set individual resource limit
  */

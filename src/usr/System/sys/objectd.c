@@ -476,7 +476,7 @@ void compile_failed(string owner, string path)
  */
 void destruct(string owner, string path)
 {
-    if (previous_object() == driver && sscanf(path, "%*s#") == 0) {
+    if (previous_object() == driver) {
 	if (sscanf(path, "%*s/lib/") == 0) {
 	    unregister_object(path, status(path, O_INDEX));
 	}

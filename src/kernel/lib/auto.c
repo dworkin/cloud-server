@@ -75,8 +75,7 @@ nomask void _F_create()
 	    creator = driver->creator(oname);
 	    if (sscanf(oname, "%s#%d", oname, clone) != 0) {
 		owner = TLSVAR(1);
-		if (clone >= 0 && oname != BINARY_CONN && oname != TELNET_CONN)
-		{
+		if (clone >= 0) {
 		    /*
 		     * register object
 		     */
@@ -194,14 +193,13 @@ static int destruct_object(mixed obj)
     }
 
     rlimits (-1; -1) {
-	if (oname != BINARY_CONN && oname != TELNET_CONN) {
+	if (clone) {
+	    /*
+	     * non-clones are handled by driver->remove_program()
+	     */
+	    ::find_object(RSRCD)->rsrc_incr(oowner, "objects", nil, -1);
+	} else {
 	    driver->destruct(object_name(obj), oowner);
-	    if (clone) {
-		/*
-		 * non-clones are handled by driver->remove_program()
-		 */
-		::find_object(RSRCD)->rsrc_incr(oowner, "objects", nil, -1);
-	    }
 	}
 	if (!lib) {
 	    obj->_F_destruct();
@@ -215,8 +213,8 @@ static int destruct_object(mixed obj)
  * NAME:	_compile()
  * DESCRIPTION:	reversible low-level compile
  */
-private atomic object _compile(object driver, object rsrcd, string path,
-			       string uid, string *source)
+private atomic object _compile(object driver, string path, string uid,
+			       string *source)
 {
     int add;
     object obj;
@@ -224,7 +222,7 @@ private atomic object _compile(object driver, object rsrcd, string path,
     add = !::find_object(path);
     obj = ::compile_object(path, source...);
     if (add) {
-	rsrcd->rsrc_incr(uid, "objects", nil, 1);
+	::find_object(RSRCD)->rsrc_incr(uid, "objects", nil, 1);
     }
     driver->compile(path, uid, source...);
     return obj;
@@ -237,8 +235,8 @@ private atomic object _compile(object driver, object rsrcd, string path,
 static object compile_object(string path, string source...)
 {
     string uid, err;
-    object driver, rsrcd, obj;
-    int *rsrc, lib, kernel;
+    object driver, obj;
+    int lib, kernel;
 
     CHECKARG(path, 1, "compile_object");
     if (!this_object()) {
@@ -263,20 +261,11 @@ static object compile_object(string path, string source...)
     }
 
     /*
-     * check resource usage
-     */
-    rsrcd = ::find_object(RSRCD);
-    rsrc = rsrcd->rsrc_get(uid, "objects");
-    if (rsrc[RSRC_USAGE] >= rsrc[RSRC_MAX] && rsrc[RSRC_MAX] >= 0) {
-	error("Too many objects");
-    }
-
-    /*
      * do the compiling
      */
     rlimits (-1; -1) {
 	driver->compiling(path);
-	err = catch(obj = _compile(driver, rsrcd, path, uid, source));
+	err = catch(obj = _compile(driver, path, uid, source));
 	if (err) {
 	    driver->compile_failed(path, uid);
 	    error(err);
@@ -287,13 +276,25 @@ static object compile_object(string path, string source...)
 }
 
 /*
+ * NAME:	_clone()
+ * DESCRIPTION:	reversible low-level clone
+ */
+static atomic private object _clone(string path, string uid, object obj)
+{
+    if (path != RSRCOBJ) {
+	::find_object(RSRCD)->rsrc_incr(uid, "objects", nil, 1);
+    }
+    TLSVAR(1) = uid;
+    return ::clone_object(obj);
+}
+
+/*
  * NAME:	clone_object()
  * DESCRIPTION:	clone an object
  */
 static object clone_object(string path, varargs string uid)
 {
-    object rsrcd, obj;
-    int *rsrc;
+    object obj;
 
     CHECKARG(path, 1, "clone_object");
     if (uid) {
@@ -332,31 +333,9 @@ static object clone_object(string path, varargs string uid)
     }
 
     /*
-     * check resource usage
-     */
-    rsrcd = ::find_object(RSRCD);
-    if (path != BINARY_CONN && path != TELNET_CONN && path != RSRCOBJ) {
-	rsrc = rsrcd->rsrc_get(uid, "objects");
-	if (rsrc[RSRC_USAGE] >= rsrc[RSRC_MAX] && rsrc[RSRC_MAX] >= 0) {
-	    error("Too many objects");
-	}
-    }
-    if (::status()[ST_NOBJECTS] == ::status()[ST_OTABSIZE]) {
-	error("Too many objects");
-    }
-
-    /*
      * do the cloning
      */
-    catch {
-	rlimits (-1; -1) {
-	    if (path != BINARY_CONN && path != TELNET_CONN && path != RSRCOBJ) {
-		rsrcd->rsrc_incr(uid, "objects", nil, 1);
-	    }
-	    TLSVAR(1) = uid;
-	}
-    } : error(TLSVAR(1));
-    return ::clone_object(obj);
+    return _clone(path, uid, obj);
 }
 
 /*
