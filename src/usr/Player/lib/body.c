@@ -1,8 +1,8 @@
-inherit body	"/lib/base/body";
-inherit inv	"/lib/container";
+inherit body	"~/api/lib/body";
+inherit inv	"container";
 
 private inherit "/lib/util/string";
-private inherit "/lib/util/language";
+private inherit "util/language";
 
 
 private string race;		/* race of this body */

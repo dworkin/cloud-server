@@ -1,4 +1,4 @@
-inherit "/lib/room";
+inherit "~/lib/room";
 
 void create()
 {

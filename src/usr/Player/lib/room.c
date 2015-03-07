@@ -2,9 +2,9 @@
 # include <messages.h>
 # include <type.h>
 
-inherit container	"/lib/base/container";
-inherit desc		"/lib/base/description";
-inherit movable		"/lib/base/movable";
+inherit container	"base/container";
+inherit desc		"base/description";
+inherit movable		"base/movable";
 
 
 private string background_desc;	/* background description */

@@ -7,7 +7,7 @@
 
 inherit auto	"~/lib/auto";
 inherit wiztool LIB_WIZTOOL;
-inherit body	"/lib/base/body";
+inherit body	"/usr/Player/api/lib/body";
 
 private inherit	"/lib/util/string";
 
@@ -15,6 +15,8 @@ private inherit	"/lib/util/string";
 # define PLAYERSERVER	"/usr/Player/sys/userd"
 # define OBJECTSERVER	"/usr/System/sys/objectd"
 # define UPGRADESERVER	"/usr/System/sys/upgraded"
+
+# define Container	object "/usr/Player/lib/base/container"
 
 
 object user;		/* associated user object */
@@ -549,8 +551,6 @@ static void cmd_snapshot(object user, string cmd, string str)
 
     dump_state(incr);
 }
-
-# define Container	"/lib/base/container"
 
 static void cmd_goto(object user, string cmd, string str)
 {

@@ -3,12 +3,12 @@
 # include <type.h>
 # include "cmdparser.h"
 
-inherit interface "~/lib/interface";
-inherit user	  "~/lib/api/user";
-inherit parser	  "~/lib/cmdparser";
+inherit interface "interface";
+inherit user	  "api/user";
+inherit parser	  "cmdparser";
 
 private inherit "/lib/util/string";
-private inherit "/lib/util/language";
+private inherit "util/language";
 
 # define STATE_NORMAL		0
 # define STATE_LOGIN		1
@@ -17,8 +17,10 @@ private inherit "/lib/util/language";
 # define STATE_NEWPASSWD2	4
 # define STATE_PASTING		5
 
-# define PlayerServer		"/usr/Player/sys/userd"
-# define BaseBody		"/lib/base/body"
+# define BODY			"/usr/Player/obj/body/human"
+# define PLAYERSERVER		"/usr/Player/sys/userd"
+
+# define BaseBody		object "/usr/Player/api/lib/body"
 
 
 private string name;		/* user name */
@@ -582,7 +584,7 @@ static int receive_message(string str)
 		break;
 
 	    case "@users":
-		users = PlayerServer->query_logins();
+		users = PLAYERSERVER->query_logins();
 		str = "Logged on:";
 		for (i = 0, sz = sizeof(users); i < sz; i++) {
 		    cmd = users[i]->query_name();
@@ -653,10 +655,10 @@ static int receive_message(string str)
 	::login(connection, name);
 	::message("\n\n");
 	if (!body) {
-	    add_body(body = clone_object("/obj/body/human"));
+	    add_body(body = clone_object(BODY));
 	    set_current_body(body);
 	    body->set_name(name);
-	    body->move(find_object("/usr/Pattern/room/entrance"));
+	    body->move(find_object("/usr/Player/room/entrance"));
 	}
 	body->query_env()->message(MSG_FORWARD, Name + " logs in.", body);
 	cmd_look(body, ({ }));
@@ -686,10 +688,10 @@ static int receive_message(string str)
 	}
 	newpasswd = nil;
 	if (!body) {
-	    add_body(body = clone_object("/obj/body/human"));
+	    add_body(body = clone_object(BODY));
 	    set_current_body(body);
 	    body->set_name(name);
-	    body->move(find_object("/usr/Pattern/room/entrance"));
+	    body->move(find_object("/usr/Player/room/entrance"));
 
 	    body->query_env()->message(MSG_FORWARD, Name + " logs in.", body);
 	    ::message("\n");

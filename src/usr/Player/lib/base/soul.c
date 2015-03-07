@@ -1,4 +1,4 @@
-# define Body		"/lib/base/body"
+# define Body		object "/usr/Player/api/lib/body"
 
 
 private object *bodies;	/* body objects for this soul */
@@ -18,7 +18,7 @@ static void create()
  * NAME:	add_body()
  * DESCRIPTION:	add a new body controlled by this soul
  */
-static atomic void add_body(object Body body)
+static atomic void add_body(Body body)
 {
     if (body) {
 	body->_F_set_soul(this_object());
@@ -30,7 +30,7 @@ static atomic void add_body(object Body body)
  * NAME:	remove_body()
  * DESCRIPTION:	stop controlling a body
  */
-static atomic void remove_body(object Body body)
+static atomic void remove_body(Body body)
 {
     if (sizeof(bodies & ({ body })) == 0) {
 	error("bad body");
@@ -52,7 +52,7 @@ static object *query_bodies()
  * NAME:	command()
  * DESCRIPTION:	let body handle command
  */
-static mixed command(object Body body, string command, mixed args...)
+static mixed command(Body body, string command, mixed args...)
 {
     return body->_F_command(command, args);
 }

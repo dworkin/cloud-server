@@ -43,11 +43,7 @@ static void create()
     load("sys/errord");
     load("sys/upgraded");
 
-    /* clonables */
-    compile_object("obj/wiztool");
-
-    /* mudlib objects */
-    compile_object("/obj/body/human");
+    /* global lib objects */
     compile_object("/lib/strbuffer");
 
     /* Domain stuff */
@@ -64,6 +60,9 @@ static void create()
 	    load("/usr/" + domain + "/initd");
 	}
     }
+
+    /* clonables */
+    compile_object("obj/wiztool");
 
     /* connections */
     USERD->set_binary_manager(0, find_object(BINARYSERVER));

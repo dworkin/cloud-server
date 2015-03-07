@@ -1,6 +1,6 @@
 # include <messages.h>
 
-inherit "/lib/body";
+inherit "~/lib/body";
 
 private inherit "/lib/util/string";
 

@@ -1,4 +1,4 @@
-# define Soul		"/lib/base/soul"
+# define SOUL		"/usr/Player/lib/base/soul"
 
 
 private object soul;	/* controller of this body */
@@ -17,7 +17,7 @@ static void create()
  */
 nomask void _F_set_soul(object obj)
 {
-    if (previous_program() != Soul || soul) {
+    if (previous_program() != SOUL || soul) {
 	error("bad soul");
     }
     soul = obj;
@@ -29,7 +29,7 @@ nomask void _F_set_soul(object obj)
  */
 nomask void _F_remove_soul(object obj)
 {
-    if (previous_program() != Soul || soul != obj) {
+    if (previous_program() != SOUL || soul != obj) {
 	error("bad soul");
     }
     soul = nil;
@@ -50,7 +50,7 @@ object query_soul()
  */
 nomask mixed _F_command(string command, mixed *args)
 {
-    if (previous_program() == Soul && previous_object() == soul) {
+    if (previous_program() == SOUL && previous_object() == soul) {
 	return call_limited("command", command, args);
     }
 }

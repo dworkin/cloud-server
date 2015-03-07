@@ -1,4 +1,4 @@
-# define Movable	"/lib/base/movable"
+# define MOVABLE	"/usr/Player/lib/base/movable"
 
 
 private mapping inventory;	/* object -> position */
@@ -39,7 +39,7 @@ mixed query_inv_posn(object obj)
  */
 nomask void _F_movein(object obj, mixed position)
 {
-    if (previous_program() == Movable) {
+    if (previous_program() == MOVABLE) {
 	inventory[obj] = position;
     }
 }
@@ -50,7 +50,7 @@ nomask void _F_movein(object obj, mixed position)
  */
 nomask void _F_moveout(object obj)
 {
-    if (previous_program() == Movable) {
+    if (previous_program() == MOVABLE) {
 	inventory[obj] = nil;
     }
 }

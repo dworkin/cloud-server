@@ -1,6 +1,6 @@
 # include <messages.h>
 
-inherit "/lib/body/humanoid";
+inherit "humanoid";
 
 
 static void create()

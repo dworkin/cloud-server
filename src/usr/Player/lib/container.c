@@ -1,5 +1,5 @@
-inherit base	"/lib/base/container";
-inherit obj	"/lib/object";
+inherit base	"base/container";
+inherit obj	"object";
 
 
 static void create()

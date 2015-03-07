@@ -1,1 +1,0 @@
-inherit "/lib/body/human";

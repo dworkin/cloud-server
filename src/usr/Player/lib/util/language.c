@@ -1,7 +1,7 @@
 # include <limits.h>
 
 
-# define Body	"/lib/base/body"
+# define Body	object "/usr/Player/api/lib/body"
 
 /*
  * NAME:	pluralize()

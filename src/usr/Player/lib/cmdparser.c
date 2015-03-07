@@ -1,6 +1,6 @@
 # include "cmdparser.h"
 
-private inherit "/lib/util/language";
+private inherit "util/language";
 
 
 private object parser;	/* central command parser */

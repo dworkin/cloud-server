@@ -1,7 +1,7 @@
 # include <kernel/user.h>
 
 inherit user "~System/lib/user";
-inherit soul "/lib/base/soul";
+inherit soul "base/soul";
 
 private inherit "/lib/util/string";
 

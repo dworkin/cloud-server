@@ -1,5 +1,5 @@
-inherit movable	"/lib/base/movable";
-inherit desc	"/lib/base/description";
+inherit movable	"base/movable";
+inherit desc	"base/description";
 
 
 private string *names;		/* object names */

@@ -1,6 +1,6 @@
 # include <type.h>
 
-# define Container	"/lib/base/container"
+# define Container	object "/usr/Player/lib/base/container"
 
 
 private object environment;	/* environment of this object */
@@ -16,7 +16,7 @@ static void create() { }
  * DESCRIPTION:	move this object to a new destination, which may be nil.
  *		The "position" can be any integer or floating-point value.
  */
-atomic void move(object Container dest, varargs mixed position)
+atomic void move(Container dest, varargs mixed position)
 {
     switch (typeof(position)) {
     case T_INT:
