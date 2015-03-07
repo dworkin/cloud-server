@@ -810,7 +810,7 @@ static string runtime_error(string str, int caught, int ticks)
     mapping tls;
 
     user = this_user();
-    while (user && function_object("query_user", user) == LIB_CONN) {
+    if (user) {
 	user = user->query_user();
     }
     messages = explode(str, "\n");

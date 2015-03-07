@@ -583,7 +583,7 @@ static object this_user()
     if (!user) {
 	user = TLSVAR(3);
     }
-    while (user && user <- LIB_CONN) {
+    if (user) {
 	user = user->query_user();
     }
     return user;
