@@ -1,6 +1,7 @@
 # include <kernel/kernel.h>
 # include <status.h>
 
+# define SYSTEMAUTO	"/usr/System/lib/auto"
 # define OBJECTSERVER	"/usr/System/sys/objectd"
 # define UPGRADESERVER	"/usr/System/sys/upgraded"
 
@@ -43,6 +44,19 @@ static object clone_object(string path, mixed args...)
     return ::clone_object(path);
 }
 
+static void copy() { }		/* default copy function */
+
+/*
+ * NAME:	_F_copy()
+ * DESCRIPTION:	call copy() in a newly copied object
+ */
+nomask void _F_copy()
+{
+    if (previous_program() == SYSTEMAUTO) {
+	copy();
+    }
+}
+
 /*
  * NAME:	new_object()
  * DESCRIPTION:	create and initialize a new light-weight object
@@ -64,14 +78,19 @@ static object new_object(string path, mixed args...)
 
 /*
  * NAME:	copy_object()
- * DESCRIPTION:	copy a light-weight object
+ * DESCRIPTION:	copy this light-weight object
  */
-static object copy_object(object obj)
+static object copy_object()
 {
-    if (!obj || sscanf(object_name(obj), "%*s#-1") == 0) {
+    object obj;
+
+    if (sscanf(object_name(this_object()), "%*s#-1") == 0) {
 	error("Not a light-weight object");
     }
-    return ::new_object(obj);
+    obj = ::new_object(this_object());
+    obj->_F_copy();
+
+    return obj;
 }
 
 /*
