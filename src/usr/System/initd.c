@@ -44,7 +44,8 @@ static void create()
     load("sys/upgraded");
 
     /* global lib objects */
-    compile_object("/sys/utf8");
+    compile_object("/sys/utf8encode");
+    compile_object("/sys/utf8decode");
     compile_object("/lib/strbuffer");
 
     /* Domain stuff */
