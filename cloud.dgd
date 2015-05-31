@@ -6,7 +6,6 @@ directory	= "/home/cloud/server/src";
 ed_tmpfile	= "../state/ed";	/* proto editor tmpfile */
 swap_file	= "../state/swap";	/* swap file */
 swap_size	= 65535;		/* # sectors in swap file */
-cache_size	= 1024;			/* # sectors in swap cache */
 sector_size	= 1024;			/* swap sector size */
 swap_fragment	= 256;			/* fragment to swap out */
 static_chunk	= 64512;		/* static memory chunk */
