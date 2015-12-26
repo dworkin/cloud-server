@@ -12,9 +12,9 @@
 
 object driver;		/* driver object */
 object notify;		/* object notified about changes */
-mapping index_map;	/* a two-step mapping; (index / factor) -> dbase obj */
 int factor;		/* 2nd level divisor */
-mapping creator_map;	/* creator -> dbase object */
+mapping index2db;	/* ([ index / factor : dbase object ]) */
+mapping creator2db;	/* ([ creator : dbase object ]) */
 
 private void preregister_objects();
 
@@ -26,8 +26,8 @@ static void create()
 {
     driver = find_object(DRIVER);
     factor = status(ST_ARRAYSIZE);
-    index_map = ([ ]);
-    creator_map = ([ ]);
+    index2db = ([ ]);
+    creator2db = ([ ]);
 
     compile_object(OBJDBASE);
     preregister_objects();
@@ -46,7 +46,7 @@ private void register_inherited(int issue, int *list)
     /* register inherited objects */
     for (i = sizeof(list); --i >= 0; ) {
 	index = list[i];
-	index_map[index / factor][index]->add_inherited(issue, index);
+	index2db[index / factor][index]->add_inherited(issue, index);
     }
 }
 
@@ -61,12 +61,12 @@ private void unregister_inherited(int issue, int *list)
 
     for (i = sizeof(list); --i >= 0; ) {
 	index = list[i];
-	dbase = index_map[index / factor];
+	dbase = index2db[index / factor];
 	if (dbase[index]->del_inherited(issue, index)) {
-	    /* dbase object removed */
+	    /* index completely removed */
 	    dbase[index] = nil;
 	    if (map_sizeof(dbase) == 0) {
-		index_map[index / factor] = nil;
+		index2db[index / factor] = nil;
 	    }
 	}
     }
@@ -83,14 +83,14 @@ private void register_object(string creator, string path, int index, int *list)
     mapping dbase;
 
     /* get creator's dbase object */
-    dbobj = creator_map[creator];
+    dbobj = creator2db[creator];
     if (!dbobj) {
-	creator_map[creator] = dbobj = clone_object(OBJDBASE);
+	creator2db[creator] = dbobj = clone_object(OBJDBASE);
 	dbobj->set_creator(creator);
     }
 
     /* update index mapping */
-    dbase = index_map[index / factor];
+    dbase = index2db[index / factor];
     if (dbase) {
 	if (dbase[index]) {
 	    /* object has been recompiled: unregister old inherited */
@@ -99,7 +99,7 @@ private void register_object(string creator, string path, int index, int *list)
 	    dbase[index] = dbobj;
 	}
     } else {
-	index_map[index / factor] = ([ index : dbobj ]);
+	index2db[index / factor] = ([ index : dbobj ]);
     }
 
     /* minimize & sort list of inherited objects */
@@ -125,7 +125,7 @@ private void unregister_object(string path, int index)
     mapping dbase;
     object dbobj;
 
-    dbase = index_map[index / factor];
+    dbase = index2db[index / factor];
     dbobj = dbase[index];
 
     /* unregister inherited objects */
@@ -136,7 +136,7 @@ private void unregister_object(string path, int index)
 	/* dbase object removed */
 	dbase[index] = nil;
 	if (map_sizeof(dbase) == 0) {
-	    index_map[index / factor] = nil;
+	    index2db[index / factor] = nil;
 	}
     }
 }
@@ -238,7 +238,7 @@ string query_path(int index)
 	mapping dbase;
 	object dbobj;
 
-	dbase = index_map[index / factor];
+	dbase = index2db[index / factor];
 	if (dbase && (dbobj=dbase[index])) {
 	    return dbobj->query_path(index);
 	}
@@ -257,7 +257,7 @@ int *query_issues(string path)
 
 	if (sscanf(path, "%*s/lib/") != 0) {
 	    /* lib object */
-	    obj = creator_map[driver->creator(path)];
+	    obj = creator2db[driver->creator(path)];
 	    if (obj) {
 		return obj->query_issues(path);
 	    }
@@ -282,7 +282,7 @@ int *query_inherits(int index)
 	mapping dbase;
 	object dbobj;
 
-	dbase = index_map[index / factor];
+	dbase = index2db[index / factor];
 	if (dbase && (dbobj=dbase[index])) {
 	    return dbobj->query_inherits(index);
 	}
@@ -300,7 +300,7 @@ int **query_inherited(int index)
 	mapping dbase;
 	object dbobj;
 
-	if ((dbase=index_map[index / factor]) && (dbobj=dbase[index])) {
+	if ((dbase=index2db[index / factor]) && (dbobj=dbase[index])) {
 	    return map_values(dbobj->query_inherited(index));
 	}
     }
