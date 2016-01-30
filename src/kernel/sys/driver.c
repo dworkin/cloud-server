@@ -6,8 +6,8 @@
 # include <trace.h>
 # include <type.h>
 
-# define TLS(tls, n)	tls[-1 - n]
-# define TLSVAR(n)	call_trace()[1][TRACE_FIRSTARG][-1 - n]
+# define TLS()		call_trace()[1][TRACE_FIRSTARG]
+# define TLSVAR(tls, n)	tls[-1 - n]
 
 
 object rsrcd;		/* resource manager object */
@@ -193,13 +193,15 @@ void set_error_manager(object obj)
 private atomic object _compile(string path, string creator,
 			       varargs string *source)
 {
+    mapping tls;
     object obj;
 
-    TLSVAR(2) = ({ path });
+    tls = TLS();
+    TLSVAR(tls, 2) = ({ path });
     obj = (source) ? compile_object(path, source...) : compile_object(path);
     rsrcd->rsrc_incr(creator, "objects", nil, 1);
     if (objectd) {
-	objectd->compile(creator, path, ({ }), TLSVAR(2)[1 ..]...);
+	objectd->compile(creator, path, ({ }), TLSVAR(tls, 2)[1 ..]...);
     }
     return obj;
 }
@@ -228,7 +230,7 @@ void compiling(string path)
 	if (objectd) {
 	    objectd->compiling(path);
 	}
-	TLSVAR(2) = ({ path });
+	TLSVAR(TLS(), 2) = ({ path });
     }
 }
 
@@ -240,7 +242,7 @@ void compile(string path, string owner, string source...)
 {
     if (previous_program() == AUTO) {
 	if (objectd) {
-	    objectd->compile(owner, path, source, TLSVAR(2)[1 ..]...);
+	    objectd->compile(owner, path, source, TLSVAR(TLS(), 2)[1 ..]...);
 	}
     }
 }
@@ -313,7 +315,7 @@ private object load(string path)
     if (obj) {
 	return obj;
     }
-    TLSVAR(2) = ({ path });
+    TLSVAR(TLS(), 2) = ({ path });
     return compile_object(path);
 }
 
@@ -475,7 +477,7 @@ static string path_write(string path)
 	    (creator == "System" ||
 	     (accessd->access(oname, path, WRITE_ACCESS) &&
 	      (rsrc[RSRC_USAGE] < rsrc[RSRC_MAX] || rsrc[RSRC_MAX] < 0)))) {
-	    TLSVAR(1) = ({ path, file_size(path) });
+	    TLSVAR(TLS(), 1) = ({ path, file_size(path) });
 	    return path;
 	}
     }
@@ -552,8 +554,9 @@ static int touch(object obj, string func)
 static object inherit_program(string from, string path, int priv)
 {
     string creator;
-    object obj;
     mixed str;
+    mapping tls;
+    object obj;
 
     path = normalize_path(path, from + "/..", creator = creator(from));
     if (sscanf(path, "%*s/lib/") == 0 ||
@@ -582,6 +585,7 @@ static object inherit_program(string from, string path, int priv)
 	}
     }
 
+    tls = TLS();
     obj = find_object(path);
     if (!obj) {
 	int *rsrc;
@@ -595,17 +599,17 @@ static object inherit_program(string from, string path, int priv)
 	if (objectd) {
 	    objectd->compiling(path);
 	}
-	TLSVAR(2) = ({ path });
+	TLSVAR(tls, 2) = ({ path });
 	obj = (str) ? compile_object(path, str...) : compile_object(path);
 	rsrcd->rsrc_incr(creator, "objects", nil, 1);
 	if (objectd) {
-	    objectd->compile(creator, path, ({ }), TLSVAR(2)[1 ..]...);
+	    objectd->compile(creator, path, ({ }), TLSVAR(tls, 2)[1 ..]...);
 
 	    objectd->compiling(from);
 	}
-	TLSVAR(2) = ({ from });
+	TLSVAR(tls, 2) = ({ from });
     } else {
-	TLSVAR(2) += ({ path });
+	TLSVAR(tls, 2) += ({ path });
     }
     return obj;
 }
@@ -634,7 +638,7 @@ static mixed include_file(string from, string path)
     if (objectd) {
 	mixed result;
 
-	result = objectd->include_file(TLSVAR(2)[0], from, path);
+	result = objectd->include_file(TLSVAR(TLS(), 2)[0], from, path);
 	if (sscanf(from, "/kernel/%*s") == 0) {
 	    return result;
 	}
@@ -731,7 +735,7 @@ private void _runtime_error(mapping tls, string str, int caught, int ticks,
     if (ticks >= 0) {
 	mixed *limits;
 
-	limits = TLS(tls, 0);
+	limits = TLSVAR(tls, 0);
 	while (--i >= caught) {
 	    if (trace[i][TRACE_FUNCTION] == "_F_call_limited" &&
 		trace[i][TRACE_PROGNAME] == AUTO) {
@@ -742,7 +746,7 @@ private void _runtime_error(mapping tls, string str, int caught, int ticks,
 		limits = limits[LIM_NEXT];
 	    }
 	}
-	TLS(tls, 0) = limits;
+	TLSVAR(tls, 0) = limits;
     }
 
     if (errord) {
@@ -843,13 +847,13 @@ static string runtime_error(string str, int caught, int ticks)
     } else {
 	tls = trace[1][TRACE_FIRSTARG];
 	trace[1][TRACE_FIRSTARG] = nil;
-	TLS(tls, 6) = messages - ({ nil });
+	TLSVAR(tls, 6) = messages - ({ nil });
 	if (caught <= 1) {
 	    caught = 0;		/* ignore top-level catch */
 	} else if (ticks < 0 && sscanf(trace[caught - 1][TRACE_PROGNAME],
 				       "/kernel/%*s") != 0 &&
 		   trace[caught - 1][TRACE_FUNCTION] != "cmd_code") {
-	    return TLS(tls, 1) = str;
+	    return TLSVAR(tls, 1) = str;
 	}
     }
 
@@ -870,7 +874,7 @@ static string atomic_error(string str, int atom, int ticks)
     object obj;
 
     trace = call_trace();
-    messages = TLS(trace[1][TRACE_FIRSTARG], 5);
+    messages = TLSVAR(trace[1][TRACE_FIRSTARG], 5);
     if (messages) {
 	mesg = implode(messages, "\n") + "\n" + str;
     } else {
@@ -939,14 +943,14 @@ static void compile_error(string file, int line, string err)
     mapping tls;
 
     mesg = ({ "\0" + file + "\0" + line + "\0" + err });
-    tls = call_trace()[1][TRACE_FIRSTARG];
-    messages = TLS(tls, 5);
+    tls = TLS();
+    messages = TLSVAR(tls, 5);
     if (messages) {
 	messages += mesg;
     } else {
 	messages = mesg;
     }
-    TLS(tls, 5) = messages;
+    TLSVAR(tls, 5) = messages;
 }
 
 /*

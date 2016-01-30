@@ -7,8 +7,8 @@
 # include <trace.h>
 
 
-# define TLS(tls, n)		tls[-1 - n]
-# define TLSVAR(n)		::call_trace()[1][TRACE_FIRSTARG][-1 - n]
+# define TLS()			::call_trace()[1][TRACE_FIRSTARG]
+# define TLSVAR(tls, n)		tls[-1 - n]
 # define CHECKARG(arg, n, func)	if (!(arg)) badarg((n), (func))
 
 /*
@@ -74,7 +74,7 @@ nomask void _F_create()
 	    driver = ::find_object(DRIVER);
 	    creator = driver->creator(oname);
 	    if (sscanf(oname, "%s#%d", oname, clone) != 0) {
-		owner = TLSVAR(1);
+		owner = TLSVAR(TLS(), 1);
 		if (clone >= 0) {
 		    /*
 		     * register object
@@ -284,7 +284,7 @@ static atomic private object _clone(string path, string uid, object obj)
     if (path != RSRCOBJ) {
 	::find_object(RSRCD)->rsrc_incr(uid, "objects", nil, 1);
     }
-    TLSVAR(1) = uid;
+    TLSVAR(TLS(), 1) = uid;
     return ::clone_object(obj);
 }
 
@@ -396,7 +396,7 @@ static object new_object(mixed obj, varargs string uid)
 	    error("Cannot create new instance of " + str);
 	}
 
-	TLSVAR(1) = uid;
+	TLSVAR(TLS(), 1) = uid;
     }
     return ::new_object(obj);
 }
@@ -563,7 +563,7 @@ static object this_user()
 
     user = ::this_user();
     if (!user) {
-	user = TLSVAR(3);
+	user = TLSVAR(TLS(), 3);
     }
     if (user) {
 	user = user->query_user();
@@ -670,12 +670,12 @@ private mixed _F_call_limited(mixed arg1, mixed *args)
     stack = ::status()[ST_STACKDEPTH];
     ticks = ::status()[ST_TICKS];
     rlimits (-1; -1) {
-	tls = ::call_trace()[1][TRACE_FIRSTARG];
+	tls = TLS();
 	if (tls == arg1) {
 	    tls = arg1 = ([ ]);
 	}
-	limits = TLS(tls, 0) = rsrcd->call_limits(TLS(tls, 0), owner, stack,
-						  ticks);
+	limits = TLSVAR(tls, 0) = rsrcd->call_limits(TLSVAR(tls, 0), owner,
+						     stack, ticks);
     }
 
     rlimits (limits[LIM_MAXSTACK]; limits[LIM_MAXTICKS]) {
@@ -684,7 +684,7 @@ private mixed _F_call_limited(mixed arg1, mixed *args)
 	ticks = ::status()[ST_TICKS];
 	rlimits (-1; -1) {
 	    rsrcd->update_ticks(limits, ticks);
-	    TLS(tls, 0) = limits[LIM_NEXT];
+	    TLSVAR(tls, 0) = limits[LIM_NEXT];
 
 	    return result;
 	}
@@ -814,7 +814,7 @@ static int write_file(string path, string str, varargs int offset)
 		rsrcd->rsrc_incr(fcreator, "fileblocks", nil, size);
 	    }
 	}
-    } : error(TLSVAR(1));
+    } : error(TLSVAR(TLS(), 1));
 
     return result;
 }
@@ -852,7 +852,7 @@ static int remove_file(string path)
 						"fileblocks", nil, -size);
 	    }
 	}
-    } : error(TLSVAR(1));
+    } : error(TLSVAR(TLS(), 1));
     return result;
 }
 
@@ -905,7 +905,7 @@ static int rename_file(string from, string to)
 		rsrcd->rsrc_incr(fcreator, "fileblocks", nil, -size);
 	    }
 	}
-    } : error(TLSVAR(1));
+    } : error(TLSVAR(TLS(), 1));
     return result;
 }
 
@@ -1052,7 +1052,7 @@ static int make_dir(string path)
 		rsrcd->rsrc_incr(fcreator, "fileblocks", nil, 1);
 	    }
 	}
-    } : error(TLSVAR(1));
+    } : error(TLSVAR(TLS(), 1));
     return result;
 }
 
@@ -1088,7 +1088,7 @@ static int remove_dir(string path)
 						"fileblocks", nil, -1);
 	    }
 	}
-    } : error(TLSVAR(1));
+    } : error(TLSVAR(TLS(), 1));
     return result;
 }
 
@@ -1155,7 +1155,7 @@ static void save_object(string path)
 		rsrcd->rsrc_incr(fcreator, "fileblocks", nil, size);
 	    }
 	}
-    } : error(TLSVAR(1));
+    } : error(TLSVAR(TLS(), 1));
 }
 
 /*
@@ -1181,9 +1181,9 @@ static string editor(varargs string cmd)
 	    }
 	    driver = ::find_object(DRIVER);
 
-	    TLSVAR(1) = nil;
+	    TLSVAR(TLS(), 1) = nil;
 	    result = (cmd) ? ::editor(cmd) : ::editor();
-	    info = TLSVAR(1);
+	    info = TLSVAR(TLS(), 1);
 
 	    if (!query_editor(this_object())) {
 		::find_object(USERD)->remove_editor(this_object());
@@ -1193,7 +1193,7 @@ static string editor(varargs string cmd)
 				 driver->file_size(info[0]) - info[1]);
 	    }
 	}
-    } : error(TLSVAR(1));
+    } : error(TLSVAR(TLS(), 1));
     return result;
 }
 
@@ -1207,7 +1207,7 @@ static void tls_set(mixed index, mixed value)
     if (typeof(index) == T_INT && index < 0) {
 	badarg(1, "tls_set");
     }
-    ::call_trace()[1][TRACE_FIRSTARG][index] = value;
+    TLS()[index] = value;
 }
 
 /*
@@ -1219,7 +1219,7 @@ static mixed tls_get(mixed index)
     if (typeof(index) == T_INT && index < 0) {
 	badarg(1, "tls_get");
     }
-    return ::call_trace()[1][TRACE_FIRSTARG][index];
+    return TLS()[index];
 }
 
 /*
@@ -1236,14 +1236,14 @@ static void add_atomic_message(string str)
     }
 
     mesg = ({ "." + str });
-    tls = ::call_trace()[1][TRACE_FIRSTARG];
-    messages = TLS(tls, 5);
+    tls = TLS();
+    messages = TLSVAR(tls, 5);
     if (messages) {
 	messages += mesg;
     } else {
 	messages = mesg;
     }
-    TLS(tls, 5) = messages;
+    TLSVAR(tls, 5) = messages;
 }
 
 /*
@@ -1255,9 +1255,9 @@ static string *get_atomic_messages()
     mapping tls;
     string *messages;
 
-    tls = ::call_trace()[1][TRACE_FIRSTARG];
-    messages = TLS(tls, 6);
-    TLS(tls, 6) = nil;
+    tls = TLS();
+    messages = TLSVAR(tls, 6);
+    TLSVAR(tls, 6) = nil;
     return (messages) ? messages : ({ });
 }
 
