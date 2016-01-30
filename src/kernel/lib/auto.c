@@ -74,7 +74,7 @@ nomask void _F_create()
 	    driver = ::find_object(DRIVER);
 	    creator = driver->creator(oname);
 	    if (sscanf(oname, "%s#%d", oname, clone) != 0) {
-		owner = TLSVAR(TLS(), 1);
+		owner = TLSVAR(TLS(), TLS_ARGUMENT);
 		if (clone >= 0) {
 		    /*
 		     * register object
@@ -284,7 +284,7 @@ static atomic private object _clone(string path, string uid, object obj)
     if (path != RSRCOBJ) {
 	::find_object(RSRCD)->rsrc_incr(uid, "objects", nil, 1);
     }
-    TLSVAR(TLS(), 1) = uid;
+    TLSVAR(TLS(), TLS_ARGUMENT) = uid;
     return ::clone_object(obj);
 }
 
@@ -396,7 +396,7 @@ static object new_object(mixed obj, varargs string uid)
 	    error("Cannot create new instance of " + str);
 	}
 
-	TLSVAR(TLS(), 1) = uid;
+	TLSVAR(TLS(), TLS_ARGUMENT) = uid;
     }
     return ::new_object(obj);
 }
@@ -563,7 +563,7 @@ static object this_user()
 
     user = ::this_user();
     if (!user) {
-	user = TLSVAR(TLS(), 3);
+	user = TLSVAR(TLS(), TLS_USER);
     }
     if (user) {
 	user = user->query_user();
@@ -674,8 +674,9 @@ private mixed _F_call_limited(mixed arg1, mixed *args)
 	if (tls == arg1) {
 	    tls = arg1 = ([ ]);
 	}
-	limits = TLSVAR(tls, 0) = rsrcd->call_limits(TLSVAR(tls, 0), owner,
-						     stack, ticks);
+	limits = TLSVAR(tls, TLS_LIMIT) =
+		 rsrcd->call_limits(TLSVAR(tls, TLS_LIMIT), owner, stack,
+				    ticks);
     }
 
     rlimits (limits[LIM_MAXSTACK]; limits[LIM_MAXTICKS]) {
@@ -684,7 +685,7 @@ private mixed _F_call_limited(mixed arg1, mixed *args)
 	ticks = ::status()[ST_TICKS];
 	rlimits (-1; -1) {
 	    rsrcd->update_ticks(limits, ticks);
-	    TLSVAR(tls, 0) = limits[LIM_NEXT];
+	    TLSVAR(tls, TLS_LIMIT) = limits[LIM_NEXT];
 
 	    return result;
 	}
@@ -814,7 +815,7 @@ static int write_file(string path, string str, varargs int offset)
 		rsrcd->rsrc_incr(fcreator, "fileblocks", nil, size);
 	    }
 	}
-    } : error(TLSVAR(TLS(), 1));
+    } : error(TLSVAR(TLS(), TLS_ARGUMENT));
 
     return result;
 }
@@ -852,7 +853,7 @@ static int remove_file(string path)
 						"fileblocks", nil, -size);
 	    }
 	}
-    } : error(TLSVAR(TLS(), 1));
+    } : error(TLSVAR(TLS(), TLS_ARGUMENT));
     return result;
 }
 
@@ -905,7 +906,7 @@ static int rename_file(string from, string to)
 		rsrcd->rsrc_incr(fcreator, "fileblocks", nil, -size);
 	    }
 	}
-    } : error(TLSVAR(TLS(), 1));
+    } : error(TLSVAR(TLS(), TLS_ARGUMENT));
     return result;
 }
 
@@ -1052,7 +1053,7 @@ static int make_dir(string path)
 		rsrcd->rsrc_incr(fcreator, "fileblocks", nil, 1);
 	    }
 	}
-    } : error(TLSVAR(TLS(), 1));
+    } : error(TLSVAR(TLS(), TLS_ARGUMENT));
     return result;
 }
 
@@ -1088,7 +1089,7 @@ static int remove_dir(string path)
 						"fileblocks", nil, -1);
 	    }
 	}
-    } : error(TLSVAR(TLS(), 1));
+    } : error(TLSVAR(TLS(), TLS_ARGUMENT));
     return result;
 }
 
@@ -1155,7 +1156,7 @@ static void save_object(string path)
 		rsrcd->rsrc_incr(fcreator, "fileblocks", nil, size);
 	    }
 	}
-    } : error(TLSVAR(TLS(), 1));
+    } : error(TLSVAR(TLS(), TLS_ARGUMENT));
 }
 
 /*
@@ -1181,9 +1182,9 @@ static string editor(varargs string cmd)
 	    }
 	    driver = ::find_object(DRIVER);
 
-	    TLSVAR(TLS(), 1) = nil;
+	    TLSVAR(TLS(), TLS_ARGUMENT) = nil;
 	    result = (cmd) ? ::editor(cmd) : ::editor();
-	    info = TLSVAR(TLS(), 1);
+	    info = TLSVAR(TLS(), TLS_ARGUMENT);
 
 	    if (!query_editor(this_object())) {
 		::find_object(USERD)->remove_editor(this_object());
@@ -1193,7 +1194,7 @@ static string editor(varargs string cmd)
 				 driver->file_size(info[0]) - info[1]);
 	    }
 	}
-    } : error(TLSVAR(TLS(), 1));
+    } : error(TLSVAR(TLS(), TLS_ARGUMENT));
     return result;
 }
 
@@ -1237,13 +1238,13 @@ static void add_atomic_message(string str)
 
     mesg = ({ "." + str });
     tls = TLS();
-    messages = TLSVAR(tls, 5);
+    messages = TLSVAR(tls, TLS_PUT_ATOMIC);
     if (messages) {
 	messages += mesg;
     } else {
 	messages = mesg;
     }
-    TLSVAR(tls, 5) = messages;
+    TLSVAR(tls, TLS_PUT_ATOMIC) = messages;
 }
 
 /*
@@ -1256,8 +1257,8 @@ static string *get_atomic_messages()
     string *messages;
 
     tls = TLS();
-    messages = TLSVAR(tls, 6);
-    TLSVAR(tls, 6) = nil;
+    messages = TLSVAR(tls, TLS_GET_ATOMIC);
+    TLSVAR(tls, TLS_GET_ATOMIC) = nil;
     return (messages) ? messages : ({ });
 }
 

@@ -171,9 +171,9 @@ int rsrc_incr(string name, object obj, int incr, int *grsrc, int force)
 	    mixed *arr;
 
 	    tls = TLS();
-	    map = TLSVAR(tls, 4);
+	    map = TLSVAR(tls, TLS_RESOURCE);
 	    if (!map) {
-		map = TLSVAR(tls, 4) = ([ ]);
+		map = TLSVAR(tls, TLS_RESOURCE) = ([ ]);
 	    }
 	    pending = map[this_object()];
 	    if (!pending) {

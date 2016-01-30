@@ -197,11 +197,12 @@ private atomic object _compile(string path, string creator,
     object obj;
 
     tls = TLS();
-    TLSVAR(tls, 2) = ({ path });
+    TLSVAR(tls, TLS_INHERIT) = ({ path });
     obj = (source) ? compile_object(path, source...) : compile_object(path);
     rsrcd->rsrc_incr(creator, "objects", nil, 1);
     if (objectd) {
-	objectd->compile(creator, path, ({ }), TLSVAR(tls, 2)[1 ..]...);
+	objectd->compile(creator, path, ({ }),
+			 TLSVAR(tls, TLS_INHERIT)[1 ..]...);
     }
     return obj;
 }
@@ -230,7 +231,7 @@ void compiling(string path)
 	if (objectd) {
 	    objectd->compiling(path);
 	}
-	TLSVAR(TLS(), 2) = ({ path });
+	TLSVAR(TLS(), TLS_INHERIT) = ({ path });
     }
 }
 
@@ -242,7 +243,8 @@ void compile(string path, string owner, string source...)
 {
     if (previous_program() == AUTO) {
 	if (objectd) {
-	    objectd->compile(owner, path, source, TLSVAR(TLS(), 2)[1 ..]...);
+	    objectd->compile(owner, path, source,
+			     TLSVAR(TLS(), TLS_INHERIT)[1 ..]...);
 	}
     }
 }
@@ -315,7 +317,7 @@ private object load(string path)
     if (obj) {
 	return obj;
     }
-    TLSVAR(TLS(), 2) = ({ path });
+    TLSVAR(TLS(), TLS_INHERIT) = ({ path });
     return compile_object(path);
 }
 
@@ -477,7 +479,7 @@ static string path_write(string path)
 	    (creator == "System" ||
 	     (accessd->access(oname, path, WRITE_ACCESS) &&
 	      (rsrc[RSRC_USAGE] < rsrc[RSRC_MAX] || rsrc[RSRC_MAX] < 0)))) {
-	    TLSVAR(TLS(), 1) = ({ path, file_size(path) });
+	    TLSVAR(TLS(), TLS_ARGUMENT) = ({ path, file_size(path) });
 	    return path;
 	}
     }
@@ -599,17 +601,18 @@ static object inherit_program(string from, string path, int priv)
 	if (objectd) {
 	    objectd->compiling(path);
 	}
-	TLSVAR(tls, 2) = ({ path });
+	TLSVAR(tls, TLS_INHERIT) = ({ path });
 	obj = (str) ? compile_object(path, str...) : compile_object(path);
 	rsrcd->rsrc_incr(creator, "objects", nil, 1);
 	if (objectd) {
-	    objectd->compile(creator, path, ({ }), TLSVAR(tls, 2)[1 ..]...);
+	    objectd->compile(creator, path, ({ }),
+			     TLSVAR(tls, TLS_INHERIT)[1 ..]...);
 
 	    objectd->compiling(from);
 	}
-	TLSVAR(tls, 2) = ({ from });
+	TLSVAR(tls, TLS_INHERIT) = ({ from });
     } else {
-	TLSVAR(tls, 2) += ({ path });
+	TLSVAR(tls, TLS_INHERIT) += ({ path });
     }
     return obj;
 }
@@ -638,7 +641,8 @@ static mixed include_file(string from, string path)
     if (objectd) {
 	mixed result;
 
-	result = objectd->include_file(TLSVAR(TLS(), 2)[0], from, path);
+	result = objectd->include_file(TLSVAR(TLS(), TLS_INHERIT)[0], from,
+				       path);
 	if (sscanf(from, "/kernel/%*s") == 0) {
 	    return result;
 	}
@@ -735,7 +739,7 @@ private void _runtime_error(mapping tls, string str, int caught, int ticks,
     if (ticks >= 0) {
 	mixed *limits;
 
-	limits = TLSVAR(tls, 0);
+	limits = TLSVAR(tls, TLS_LIMIT);
 	while (--i >= caught) {
 	    if (trace[i][TRACE_FUNCTION] == "_F_call_limited" &&
 		trace[i][TRACE_PROGNAME] == AUTO) {
@@ -746,7 +750,7 @@ private void _runtime_error(mapping tls, string str, int caught, int ticks,
 		limits = limits[LIM_NEXT];
 	    }
 	}
-	TLSVAR(tls, 0) = limits;
+	TLSVAR(tls, TLS_LIMIT) = limits;
     }
 
     if (errord) {
@@ -847,13 +851,13 @@ static string runtime_error(string str, int caught, int ticks)
     } else {
 	tls = trace[1][TRACE_FIRSTARG];
 	trace[1][TRACE_FIRSTARG] = nil;
-	TLSVAR(tls, 6) = messages - ({ nil });
+	TLSVAR(tls, TLS_GET_ATOMIC) = messages - ({ nil });
 	if (caught <= 1) {
 	    caught = 0;		/* ignore top-level catch */
 	} else if (ticks < 0 && sscanf(trace[caught - 1][TRACE_PROGNAME],
 				       "/kernel/%*s") != 0 &&
 		   trace[caught - 1][TRACE_FUNCTION] != "cmd_code") {
-	    return TLSVAR(tls, 1) = str;
+	    return TLSVAR(tls, TLS_ARGUMENT) = str;
 	}
     }
 
@@ -874,7 +878,7 @@ static string atomic_error(string str, int atom, int ticks)
     object obj;
 
     trace = call_trace();
-    messages = TLSVAR(trace[1][TRACE_FIRSTARG], 5);
+    messages = TLSVAR(trace[1][TRACE_FIRSTARG], TLS_PUT_ATOMIC);
     if (messages) {
 	mesg = implode(messages, "\n") + "\n" + str;
     } else {
@@ -944,13 +948,13 @@ static void compile_error(string file, int line, string err)
 
     mesg = ({ "\0" + file + "\0" + line + "\0" + err });
     tls = TLS();
-    messages = TLSVAR(tls, 5);
+    messages = TLSVAR(tls, TLS_PUT_ATOMIC);
     if (messages) {
 	messages += mesg;
     } else {
 	messages = mesg;
     }
-    TLSVAR(tls, 5) = messages;
+    TLSVAR(tls, TLS_PUT_ATOMIC) = messages;
 }
 
 /*
