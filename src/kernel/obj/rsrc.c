@@ -166,12 +166,13 @@ int rsrc_incr(string name, object obj, int incr, int *grsrc, int force)
 {
     if (previous_program() == RSRCD && incr != 0) {
 	if (!obj) {
+	    mapping tls, map, pending;
 	    mixed *arr;
-	    mapping map, pending;
 
-	    map = TLS(call_trace(1)[TRACE_FIRSTARG], 4);
+	    tls = call_trace(1)[TRACE_FIRSTARG];
+	    map = TLS(tls, 4);
 	    if (!map) {
-		map = ([ ]);
+		map = TLS(tls, 4) = ([ ]);
 	    }
 	    pending = map[this_object()];
 	    if (!pending) {
