@@ -47,7 +47,7 @@ void add_inherited(int index, int issue)
 	map = inherited[issue];
 	if (map) {
 	    if (map[index / factor]) {
-		map[index / factor] += ({ index });
+		map[index / factor] |= ({ index });
 	    } else {
 		map[index / factor] = ({ index });
 	    }
