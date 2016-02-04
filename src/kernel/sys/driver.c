@@ -188,20 +188,20 @@ void set_error_manager(object obj)
 
 /*
  * NAME:	_compile()
- * DESCRIPTION:	low-level compilation function
+ * DESCRIPTION:	automatically compile auto object
  */
-private atomic object _compile(string path, string creator,
-			       varargs string *source)
+private atomic object _compile()
 {
     mapping tls;
     object obj;
 
     tls = TLS();
-    TLSVAR(tls, TLS_INHERIT) = ({ path });
-    obj = (source) ? compile_object(path, source...) : compile_object(path);
-    rsrcd->rsrc_incr(creator, "objects", nil, 1);
+    TLSVAR(tls, TLS_SOURCE) = ([ AUTO + ".c" : AUTO + ".c" ]);
+    TLSVAR(tls, TLS_INHERIT) = ({ AUTO });
+    obj = compile_object(AUTO);
+    rsrcd->rsrc_incr("System", "objects", nil, 1);
     if (objectd) {
-	objectd->compile(creator, path, ({ }),
+	objectd->compile("System", AUTO, TLSVAR(tls, TLS_SOURCE),
 			 TLSVAR(tls, TLS_INHERIT)[1 ..]...);
     }
     return obj;
@@ -211,16 +211,17 @@ private atomic object _compile(string path, string creator,
  * NAME:	compiling()
  * DESCRIPTION:	object being compiled
  */
-void compiling(string path)
+void compiling(string path, string *source)
 {
     if (previous_program() == AUTO) {
-	if (path != AUTO && path != DRIVER && !find_object(AUTO)) {
-	    string err;
+	string err;
+	mapping tls;
 
+	if (path != AUTO && path != DRIVER && !find_object(AUTO)) {
 	    if (objectd) {
 		objectd->compiling(AUTO);
 	    }
-	    err = catch(_compile(AUTO, "System"));
+	    err = catch(_compile());
 	    if (err) {
 		if (objectd) {
 		    objectd->compile_failed("System", AUTO);
@@ -231,7 +232,13 @@ void compiling(string path)
 	if (objectd) {
 	    objectd->compiling(path);
 	}
-	TLSVAR(TLS(), TLS_INHERIT) = ({ path });
+	tls = TLS();
+	if (sizeof(source) != 0) {
+	    TLSVAR(tls, TLS_SOURCE) = ([ path + ".c" : source ]);
+	} else {
+	    TLSVAR(tls, TLS_SOURCE) = ([ path + ".c" : path + ".c" ]);
+	}
+	TLSVAR(tls, TLS_INHERIT) = ({ path });
     }
 }
 
@@ -239,13 +246,14 @@ void compiling(string path)
  * NAME:	compile()
  * DESCRIPTION:	object compiled
  */
-void compile(string path, string owner, string source...)
+void compile(string path, string owner)
 {
-    if (previous_program() == AUTO) {
-	if (objectd) {
-	    objectd->compile(owner, path, source,
-			     TLSVAR(TLS(), TLS_INHERIT)[1 ..]...);
-	}
+    if (objectd && previous_program() == AUTO) {
+	mapping tls;
+
+	tls = TLS();
+	objectd->compile(owner, path, TLSVAR(tls, TLS_SOURCE),
+			 TLSVAR(tls, TLS_INHERIT)[1 ..]...);
     }
 }
 
@@ -255,10 +263,8 @@ void compile(string path, string owner, string source...)
  */
 void compile_failed(string path, string owner)
 {
-    if (previous_program() == AUTO) {
-	if (objectd) {
-	    objectd->compile_failed(owner, path);
-	}
+    if (objectd && previous_program() == AUTO) {
+	objectd->compile_failed(owner, path);
     }
 }
 
@@ -312,12 +318,15 @@ void message(string str)
 private object load(string path)
 {
     object obj;
+    mapping tls;
 
     obj = find_object(path);
     if (obj) {
 	return obj;
     }
-    TLSVAR(TLS(), TLS_INHERIT) = ({ path });
+    tls = TLS();
+    TLSVAR(tls, TLS_INHERIT) = ({ path });
+    TLSVAR(tls, TLS_SOURCE) = ([ path + ".c" : path + ".c" ]);
     return compile_object(path);
 }
 
@@ -591,6 +600,7 @@ static object inherit_program(string from, string path, int priv)
     obj = find_object(path);
     if (!obj) {
 	int *rsrc;
+	mapping source;
 
 	creator = creator(path);
 	rsrc = rsrcd->rsrc_get(creator, "objects");
@@ -598,18 +608,26 @@ static object inherit_program(string from, string path, int priv)
 	    error("Too many objects");
 	}
 
+	source = TLSVAR(tls, TLS_SOURCE);
 	if (objectd) {
 	    objectd->compiling(path);
 	}
 	TLSVAR(tls, TLS_INHERIT) = ({ path });
-	obj = (str) ? compile_object(path, str...) : compile_object(path);
+	if (str) {
+	    TLSVAR(tls, TLS_SOURCE) = ([ path + ".c" : str ]);
+	    obj = compile_object(path, str...);
+	} else {
+	    TLSVAR(tls, TLS_SOURCE) = ([ path + ".c" : path + ".c" ]);
+	    obj = compile_object(path);
+	}
 	rsrcd->rsrc_incr(creator, "objects", nil, 1);
 	if (objectd) {
-	    objectd->compile(creator, path, ({ }),
+	    objectd->compile(creator, path, TLSVAR(tls, TLS_SOURCE),
 			     TLSVAR(tls, TLS_INHERIT)[1 ..]...);
 
 	    objectd->compiling(from);
 	}
+	TLSVAR(tls, TLS_SOURCE) = source;
 	TLSVAR(tls, TLS_INHERIT) = ({ from });
     } else {
 	TLSVAR(tls, TLS_INHERIT) += ({ path });
@@ -624,6 +642,9 @@ static object inherit_program(string from, string path, int priv)
  */
 static mixed include_file(string from, string path)
 {
+    mapping source;
+    mixed result;
+
     if (strlen(path) != 0 && path[0] != '~' && sscanf(path, "%*s/../") == 0 &&
 	(sscanf(path, "/include/%*s") != 0 || sscanf(path, "%*s/") == 0)) {
 	/*
@@ -638,16 +659,20 @@ static mixed include_file(string from, string path)
 	    return nil;
 	}
     }
-    if (objectd) {
-	mixed result;
 
+    source = TLSVAR(TLS(), TLS_SOURCE);
+    result = source[path];
+    if (result) {
+	return result;
+    }
+    if (objectd) {
 	result = objectd->include_file(TLSVAR(TLS(), TLS_INHERIT)[0], from,
 				       path);
 	if (sscanf(from, "/kernel/%*s") == 0) {
-	    return result;
+	    return source[path] = result;
 	}
     }
-    return path;
+    return source[path] = path;
 }
 
 /*

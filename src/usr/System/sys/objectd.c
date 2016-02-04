@@ -419,7 +419,7 @@ void compiling(string path)
  * NAME:	compile()
  * DESCRIPTION:	an object has been compiled
  */
-void compile(string owner, string path, mixed source, string inherited...)
+void compile(string owner, string path, mapping source, string inherited...)
 {
     if (previous_object() == driver) {
 	int i, *indices;

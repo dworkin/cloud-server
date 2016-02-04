@@ -224,7 +224,7 @@ private atomic object _compile(object driver, string path, string uid,
     if (add) {
 	::find_object(RSRCD)->rsrc_incr(uid, "objects", nil, 1);
     }
-    driver->compile(path, uid, source...);
+    driver->compile(path, uid);
     return obj;
 }
 
@@ -264,7 +264,7 @@ static object compile_object(string path, string source...)
      * do the compiling
      */
     rlimits (-1; -1) {
-	driver->compiling(path);
+	driver->compiling(path, source);
 	err = catch(obj = _compile(driver, path, uid, source));
 	if (err) {
 	    driver->compile_failed(path, uid);
