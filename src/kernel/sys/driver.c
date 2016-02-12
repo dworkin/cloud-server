@@ -196,7 +196,16 @@ private atomic object _compile()
     object obj;
 
     tls = TLS();
-    TLSVAR(tls, TLS_SOURCE) = ([ AUTO + ".c" : AUTO + ".c" ]);
+    TLSVAR(tls, TLS_SOURCE) = ([
+	AUTO + ".c" : AUTO + ".c",
+	"/include/kernel/kernel.h" : "/include/kernel/kernel.h",
+	"/include/kernel/rsrc.h" : "/include/kernel/rsrc.h",
+	"/include/kernel/access.h" : "/include/kernel/access.h",
+	"/include/kernel/user.h" : "/include/kernel/user.h",
+	"/include/status.h" : "/include/status.h",
+	"/include/type.h" : "/include/type.h",
+	"/include/trace.h" : "/include/trace.h"
+    ]);
     TLSVAR(tls, TLS_INHERIT) = ({ AUTO });
     obj = compile_object(AUTO);
     rsrcd->rsrc_incr("System", "objects", nil, 1);
