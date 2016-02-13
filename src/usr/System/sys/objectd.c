@@ -39,13 +39,13 @@ static void create()
  * NAME:	register_inherited()
  * DESCRIPTION:	register inherited objects
  */
-private void register_inherited(int issue, int *list)
+private void register_inherited(int issue, int *inherits)
 {
     int i, index;
 
     /* register inherited objects */
-    for (i = sizeof(list); --i >= 0; ) {
-	index = list[i];
+    for (i = sizeof(inherits); --i >= 0; ) {
+	index = inherits[i];
 	index2db[index / factor][index]->add_inherited(issue, index);
     }
 }
@@ -54,13 +54,13 @@ private void register_inherited(int issue, int *list)
  * NAME:	unregister_inherited()
  * DESCRIPTION:	unregister inherited objects
  */
-private void unregister_inherited(int issue, int *list)
+private void unregister_inherited(int issue, int *inherits)
 {
     int i, index;
     mapping dbase;
 
-    for (i = sizeof(list); --i >= 0; ) {
-	index = list[i];
+    for (i = sizeof(inherits); --i >= 0; ) {
+	index = inherits[i];
 	dbase = index2db[index / factor];
 	if (dbase[index]->del_inherited(issue, index)) {
 	    /* index completely removed */
@@ -76,11 +76,12 @@ private void unregister_inherited(int issue, int *list)
  * NAME:	register_object()
  * DESCRIPTION:	register a new object and what it inherits
  */
-private void register_object(string creator, string path, int index, int *list)
+private void register_object(string creator, string path, string *inherits)
 {
-    int i;
+    int index, i;
     object dbobj;
     mapping dbase;
+    int *issues;
 
     /* get creator's dbase object */
     dbobj = creator2db[creator];
@@ -90,6 +91,7 @@ private void register_object(string creator, string path, int index, int *list)
     }
 
     /* update index mapping */
+    index = status(path, O_INDEX);
     dbase = index2db[index / factor];
     if (dbase) {
 	if (dbase[index]) {
@@ -102,18 +104,16 @@ private void register_object(string creator, string path, int index, int *list)
 	index2db[index / factor] = ([ index : dbobj ]);
     }
 
-    /* minimize & sort list of inherited objects */
-    dbase = ([ ]);
-    for (i = sizeof(list); --i >= 0; ) {
-	dbase[list[i]] = 1;
+    /* obtain list of inherited issues */
+    for (i = sizeof(inherits), issues = allocate_int(i); --i >= 0; ) {
+	issues[i] = status(inherits[i], O_INDEX);
     }
-    list = map_indices(dbase);
 
     /* register object in dbase object */
-    dbobj->add_object(path, index, list);
+    dbobj->add_object(path, index, issues);
 
     /* register inherited objects */
-    register_inherited(index, list);
+    register_inherited(index, issues);
 }
 
 /*
@@ -142,48 +142,45 @@ private void unregister_object(string path, int index)
 }
 
 /*
- * NAME:	prereg_inherits()
+ * NAME:	preregister_inherits()
  * DESCRIPTION:	for all preregistered objects, return a list of inherited
  *		objects
  */
-private string *prereg_inherits(string path)
+private string *preregister_inherits(string path)
 {
     switch (path) {
     case DRIVER:
     case AUTO:
 	return ({ });
 
-    case RSRCD:	
+    case RSRCD:
     case ACCESSD:
     case USERD:
-	return ({ AUTO });
-
     case API_ACCESS:
     case API_RSRC:
     case API_USER:
-	return ({ AUTO });
-
     case LIB_CONN:
     case LIB_USER:
+    case RSRCOBJ:
+    case OBJECTSERVER:
+    case OBJDBASE:
 	return ({ AUTO });
+
     case LIB_WIZTOOL:
 	return ({ API_ACCESS, API_RSRC, API_USER });
 
-    case RSRCOBJ:
-	return ({ AUTO });
     case BINARY_CONN:
     case TELNET_CONN:
 	return ({ LIB_CONN });
+
     case DEFAULT_USER:
 	return ({ LIB_USER, API_USER, API_ACCESS });
+
     case DEFAULT_WIZTOOL:
 	return ({ LIB_WIZTOOL });
 
     case INIT:
 	return ({ API_ACCESS, API_RSRC });
-    case OBJECTSERVER:
-    case OBJDBASE:
-	return ({ AUTO });
     }
 }
 
@@ -193,12 +190,11 @@ private string *prereg_inherits(string path)
  */
 private void preregister_objects()
 {
-    int i, sz, index;
     mixed *list;
-    mapping indices;
+    int i, sz;
     string name;
 
-    /* initialize variables */
+    /* register objects in order of compilation, including this object */
     list = ({
 	DRIVER, AUTO,
 	RSRCD, ACCESSD, USERD,
@@ -207,24 +203,11 @@ private void preregister_objects()
 	RSRCOBJ, BINARY_CONN, TELNET_CONN, DEFAULT_USER, DEFAULT_WIZTOOL,
 	INIT, OBJECTSERVER, OBJDBASE
     });
-    sz = sizeof(list);
-    indices = ([ ]);
-    for (i = sz; --i >= 0; ) {
-	name = list[i];
-	indices[name] = status(name, O_INDEX);
-    }
 
-    /* register objects in order of compilation, including this object */
-    for (i = 0; i < sz; i++) {
-	int j;
-	mixed *inherits;
-
+    for (i = 0, sz = sizeof(list); i < sz; i++) {
 	name = list[i];
-	inherits = prereg_inherits(name);
-	for (j = sizeof(inherits); --j >= 0; ) {
-	    inherits[j] = indices[inherits[j]];
-	}
-	register_object(driver->creator(name), name, indices[name], inherits);
+	register_object(driver->creator(name), name,
+			preregister_inherits(name));
     }
 }
 
@@ -247,7 +230,7 @@ string query_path(int index)
 
 /*
  * NAME:	query_issues()
- * DESCRIPTION:	return the registered issue for an object given by name
+ * DESCRIPTION:	return the registered issues for an object given by name
  */
 int *query_issues(string path)
 {
@@ -419,14 +402,12 @@ void compiling(string path)
  * NAME:	compile()
  * DESCRIPTION:	an object has been compiled
  */
-void compile(string owner, string path, mapping source, string inherited...)
+void compile(string owner, string path, mapping source, string inherits...)
 {
     if (previous_object() == driver) {
-	int i, *indices;
+	mapping undefined;
 
 	if (sscanf(path, "%*s/lib/") == 0) {
-	    mapping undefined;
-
 	    undefined = status(path, O_UNDEFINED);
 	    if (undefined) {
 		error("Function " + map_values(undefined)[0][0] +
@@ -434,23 +415,12 @@ void compile(string owner, string path, mapping source, string inherited...)
 	    }
 	}
 
-	i = sizeof(inherited);
-	if (i != 0) {
-	    /* collect indices of inherited objects */
-	    indices = allocate(i);
-	    do {
-		--i;
-		indices[i] = status(inherited[i], O_INDEX);
-	    } while (i != 0);
-	} else if (path == DRIVER || path == AUTO) {
-	    /* no index at all */
-	    indices = ({ });
-	} else {
+	if (sizeof(inherits) == 0 && path != DRIVER && path != AUTO) {
 	    /* just the auto object */
-	    indices = ({ status(AUTO, O_INDEX) });
+	    inherits = ({ AUTO });
 	}
 	catch {
-	    register_object(owner, path, status(path, O_INDEX), indices);
+	    register_object(owner, path, inherits);
 	} : error("Out of space for object \"" + path + "\"");
 
 	if (notify) {
