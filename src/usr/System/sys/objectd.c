@@ -677,9 +677,7 @@ void remove_program(string owner, string path, int timestamp, int index)
  */
 mixed inherit_program(string from, string path, int priv)
 {
-    if (previous_object() == driver) {
-	return path;
-    }
+    return path;
 }
 
 /*
@@ -688,27 +686,25 @@ mixed inherit_program(string from, string path, int priv)
  */
 mixed include_file(string compiled, string from, string path)
 {
-    if (previous_object() == driver) {
-	int len;
+    int len;
 
-	if (path == "/include/AUTO" && from == "/include/std.h") {
-	    if (driver->creator(compiled) != "System") {
-		/*
-		 * special include file
-		 */
-		return ({ "inherit \"/usr/System/lib/auto\";\n" });
-	    } else {
-		return ({ "" });
-	    }
+    if (path == "/include/AUTO" && from == "/include/std.h") {
+	if (driver->creator(compiled) != "System") {
+	    /*
+	     * special include file
+	     */
+	    return ({ "inherit \"/usr/System/lib/auto\";\n" });
+	} else {
+	    return ({ "" });
 	}
-
-	/* checks */
-	len = strlen(path);
-	if (path != "/include/AUTO" &&
-	    (sscanf(path, "%*s.c/") != 0 || sscanf(path, "%*s.h/") != 0 ||
-	     len < 2 || path[len - 2 ..] != ".h")) {
-	    error("Invalid include file");
-	}
-	return path;
     }
+
+    /* checks */
+    len = strlen(path);
+    if (path != "/include/AUTO" &&
+	(sscanf(path, "%*s.c/") != 0 || sscanf(path, "%*s.h/") != 0 ||
+	 len < 2 || path[len - 2 ..] != ".h")) {
+	error("Invalid include file");
+    }
+    return path;
 }
