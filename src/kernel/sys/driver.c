@@ -674,6 +674,14 @@ static mixed include_file(string from, string path)
     if (result) {
 	return result;
     }
+    result = implode(explode(path, "\\"), "\0\\");
+    result = implode(explode(result, "*"), "\0*");
+    result = implode(explode(result, "?"), "\0?");
+    result = implode(explode(result, "["), "\0[");
+    result = implode(explode(result, "\0"), "\\");
+    if (sizeof(get_dir(result)[0]) == 0) {
+	return nil;
+    }
     if (objectd) {
 	result = objectd->include_file(TLSVAR(TLS(), TLS_INHERIT)[0], from,
 				       path);
