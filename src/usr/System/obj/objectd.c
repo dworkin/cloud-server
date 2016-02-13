@@ -6,6 +6,7 @@
 
 string creator;		/* which creator is this the database part for */
 object objectd;		/* object server */
+mapping included;	/* ([ path : ([ index / factor : indices ]) ]) */
 mapping inherited;	/* ([ issue : ([ index / factor : indices ]) ]) */
 int factor;		/* 2nd level divisor */
 mapping objects;	/* ([ index : object info ]) */
@@ -19,6 +20,7 @@ static void create()
 {
     objectd = find_object(OBJECTSERVER);
     factor = status(ST_ARRAYSIZE);
+    included = ([ ]);
     inherited = ([ ]);
     objects = ([ ]);
     issues = ([ ]);
@@ -33,6 +35,68 @@ void set_creator(string str)
     if (previous_object() == objectd) {
 	creator = str;
     }
+}
+
+/*
+ * NAME:	add_included()
+ * DESCRIPTION:	register an included file
+ */
+void add_included(int index, string path)
+{
+    if (previous_object() == objectd) {
+	mapping map;
+
+	sscanf(path, "/usr/%*s/%s", path);
+	map = included[path];
+	if (map) {
+	    if (map[index / factor]) {
+		map[index / factor] |= ({ index });
+	    } else {
+		map[index / factor] = ({ index });
+	    }
+	} else {
+	    included[path] = ([ index / factor : ({ index }) ]);
+	}
+    }
+}
+
+/*
+ * NAME:	del_included()
+ * DESCRIPTION:	unregister an included file
+ */
+void del_included(int index, string path)
+{
+    if (previous_object() == objectd) {
+	mapping map;
+
+	sscanf(path, "/usr/%*s/%s", path);
+	map = included[path];
+	map[index / factor] -= ({ index });
+	if (sizeof(map[index / factor]) == 0) {
+	    map[index / factor] = nil;
+	    if (map_sizeof(map) == 0) {
+		included[path] = nil;
+		if (map_sizeof(included) == 0 && map_sizeof(objects) == 0) {
+		    destruct_object(this_object());
+		}
+	    }
+	}
+    }
+}
+
+/*
+ * NAME:	query_included()
+ * DESCRIPTION:	return the objects that include the given path
+ */
+mapping query_included(string path)
+{
+    if (previous_object() == objectd) {
+	sscanf(path, "/usr/%*s/%s", path);
+	if (included[path]) {
+	    return included[path];
+	}
+    }
+    return ([ ]);
 }
 
 /*
@@ -95,10 +159,22 @@ mapping query_inherited(int issue)
  * NAME:	add_object()
  * DESCRIPTION:	register an object
  */
-void add_object(string path, int index, int *list)
+void add_object(mixed files, int index, int *list)
 {
     if (previous_object() == objectd) {
-	sscanf(path, "/usr/%*s/%s", path);
+	string path;
+	int i;
+
+	if (typeof(files) == T_STRING) {
+	    sscanf(files, "/usr/%*s/%s", files);
+	    path = files;
+	} else if (creator) {
+	    path = "/usr/" + creator + "/%s";
+	    for (i = sizeof(files); --i >= 0; ) {
+		sscanf(files[i], path, files[i]);
+	    }
+	    path = files[0];
+	}
 	if (sscanf("/" + path, "%*s/lib/") == 0) {
 	    /* normal object */
 	    issues[path] = index;
@@ -119,7 +195,7 @@ void add_object(string path, int index, int *list)
 		issues[path] = index;
 	    }
 	}
-	objects[index] = ({ path }) + list;
+	objects[index] = ({ files }) + list;
     }
 }
 
@@ -130,15 +206,16 @@ void add_object(string path, int index, int *list)
 int del_object(int index)
 {
     if (previous_object() == objectd) {
+	mixed files, issue;
 	string path;
-	mixed issue;
 
-	path = objects[index][0];
+	files = objects[index][0];
+	path = (typeof(files) == T_STRING) ? files : files[0];
 	if (sscanf("/" + path, "%*s/lib/") == 0) {
 	    /* normal object */
 	    issues[path] = nil;
 	    objects[index] = nil;
-	    if (map_sizeof(objects) == 0) {
+	    if (map_sizeof(objects) == 0 && map_sizeof(included) == 0) {
 		destruct_object(this_object());
 	    }
 	    return TRUE;
@@ -157,7 +234,7 @@ int del_object(int index)
 	    }
 
 	    objects[index] = nil;
-	    if (map_sizeof(objects) == 0) {
+	    if (map_sizeof(objects) == 0 && map_sizeof(included) == 0) {
 		destruct_object(this_object());
 	    }
 	    return (inherited[index] == nil);
@@ -172,11 +249,37 @@ int del_object(int index)
 string query_path(int index)
 {
     if (previous_object() == objectd) {
+	mixed files;
 	string path;
 
-	path = objects[index][0];
+	files = objects[index][0];
+	path = (typeof(files) == T_STRING) ? files : files[0];
 	return (path[0] == '/') ? path : "/usr/" + creator + "/" + path;
     }
+}
+
+/*
+ * NAME:	query_includes()
+ * DESCRIPTION:	return the files included by the given object
+ */
+string *query_includes(int index)
+{
+    if (previous_object() == objectd) {
+	mixed files;
+	int i;
+
+	files = objects[index][0];
+	if (typeof(files) == T_ARRAY) {
+	    files = files[1 ..];
+	    for (i = sizeof(files); --i >= 0; ) {
+		if (files[i][0] != '/') {
+		    files[i] = "/usr/" + creator + "/" + files[i];
+		}
+	    }
+	    return files;
+	}
+    }
+    return ({ });
 }
 
 /*

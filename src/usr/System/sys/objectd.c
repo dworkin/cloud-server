@@ -36,6 +36,41 @@ static void create()
 
 
 /*
+ * NAME:	register_included()
+ * DESCRIPTION:	register included files
+ */
+private void register_included(int index, string *includes)
+{
+    int i;
+    string creator;
+    object dbobj;
+
+    for (i = sizeof(includes); --i >= 0; ) {
+	creator = driver->creator(includes[i]);
+	dbobj = creator2db[creator];
+	if (!dbobj) {
+	    creator2db[creator] = dbobj = clone_object(OBJDBASE);
+	    dbobj->set_creator(creator);
+	}
+	dbobj->add_included(index, includes[i]);
+    }
+}
+
+/*
+ * NAME:	unregister_included()
+ * DESCRIPTION:	unregister included files
+ */
+private void unregister_included(int index, string *includes)
+{
+    int i;
+
+    for (i = sizeof(includes); --i >= 0; ) {
+	creator2db[driver->creator(includes[i])]->del_included(index,
+							       includes[i]);
+    }
+}
+
+/*
  * NAME:	register_inherited()
  * DESCRIPTION:	register inherited objects
  */
@@ -76,7 +111,8 @@ private void unregister_inherited(int issue, int *inherits)
  * NAME:	register_object()
  * DESCRIPTION:	register a new object and what it inherits
  */
-private void register_object(string creator, string path, string *inherits)
+private void register_object(string creator, string path, string *includes,
+			     string *inherits)
 {
     int index, i;
     object dbobj;
@@ -95,8 +131,9 @@ private void register_object(string creator, string path, string *inherits)
     dbase = index2db[index / factor];
     if (dbase) {
 	if (dbase[index]) {
-	    /* object has been recompiled: unregister old inherited */
+	    /* object recompiled: unregister old inherited and included */
 	    unregister_inherited(index, dbobj->query_inherits(index));
+	    unregister_included(index, dbobj->query_includes(index));
 	} else {
 	    dbase[index] = dbobj;
 	}
@@ -110,9 +147,11 @@ private void register_object(string creator, string path, string *inherits)
     }
 
     /* register object in dbase object */
-    dbobj->add_object(path, index, issues);
+    dbobj->add_object((sizeof(includes) != 0) ? ({ path }) + includes : path,
+		      index, issues);
 
-    /* register inherited objects */
+    /* register included and inherited */
+    register_included(index, includes);
     register_inherited(index, issues);
 }
 
@@ -128,8 +167,9 @@ private void unregister_object(string path, int index)
     dbase = index2db[index / factor];
     dbobj = dbase[index];
 
-    /* unregister inherited objects */
+    /* unregister inherited and included */
     unregister_inherited(index, dbobj->query_inherits(index));
+    unregister_included(index, dbobj->query_includes(index));
 
     /* unregister object */
     if (dbobj->del_object(index)) {
@@ -138,6 +178,116 @@ private void unregister_object(string path, int index)
 	if (map_sizeof(dbase) == 0) {
 	    index2db[index / factor] = nil;
 	}
+    }
+}
+
+/*
+ * NAME:	preregister_includes()
+ * DESCRIPTION:	for all preregistered objects, return a list of included files
+ */
+private string *preregister_includes(string path)
+{
+    switch (path) {
+    case DRIVER:
+    case AUTO:
+	return ({
+	    "/include/kernel/access.h",
+	    "/include/kernel/kernel.h",
+	    "/include/kernel/rsrc.h",
+	    "/include/kernel/user.h",
+	    "/include/status.h",
+	    "/include/trace.h",
+	    "/include/type.h"
+	});
+
+    case RSRCD:
+    case API_RSRC:
+	return ({
+	    "/include/kernel/kernel.h",
+	    "/include/kernel/rsrc.h",
+	    "/include/type.h"
+	});
+
+    case ACCESSD:
+	return ({
+	    "/include/kernel/access.h",
+	    "/include/kernel/kernel.h",
+	    "/include/type.h"
+	});
+
+    case USERD:
+	return ({
+	    "/include/kernel/kernel.h",
+	    "/include/kernel/rsrc.h",
+	    "/include/kernel/user.h"
+	});
+
+    case API_ACCESS:
+	return ({
+	    "/include/kernel/access.h",
+	    "/include/kernel/kernel.h"
+	});
+
+    case API_USER:
+    case LIB_CONN:
+    case LIB_USER:
+    case BINARY_CONN:
+    case TELNET_CONN:
+    case DEFAULT_WIZTOOL:
+	return ({
+	    "/include/kernel/kernel.h",
+	    "/include/kernel/user.h"
+	});
+
+    case LIB_WIZTOOL:
+	return ({
+	    "/include/kernel/access.h",
+	    "/include/kernel/kernel.h",
+	    "/include/kernel/rsrc.h",
+	    "/include/kernel/user.h",
+	    "/include/status.h",
+	    "/include/type.h"
+	});
+
+    case RSRCOBJ:
+	return ({
+	    "/include/kernel/kernel.h",
+	    "/include/kernel/rsrc.h",
+	    "/include/status.h",
+	    "/include/trace.h",
+	    "/include/type.h"
+	});
+
+    case DEFAULT_USER:
+	return ({
+	    "/include/kernel/access.h",
+	    "/include/kernel/kernel.h",
+	    "/include/kernel/user.h"
+	});
+
+    case INIT:
+	return ({
+	    "/include/kernel/access.h",
+	    "/include/kernel/kernel.h",
+	    "/include/kernel/rsrc.h",
+	    "/include/kernel/user.h"
+	});
+
+    case OBJECTSERVER:
+	return ({
+	    "/include/kernel/access.h",
+	    "/include/kernel/kernel.h",
+	    "/include/kernel/rsrc.h",
+	    "/include/kernel/user.h",
+	    "/include/limits.h",
+	    "/include/status.h"
+	});
+
+    case OBJDBASE:
+	return ({
+	    "/include/status.h",
+	    "/include/type.h"
+	});
     }
 }
 
@@ -206,7 +356,7 @@ private void preregister_objects()
 
     for (i = 0, sz = sizeof(list); i < sz; i++) {
 	name = list[i];
-	register_object(driver->creator(name), name,
+	register_object(driver->creator(name), name, preregister_includes(name),
 			preregister_inherits(name));
     }
 }
@@ -256,6 +406,42 @@ int *query_issues(string path)
 }
 
 /*
+ * NAME:	query_includes()
+ * DESCRIPTION:	return the files included by a given object
+ */
+
+string *query_includes(int index)
+{
+    if (SYSTEM()) {
+	mapping dbase;
+	object dbobj;
+
+	dbase = index2db[index / factor];
+	if (dbase && (dbobj=dbase[index])) {
+	    return dbobj->query_includes(index);
+	}
+    }
+    return ({ });
+}
+
+/*
+ * NAME:	query_included()
+ * DESCRIPTION:	return the indices of objects that include a given file
+ */
+int **query_included(string path)
+{
+    if (SYSTEM()) {
+	object dbobj;
+
+	dbobj = creator2db[driver->creator(path)];
+	if (dbobj) {
+	    return map_values(dbobj->query_included(path));
+	}
+    }
+    return ({ });
+}
+
+/*
  * NAME:	query_inherits()
  * DESCRIPTION:	return the indices of objects inherited by a given object
  */
@@ -275,7 +461,7 @@ int *query_inherits(int index)
 
 /*
  * NAME:	query_inherited()
- * DESCRIPTION:	return the indices of the objects that inherit a given one
+ * DESCRIPTION:	return the indices of objects that inherit a given one
  */
 int **query_inherited(int index)
 {
@@ -406,6 +592,7 @@ void compile(string owner, string path, mapping source, string inherits...)
 {
     if (previous_object() == driver) {
 	mapping undefined;
+	string *includes;
 
 	if (sscanf(path, "%*s/lib/") == 0) {
 	    undefined = status(path, O_UNDEFINED);
@@ -415,12 +602,15 @@ void compile(string owner, string path, mapping source, string inherits...)
 	    }
 	}
 
+	source[path + ".c"] = source["/include/AUTO"] = nil;
+	includes = map_indices(source);
 	if (sizeof(inherits) == 0 && path != DRIVER && path != AUTO) {
 	    /* just the auto object */
 	    inherits = ({ AUTO });
 	}
+
 	catch {
-	    register_object(owner, path, inherits);
+	    register_object(owner, path, includes, inherits);
 	} : error("Out of space for object \"" + path + "\"");
 
 	if (notify) {
