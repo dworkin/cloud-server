@@ -674,12 +674,8 @@ static mixed include_file(string from, string path)
     if (result) {
 	return result;
     }
-    result = implode(explode(path, "\\"), "\0\\");
-    result = implode(explode(result, "*"), "\0*");
-    result = implode(explode(result, "?"), "\0?");
-    result = implode(explode(result, "["), "\0[");
-    result = implode(explode(result, "\0"), "\\");
-    if (sizeof(get_dir(result)[0]) == 0) {
+    result = explode(path, "/");
+    if (sizeof(get_dir(path)[0] & result[sizeof(result) - 1 ..]) != 1) {
 	return nil;
     }
     if (objectd) {
