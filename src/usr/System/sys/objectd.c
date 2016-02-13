@@ -191,6 +191,7 @@ private string *preregister_includes(string path)
     case DRIVER:
     case AUTO:
 	return ({
+	    "/include/config.h",
 	    "/include/kernel/access.h",
 	    "/include/kernel/kernel.h",
 	    "/include/kernel/rsrc.h",
@@ -203,6 +204,7 @@ private string *preregister_includes(string path)
     case RSRCD:
     case API_RSRC:
 	return ({
+	    "/include/config.h",
 	    "/include/kernel/kernel.h",
 	    "/include/kernel/rsrc.h",
 	    "/include/type.h"
@@ -210,6 +212,7 @@ private string *preregister_includes(string path)
 
     case ACCESSD:
 	return ({
+	    "/include/config.h",
 	    "/include/kernel/access.h",
 	    "/include/kernel/kernel.h",
 	    "/include/type.h"
@@ -217,13 +220,16 @@ private string *preregister_includes(string path)
 
     case USERD:
 	return ({
+	    "/include/config.h",
 	    "/include/kernel/kernel.h",
 	    "/include/kernel/rsrc.h",
-	    "/include/kernel/user.h"
+	    "/include/kernel/user.h",
+	    "/include/status.h"
 	});
 
     case API_ACCESS:
 	return ({
+	    "/include/config.h",
 	    "/include/kernel/access.h",
 	    "/include/kernel/kernel.h"
 	});
@@ -235,12 +241,14 @@ private string *preregister_includes(string path)
     case TELNET_CONN:
     case DEFAULT_WIZTOOL:
 	return ({
+	    "/include/config.h",
 	    "/include/kernel/kernel.h",
 	    "/include/kernel/user.h"
 	});
 
     case LIB_WIZTOOL:
 	return ({
+	    "/include/config.h",
 	    "/include/kernel/access.h",
 	    "/include/kernel/kernel.h",
 	    "/include/kernel/rsrc.h",
@@ -251,6 +259,7 @@ private string *preregister_includes(string path)
 
     case RSRCOBJ:
 	return ({
+	    "/include/config.h",
 	    "/include/kernel/kernel.h",
 	    "/include/kernel/rsrc.h",
 	    "/include/status.h",
@@ -260,6 +269,7 @@ private string *preregister_includes(string path)
 
     case DEFAULT_USER:
 	return ({
+	    "/include/config.h",
 	    "/include/kernel/access.h",
 	    "/include/kernel/kernel.h",
 	    "/include/kernel/user.h"
@@ -267,6 +277,7 @@ private string *preregister_includes(string path)
 
     case INIT:
 	return ({
+	    "/include/config.h",
 	    "/include/kernel/access.h",
 	    "/include/kernel/kernel.h",
 	    "/include/kernel/rsrc.h",
@@ -275,6 +286,7 @@ private string *preregister_includes(string path)
 
     case OBJECTSERVER:
 	return ({
+	    "/include/config.h",
 	    "/include/kernel/access.h",
 	    "/include/kernel/kernel.h",
 	    "/include/kernel/rsrc.h",
