@@ -2,16 +2,16 @@
 # include <messages.h>
 # include <trace.h>
 # include <type.h>
+# include "tls.h"
 
 # define SYSTEMAUTO	"/usr/System/lib/auto"
 
+inherit auto AUTO;
 inherit SYSTEMAUTO;
-
 private inherit "/lib/util/string";
 
 
 object driver;
-object notify;
 
 /*
  * NAME:	create()
@@ -21,17 +21,6 @@ static void create()
 {
     driver = find_object(DRIVER);
     driver->set_error_manager(this_object());
-}
-
-/*
- * NAME:	notify_error()
- * DESCRIPTION:	object to notify about errors
- */
-void notify_error(object obj)
-{
-    if (SYSTEM()) {
-	notify = obj;
-    }
 }
 
 /*
@@ -45,10 +34,6 @@ void runtime_error(string error, int caught, mixed **trace)
 	string progname, objname, last_obj, str;
 	mixed *ftrace, *lines;
 	object user;
-
-	if (notify) {
-	    notify->runtime_error(error);
-	}
 
 	if (caught != 0) {
 	    error += " [caught]";
@@ -166,8 +151,8 @@ void compile_error(string file, int line, string error)
 	object user;
 
 	str = file + ", " + line + ": " + error;
-	if (notify) {
-	    notify->compile_error(str);
+	if (auto::tls_get(TLS_COMPILE_ERRORS)) {
+	    add_atomic_message(str);
 	}
 	str += "\n";
 	driver->message(str);

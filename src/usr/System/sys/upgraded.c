@@ -3,17 +3,15 @@
 # include <messages.h>
 # include <status.h>
 # include <type.h>
+# include "tls.h"
 
 inherit API_ACCESS;
 
 # define OBJECTSERVER	"/usr/System/sys/objectd"
-# define ERRORMANAGER	"/usr/System/sys/errord"
 # define SYSTEMAUTO	"/usr/System/lib/auto"
 
 
 object objectd;			/* object server */
-object errord;			/* error manager */
-string compfailed;		/* compilation of this object failed */
 mapping inherited;		/* Not yet compiled lib-objects */
 mapping *patching;		/* objects left to patch */
 int factor;			/* 2nd level divisor */
@@ -27,7 +25,6 @@ static void create()
     ::create();
 
     objectd = find_object(OBJECTSERVER);
-    errord = find_object(ERRORMANAGER);
     factor = status(ST_ARRAYSIZE);
 }
 
@@ -221,9 +218,9 @@ string *recompile(string *names, mapping *leaves, mapping *depend, int atom,
 
     objectd->notify_compiling(this_object());
     if (atom) {
-	errord->notify_error(this_object());
+	tls_set(TLS_COMPILE_ERRORS, TRUE);
     }
-    tls_set(0, TRUE);
+    tls_set(TLS_UPGRADE_TASK, TRUE);
 
     /*
      * Destruct inherited lib objects among the ones that are being upgraded.
@@ -261,8 +258,7 @@ string *recompile(string *names, mapping *leaves, mapping *depend, int atom,
 		    object user;
 
 		    /* recompile failed */
-		    failed[compfailed] = 1;
-		    compfailed = nil;
+		    failed[tls_get(TLS_COMPILE_FAILED)] = 1;
 		    patch = FALSE;
 
 		    /* take note of upgraded objects that are inherited */
@@ -309,7 +305,7 @@ string *recompile(string *names, mapping *leaves, mapping *depend, int atom,
     inherited = nil;
     objectd->notify_compiling(nil);
     if (atom) {
-	errord->notify_error(nil);
+	tls_set(TLS_COMPILE_ERRORS, nil);
     }
 
     objects = map_indices(failed);
@@ -413,17 +409,6 @@ mixed upgrade(string owner, string *names, int atom, int patch)
 
 
 /*
- * NAME:	compile_failed()
- * DESCRIPTION:	attempt to compile object failed
- */
-void compile_failed(string path)
-{
-    if (previous_object() == objectd && !compfailed) {
-	compfailed = path;
-    }
-}
-
-/*
  * NAME:	destruct()
  * DESCRIPTION:	check if a lib object is about to be destructed
  */
@@ -432,26 +417,6 @@ void destruct(string path)
     if (previous_object() == objectd && sscanf(path, "%*s/lib/") != 0) {
 	inherited[status(path, O_INDEX) / factor][path] = nil;
     }
-}
-
-/*
- * NAME:	compile_error()
- * DESCRIPTION:	preserve a compile-time error
- */
-void compile_error(string err)
-{
-    if (previous_object() == errord) {
-	add_atomic_message(err);
-    }
-}
-
-/*
- * NAME:	query_upgrading()
- * DESCRIPTION:	upgrading during this task?
- */
-int query_upgrading()
-{
-    return !!tls_get(0);
 }
 
 

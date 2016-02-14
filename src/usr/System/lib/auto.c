@@ -1,5 +1,6 @@
 # include <kernel/kernel.h>
 # include <status.h>
+# include "tls.h"
 
 # define SYSTEMAUTO	"/usr/System/lib/auto"
 # define OBJECTSERVER	"/usr/System/sys/objectd"
@@ -15,7 +16,7 @@ nomask int _F_init()
     if (previous_program() == AUTO) {
 	mixed *args;
 
-	args = ::tls_get(0);
+	args = ::tls_get(TLS_ARGUMENTS);
 	if (args) {
 	    create(args...);
 	} else {
@@ -40,7 +41,7 @@ static object clone_object(string path, mixed args...)
 	    error("Invalid path");
 	}
     }
-    ::tls_set(0, args);
+    ::tls_set(TLS_ARGUMENTS, args);
     return ::clone_object(path);
 }
 
@@ -72,7 +73,7 @@ static object new_object(string path, mixed args...)
 	    error("Invalid path");
 	}
     }
-    ::tls_set(0, args);
+    ::tls_set(TLS_ARGUMENTS, args);
     return ::new_object(path);
 }
 
@@ -162,7 +163,7 @@ static mixed tls_get(string index)
 nomask int _F_touch()
 {
     if (previous_program() == OBJECTSERVER) {
-	if (UPGRADESERVER->query_upgrading()) {
+	if (::tls_get(TLS_UPGRADE_TASK)) {
 	    return TRUE;	/* still upgrading */
 	}
 

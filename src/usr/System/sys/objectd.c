@@ -4,6 +4,7 @@
 # include <kernel/user.h>
 # include <limits.h>
 # include <status.h>
+# include "tls.h"
 
 # define INIT		"/usr/System/initd"
 # define OBJECTSERVER	"/usr/System/sys/objectd"
@@ -292,7 +293,8 @@ private string *preregister_includes(string path)
 	    "/include/kernel/rsrc.h",
 	    "/include/kernel/user.h",
 	    "/include/limits.h",
-	    "/include/status.h"
+	    "/include/status.h",
+	    "/usr/System/include/tls.h"
 	});
 
     case OBJDBASE:
@@ -637,8 +639,8 @@ void compile(string owner, string path, mapping source, string inherits...)
  */
 void compile_failed(string owner, string path)
 {
-    if (previous_object() == driver && notify) {
-	notify->compile_failed(path);
+    if (previous_object() == driver) {
+	tls_set(TLS_COMPILE_FAILED, path);
     }
 }
 
