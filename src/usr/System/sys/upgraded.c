@@ -216,7 +216,7 @@ string *recompile(string *names, mapping *leaves, mapping *depend, int atom,
     string name, *objects;
     mapping failed;
 
-    objectd->notify_compiling(this_object());
+    tls_set(TLS_DESTRUCT_LIB, this_object());
     if (atom) {
 	tls_set(TLS_COMPILE_ERRORS, TRUE);
     }
@@ -303,7 +303,7 @@ string *recompile(string *names, mapping *leaves, mapping *depend, int atom,
     } while (sizeof(leaves) != 0);
 
     inherited = nil;
-    objectd->notify_compiling(nil);
+    tls_set(TLS_DESTRUCT_LIB, nil);
     if (atom) {
 	tls_set(TLS_COMPILE_ERRORS, nil);
     }
@@ -336,6 +336,9 @@ mixed upgrade(string owner, string *names, int atom, int patch)
 	    string str, *list;
 	    mapping objects, *depend, *leaves;
 
+	    if (tls_get(TLS_UPGRADE_TASK)) {
+		return "An upgrade was already started.";
+	    }
 	    if (patch && patching) {
 		return "Still patching after previous upgrade.";
 	    }
@@ -409,12 +412,12 @@ mixed upgrade(string owner, string *names, int atom, int patch)
 
 
 /*
- * NAME:	destruct()
- * DESCRIPTION:	check if a lib object is about to be destructed
+ * NAME:	destruct_lib()
+ * DESCRIPTION:	a lib object is about to be destructed
  */
-void destruct(string path)
+void destruct_lib(string path)
 {
-    if (previous_object() == objectd && sscanf(path, "%*s/lib/") != 0) {
+    if (previous_object() == objectd) {
 	inherited[status(path, O_INDEX) / factor][path] = nil;
     }
 }

@@ -12,7 +12,6 @@
 
 
 object driver;		/* driver object */
-object notify;		/* object notified about changes */
 int factor;		/* 2nd level divisor */
 mapping index2db;	/* ([ index / factor : dbase object ]) */
 mapping creator2db;	/* ([ creator : dbase object ]) */
@@ -571,17 +570,6 @@ mapping *query_dependents(string path, int factor)
 
 
 /*
- * NAME:	notify_compiling()
- * DESCRIPTION:	set the object to be notified of changes
- */
-void notify_compiling(object obj)
-{
-    if (SYSTEM()) {
-	notify = obj;
-    }
-}
-
-/*
  * NAME:	compiling()
  * DESCRIPTION:	an object is about to be compiled
  */
@@ -590,10 +578,6 @@ void compiling(string path)
     if (previous_object() == driver) {
 	if (sscanf(path, "%*s.c/") != 0 || sscanf(path, "%*s.h/") != 0) {
 	    error("Invalid object name");
-	}
-
-	if (notify) {
-	    notify->compiling(path);
 	}
     }
 }
@@ -626,10 +610,6 @@ void compile(string owner, string path, mapping source, string inherits...)
 	catch {
 	    register_object(owner, path, includes, inherits);
 	} : error("Out of space for object \"" + path + "\"");
-
-	if (notify) {
-	    notify->compile(path);
-	}
     }
 }
 
@@ -653,10 +633,13 @@ void destruct(string owner, string path)
     if (previous_object() == driver) {
 	if (sscanf(path, "%*s/lib/") == 0) {
 	    unregister_object(path, status(path, O_INDEX));
-	}
+	} else {
+	    object notify;
 
-	if (notify) {
-	    notify->destruct(path);
+	    notify = tls_get(TLS_DESTRUCT_LIB);
+	    if (notify) {
+		notify->destruct_lib(path);
+	    }
 	}
     }
 }
