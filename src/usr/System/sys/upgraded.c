@@ -30,6 +30,84 @@ static void create()
 
 
 /*
+ * NAME:	gather_deps()
+ * DESCRIPTION:	gather all objects that depend on a single given object issue
+ */
+private void gather_deps(string path, int index, mapping issues,
+			 mapping inherited, mapping leaves)
+{
+    mapping map;
+    int i, j, **lists, *list;
+
+    if (sscanf(path, "%*s/lib/")) {
+	/*
+	 * lib objects are stored in the 'inherited' structure as strings
+	 */
+	map = issues[index / factor];
+	if (map) {
+	    if (map[index]) {
+		return;		/* already dealt with */
+	    }
+	    map[index] = TRUE;
+	} else {
+	    issues[index / factor] = ([ index : TRUE ]);
+	}
+	if (status(path, O_INDEX) == index) {
+	    map = inherited[index / factor];
+	    if (map) {
+		map[path] = index;
+	    } else {
+		inherited[index / factor] = ([ path : index ]);
+	    }
+	}
+	lists = objectd->query_inherited(index);
+	for (i = sizeof(lists); --i >= 0; ) {
+	    list = lists[i];
+	    for (j = sizeof(list); --j >= 0; ) {
+		gather_deps(objectd->query_path(list[j]), list[j], issues,
+			    inherited, leaves);
+	    }
+	}
+    } else {
+	/*
+	 * Not a lib object, so it must be a leaf object, which is stored in the
+	 * 'leaves' structure as an object.
+	 */
+	map = leaves[index / factor];
+	if (map) {
+	    map[path] = index;
+	} else {
+	    leaves[index / factor] = ([ path : index ]);
+	}
+    }
+}
+
+/*
+ * NAME:	query_dependents()
+ * DESCRIPTION:	Return the objects that depend on all issues of a given object,
+ *		separated into inheritables and leaves.
+ *		Datastructure: ([ index / factor : ([ path : index ]) ])
+ */
+private mapping *query_dependents(string path)
+{
+    if (SYSTEM()) {
+	int i, *issue;
+	mapping issues, inherited, leaves;
+
+	/* collect dependents for all issues of object */
+	issues = ([ ]);
+	inherited = ([ ]);
+	leaves = ([ ]);
+	issue = objectd->query_issues(path);
+	for (i = sizeof(issue); --i >= 0; ) {
+	    gather_deps(path, issue[i], issues, inherited, leaves);
+	}
+
+	return ({ inherited, leaves });
+    }
+}
+
+/*
  * NAME:	merge()
  * DESCRIPTION:	merge two mapping structures (changes first argument)
  */
@@ -69,7 +147,7 @@ private mixed *dependencies(string *names)
     for (i = sz; --i >= 0; ) {
 	mapping imap, omap;
 
-	({ imap, omap }) = objectd->query_dependents(names[i], factor);
+	({ imap, omap }) = query_dependents(names[i]);
 	libs = merge(libs, imap);
 	leaves = merge(leaves, omap);
 	all[i] = merge(imap, omap);
