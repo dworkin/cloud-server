@@ -491,16 +491,12 @@ int **query_inherited(int index)
 
 
 /*
- * NAME:	compiling()
- * DESCRIPTION:	an object is about to be compiled
+ * NAME:	forbid_call()
+ * DESCRIPTION:	block instantiation of generated leaf objects
  */
-void compiling(string path)
+int forbid_call(string path)
 {
-    if (previous_object() == driver) {
-	if (sscanf(path, "%*s.c/") != 0 || sscanf(path, "%*s.h/") != 0) {
-	    error("Invalid object name");
-	}
-    }
+    return (sscanf(path, "%*s/@@@/%*s#") == 1);
 }
 
 /*
