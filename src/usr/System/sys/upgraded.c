@@ -9,6 +9,7 @@ inherit API_ACCESS;
 
 # define OBJECTSERVER	"/usr/System/sys/objectd"
 # define SYSTEMAUTO	"/usr/System/lib/auto"
+# define WIZTOOL	"/usr/System/obj/wiztool"
 
 
 object objectd;			/* object server */
@@ -510,7 +511,9 @@ string generate_leaf(string path)
     if (previous_program() == SYSTEMAUTO) {
 	string str, tail;
 
-	if (!access(object_name(previous_object()), path, READ_ACCESS)) {
+	str = object_name(previous_object());
+	if (sscanf(str, WIZTOOL + "#%*d") == 0 &&
+	    !access(str, path, READ_ACCESS)) {
 	    error("Access denied");
 	}
 	sscanf(path, "%s/lib/%s", str, tail);
