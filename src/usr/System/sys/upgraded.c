@@ -13,7 +13,6 @@ inherit API_ACCESS;
 
 
 object objectd;			/* object server */
-mapping inherited;		/* Not yet compiled lib-objects */
 mapping *patching;		/* objects left to patch */
 int factor;			/* 2nd level divisor */
 
@@ -31,130 +30,117 @@ static void create()
 
 
 /*
- * NAME:	gather_deps()
- * DESCRIPTION:	gather all objects that depend on a single given object issue
+ * NAME:	heirs()
+ * DESCRIPTION:	gather information about objects and their heirs
  */
-private void gather_deps(string path, int index, mapping issues,
-			 mapping inherited, mapping leaves)
+private void heirs(int index, mapping known, mapping libs, mapping leaves,
+		   mapping srcmap, mapping deps)
 {
     mapping map;
-    int i, j, **lists, *list;
+    string path;
+    int i, j, **inherited, *issues;
 
-    if (sscanf(path, "%*s/lib/")) {
-	/*
-	 * lib objects are stored in the 'inherited' structure as strings
-	 */
-	map = issues[index / factor];
-	if (map) {
-	    if (map[index]) {
-		return;		/* already dealt with */
-	    }
-	    map[index] = TRUE;
-	} else {
-	    issues[index / factor] = ([ index : TRUE ]);
+    /* check whether this issue was encountered before */
+    map = known[index / factor];
+    if (map) {
+	if (map[index]) {
+	    return;
 	}
-	if (status(path, O_INDEX) == index) {
-	    map = inherited[index / factor];
+	map[index] = TRUE;
+    } else {
+	known[index / factor] = ([ index : TRUE ]);
+    }
+
+    path = objectd->query_path(index);
+    if (sscanf(path, "%*s/lib/") != 0) {
+	inherited = objectd->query_inherited(index);
+	for (i = sizeof(inherited); --i >= 0; ) {
+	    issues = inherited[i];
+	    for (j = sizeof(issues); --j >= 0; ) {
+		heirs(issues[j], known, libs, leaves, srcmap, deps);
+	    }
+	}
+
+	if (status(path, O_INDEX) != index) {
+	    return;	/* destructed lib object */
+	}
+	if (sizeof(objectd->query_inherited(index)) != 0 ||
+	    !srcmap[path + ".c"]) {
+	    /*
+	     * inherited or not explicitly upgraded lib objects
+	     */
+	    map = libs[index / factor];
 	    if (map) {
 		map[path] = index;
 	    } else {
-		inherited[index / factor] = ([ path : index ]);
+		libs[index / factor] = ([ path : index ]);
 	    }
+	    return;
 	}
-	lists = objectd->query_inherited(index);
-	for (i = sizeof(lists); --i >= 0; ) {
-	    list = lists[i];
-	    for (j = sizeof(list); --j >= 0; ) {
-		gather_deps(objectd->query_path(list[j]), list[j], issues,
-			    inherited, leaves);
-	    }
-	}
+    }
+
+    /*
+     * leaf objects are stored in two places
+     */
+    map = leaves[index / factor];
+    if (map) {
+	map[path] = index;
     } else {
-	/*
-	 * Not a lib object, so it must be a leaf object, which is stored in the
-	 * 'leaves' structure as an object.
-	 */
-	map = leaves[index / factor];
-	if (map) {
-	    map[path] = index;
-	} else {
-	    leaves[index / factor] = ([ path : index ]);
-	}
+	leaves[index / factor] = ([ path : index ]);
     }
-}
-
-/*
- * NAME:	query_dependents()
- * DESCRIPTION:	Return the objects that depend on all issues of a given object,
- *		separated into inheritables and leaves.
- *		Datastructure: ([ index / factor : ([ path : index ]) ])
- */
-private mapping *query_dependents(string path)
-{
-    if (SYSTEM()) {
-	int i, *issue;
-	mapping issues, inherited, leaves;
-
-	/* collect dependents for all issues of object */
-	issues = ([ ]);
-	inherited = ([ ]);
-	leaves = ([ ]);
-	issue = objectd->query_issues(path);
-	for (i = sizeof(issue); --i >= 0; ) {
-	    gather_deps(path, issue[i], issues, inherited, leaves);
-	}
-
-	return ({ inherited, leaves });
+    map = deps[index / factor];
+    if (map) {
+	map[path] = index;
+    } else {
+	deps[index / factor] = ([ path : index ]);
     }
-}
-
-/*
- * NAME:	merge()
- * DESCRIPTION:	merge two mapping structures (changes first argument)
- */
-private mapping merge(mapping m1, mapping m2)
-{
-    int i, index, *indices;
-    mapping *values;
-
-    indices = map_indices(m2);
-    values = map_values(m2);
-    for (i = sizeof(indices); --i >= 0; ) {
-	index = indices[i];
-	if (m1[index]) {
-	    m1[index] += values[i];
-	} else {
-	    m1[index] = values[i];
-	}
-    }
-
-    return m1;
 }
 
 /*
  * NAME:	dependencies()
  * DESCRIPTION:	find the dependencies for a list of objects, as library objects,
- *		leaf objects, and total dependencies per object in the list.
+ *		leaf objects, and leaf dependencies per source file in the list.
  */
-private mixed *dependencies(string *names)
+private mixed *dependencies(string *sources)
 {
-    mapping libs, leaves, *all;
-    int i, sz;
+    mapping libs, leaves, srcmap, *deps, known;
+    int i, j, k, sz, len, **includes, *issues;
+    string src;
 
     libs = ([ ]);
     leaves = ([ ]);
-    sz = sizeof(names);
-    all = allocate(sz);
+    srcmap = ([ ]);
+    sz = sizeof(sources);
     for (i = sz; --i >= 0; ) {
-	mapping imap, omap;
+	srcmap[sources[i]] = TRUE;
+    }
+    deps = allocate(sz);
 
-	({ imap, omap }) = query_dependents(names[i]);
-	libs = merge(libs, imap);
-	leaves = merge(leaves, omap);
-	all[i] = merge(imap, omap);
+    for (i = sz; --i >= 0; ) {
+	src = sources[i];
+	known = ([ ]);
+	deps[i] = ([ ]);
+
+	/* include dependencies */
+	includes = objectd->query_included(src);
+	for (j = sizeof(includes); --j >= 0; ) {
+	    issues = includes[j];
+	    for (k = sizeof(issues); --k >= 0; ) {
+		heirs(issues[k], known, libs, leaves, srcmap, deps[i]);
+	    }
+	}
+
+	/* object issue dependencies */
+	len = strlen(src);
+	if (len >= 2 && src[len - 2 ..] == ".c") {
+	    issues = objectd->query_issues(src[.. len - 3]);
+	    for (j = sizeof(issues); --j >= 0; ) {
+		heirs(issues[j], known, libs, leaves, srcmap, deps[i]);
+	    }
+	}
     }
 
-    return ({ libs, leaves, all });
+    return ({ libs, leaves, deps });
 }
 
 /*
@@ -287,28 +273,26 @@ private void compile(string name, mapping map, int patch)
  * NAME:	recompile()
  * DESCRIPTION:	recompile leaf objects
  */
-private atomic
-string *recompile(string *names, mapping *leaves, mapping *depend, int atom,
-		  int patch)
+private atomic string *recompile(string *sources, mapping *libs,
+				 mapping *leaves, mapping *depend, int atom,
+				 int patch)
 {
-    int i, j, sz, *status;
-    string name, *objects;
-    mapping failed;
+    int i, j, sz, *issues;
+    string name, err, *objects;
+    mapping failed, map;
 
-    tls_set(TLS_DESTRUCT_LIB, this_object());
     if (atom) {
 	tls_set(TLS_COMPILE_ERRORS, TRUE);
     }
     tls_set(TLS_UPGRADE_TASK, TRUE);
 
     /*
-     * Destruct inherited lib objects among the ones that are being upgraded.
+     * destruct inherited lib objects
      */
-    for (i = sizeof(names); --i >= 0; ) {
-	name = names[i];
-	if (sscanf(name, "%*s/lib/") != 0 && (status=status(name)) &&
-	    sizeof(objectd->query_inherited(status[O_INDEX])) != 0) {
-	    destruct_object(name);
+    for (i = sizeof(libs); --i >= 0; ) {
+	objects = map_indices(libs[i]);
+	for (j = sizeof(objects); --j >= 0; ) {
+	    destruct_object(objects[j]);
 	}
     }
 
@@ -316,73 +300,43 @@ string *recompile(string *names, mapping *leaves, mapping *depend, int atom,
     if (patch) {
 	patching = leaves;
     }
-    do {
-	int *indices, *issues;
-	mapping *values, map;
-	string err;
 
-	/*
-	 * recompile leaf objects
-	 */
-	for (i = sizeof(leaves); --i >= 0; ) {
-	    map = leaves[i];
-	    objects = map_indices(map);
-	    issues = map_values(map);
-	    for (j = 0, sz = sizeof(objects); j < sz; j++) {
-		/* recompile a leaf object */
-		name = objects[j];
-		err = catch(compile(name, map, patch));
-		if (err) {
-		    int index, k;
-		    object user;
+    /*
+     * recompile leaf objects
+     */
+    for (i = sizeof(leaves); --i >= 0; ) {
+	map = leaves[i];
+	objects = map_indices(map);
+	issues = map_values(map);
+	for (j = 0, sz = sizeof(objects); j < sz; j++) {
+	    /* recompile a leaf object */
+	    name = objects[j];
+	    err = catch(compile(name, map, patch));
+	    if (err) {
+		int index, k;
+		object user;
 
-		    /* recompile failed */
-		    failed[tls_get(TLS_COMPILE_FAILED)] = 1;
-		    patch = FALSE;
+		/* recompile failed */
+		failed[tls_get(TLS_COMPILE_FAILED)] = 1;
 
-		    /* take note of upgraded objects that are inherited */
-		    index = issues[j] / factor;
-		    for (k = sizeof(depend); --k >= 0; ) {
-			map = depend[k][index];
-			if (map && map[name]) {
-			    names[k] = nil;
-			}
+		/* check which upgraded source files are affected */
+		index = issues[j] / factor;
+		for (k = sizeof(depend); --k >= 0; ) {
+		    map = depend[k][index];
+		    if (map && map[name]) {
+			sources[k] = nil;
 		    }
+		}
 
-		    if (atom) {
-			add_atomic_message(err);
-		    } else if ((user=this_user())) {
-			user->message(MSG_FORMATTED, err + "\n");
-		    }
+		if (atom) {
+		    add_atomic_message(err);
+		} else if ((user=this_user())) {
+		    user->message(MSG_FORMATTED, err + "\n");
 		}
 	    }
 	}
-	patch = FALSE;
+    }
 
-	/*
-	 * get newly exposed leaves
-	 */
-	leaves = ({ });
-	indices = map_indices(inherited);
-	values = map_values(inherited);
-	for (i = sizeof(indices); --i >= 0; ) {
-	    map = values[i][..];
-	    objects = map_indices(values[i]);
-	    issues = map_values(values[i]);
-	    for (j = sizeof(objects); --j >= 0; ) {
-		if (sizeof(objectd->query_inherited(issues[j])) != 0) {
-		    map[objects[j]] = nil;
-		}
-	    }
-	    if (map_sizeof(map) != 0) {
-		leaves += ({ map });
-		inherited[indices[i]] -= map_indices(map);
-	    }
-	}
-    } while (sizeof(leaves) != 0);
-
-    inherited = nil;
-    tls_set(TLS_DESTRUCT_LIB, nil);
     if (atom) {
 	tls_set(TLS_COMPILE_ERRORS, nil);
     }
@@ -413,7 +367,7 @@ mixed upgrade(string owner, string *names, int atom, int patch)
 	rlimits (0; -1) {
 	    int i, j, sz;
 	    string str, *list;
-	    mapping objects, *depend, *leaves;
+	    mapping inherited, objects, *depend, *leaves;
 
 	    if (tls_get(TLS_UPGRADE_TASK)) {
 		return "An upgrade was already started.";
@@ -425,7 +379,7 @@ mixed upgrade(string owner, string *names, int atom, int patch)
 	    /* verify write access to objects to be upgraded directly */
 	    for (i = 0, sz = sizeof(names); i < sz; i++) {
 		if (!access(owner, names[i], WRITE_ACCESS)) {
-		    return names[i] + ".c: Access denied.";
+		    return names[i] + ": Access denied.";
 		}
 	    }
 
@@ -434,7 +388,6 @@ mixed upgrade(string owner, string *names, int atom, int patch)
 	     */
 	    ({ inherited, objects, depend }) = dependencies(names);
 	    if (map_sizeof(inherited) + map_sizeof(objects) == 0) {
-		inherited = nil;
 		return "No existing issues.";
 	    }
 
@@ -447,11 +400,9 @@ mixed upgrade(string owner, string *names, int atom, int patch)
 		for (j = sizeof(list); --j >= 0; ) {
 		    str = list[j] + ".c";
 		    if (!access(owner, str, WRITE_ACCESS)) {
-			inherited = nil;
 			return str + ": Access denied.";
 		    }
 		    if (!file_info(str) && sscanf(str, "%*s/@@@/") == 0) {
-			inherited = nil;
 			return str + ": Missing source file.";
 		    }
 		}
@@ -461,7 +412,8 @@ mixed upgrade(string owner, string *names, int atom, int patch)
 	     * recompile leaf objects
 	     */
 	    catch {
-		return recompile(names, leaves, depend, atom, patch);
+		return recompile(names, map_values(inherited), leaves, depend,
+				 atom, patch);
 	    } : {
 		object user;
 
@@ -486,18 +438,6 @@ mixed upgrade(string owner, string *names, int atom, int patch)
 		return "Upgrade failed.";
 	    }
 	}
-    }
-}
-
-
-/*
- * NAME:	destruct_lib()
- * DESCRIPTION:	a lib object is about to be destructed
- */
-void destruct_lib(string path)
-{
-    if (previous_object() == objectd) {
-	inherited[status(path, O_INDEX) / factor][path] = nil;
     }
 }
 

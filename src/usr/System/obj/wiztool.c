@@ -245,7 +245,6 @@ static void cmd_upgrade(object user, string cmd, string str)
 	    names[i] = nil;
 	} else {
 	    str = str[.. len - 3];
-	    names[i] = str;
 	    if (sizeof(objectd->query_issues(str)) == 0) {
 		message(str + ": No such object.\n");
 		names[i] = nil;
@@ -264,9 +263,8 @@ static void cmd_upgrade(object user, string cmd, string str)
 	    if (!atom || sizeof(result) == 0) {
 		names -= ({ nil });
 		if (sizeof(names) != 0) {
-		    message("Objects successfully upgraded:\n" +
-			    break_string("<" + implode(names, ">, <") + ">", 0,
-					 2));
+		    message("Sources successfully upgraded:\n" +
+			    break_string(implode(names, ", "), 0, 2));
 		}
 	    }
 
