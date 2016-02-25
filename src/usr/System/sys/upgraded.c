@@ -238,7 +238,7 @@ static void patcher(object patchtool)
  * NAME:	compile()
  * DESCRIPTION:	compile one object
  */
-private void compile(string name, mapping map, int patch)
+private void compile(string name, mapping map, object patcher)
 {
     string head, tail;
     object obj;
@@ -250,7 +250,7 @@ private void compile(string name, mapping map, int patch)
 	obj = compile_object(name);
     }
 
-    if (patch) {
+    if (patcher) {
 	/*
 	 * patch object after compilation
 	 */
@@ -274,8 +274,8 @@ private void compile(string name, mapping map, int patch)
  * DESCRIPTION:	recompile leaf objects
  */
 private atomic string *recompile(string *sources, mapping *libs,
-				 mapping *leaves, mapping *depend, int atom,
-				 int patch)
+				 mapping *leaves, mapping *deps, int atom,
+				 object patcher)
 {
     int i, j, sz, *issues;
     string name, err, *objects;
@@ -296,14 +296,10 @@ private atomic string *recompile(string *sources, mapping *libs,
 	}
     }
 
-    failed = ([ ]);
-    if (patch) {
-	patching = leaves;
-    }
-
     /*
      * recompile leaf objects
      */
+    failed = ([ ]);
     for (i = sizeof(leaves); --i >= 0; ) {
 	map = leaves[i];
 	objects = map_indices(map);
@@ -311,7 +307,7 @@ private atomic string *recompile(string *sources, mapping *libs,
 	for (j = 0, sz = sizeof(objects); j < sz; j++) {
 	    /* recompile a leaf object */
 	    name = objects[j];
-	    err = catch(compile(name, map, patch));
+	    err = catch(compile(name, map, patcher));
 	    if (err) {
 		int index, k;
 		object user;
@@ -321,8 +317,8 @@ private atomic string *recompile(string *sources, mapping *libs,
 
 		/* check which upgraded source files are affected */
 		index = issues[j] / factor;
-		for (k = sizeof(depend); --k >= 0; ) {
-		    map = depend[k][index];
+		for (k = sizeof(deps); --k >= 0; ) {
+		    map = deps[k][index];
 		    if (map && map[name]) {
 			sources[k] = nil;
 		    }
@@ -348,11 +344,12 @@ private atomic string *recompile(string *sources, mapping *libs,
 	 */
 	add_atomic_message("#" + implode(objects, "#"));
 	error("Upgrade failed");
-    } else if (patching) {
+    } else if (patcher) {
 	/*
 	 * patch affected objects through callout
 	 */
-	call_out("patcher", 0, previous_object());
+	patching = leaves;
+	call_out("patcher", 0, patcher);
     }
     return objects;
 }
@@ -361,42 +358,42 @@ private atomic string *recompile(string *sources, mapping *libs,
  * NAME:	upgrade()
  * DESCRIPTION:	upgrade interface function
  */
-mixed upgrade(string owner, string *names, int atom, int patch)
+mixed upgrade(string owner, string *sources, int atom, object patcher)
 {
     if (SYSTEM()) {
 	rlimits (0; -1) {
 	    int i, j, sz;
 	    string str, *list;
-	    mapping inherited, objects, *depend, *leaves;
+	    mapping libs, leaves, *depend, *objects;
 
 	    if (tls_get(TLS_UPGRADE_TASK)) {
 		return "An upgrade was already started.";
 	    }
-	    if (patch && patching) {
+	    if (patching) {
 		return "Still patching after previous upgrade.";
 	    }
 
 	    /* verify write access to objects to be upgraded directly */
-	    for (i = 0, sz = sizeof(names); i < sz; i++) {
-		if (!access(owner, names[i], WRITE_ACCESS)) {
-		    return names[i] + ": Access denied.";
+	    for (i = 0, sz = sizeof(sources); i < sz; i++) {
+		if (!access(owner, sources[i], WRITE_ACCESS)) {
+		    return sources[i] + ": Access denied.";
 		}
 	    }
 
 	    /*
 	     * gather information about the dependencies
 	     */
-	    ({ inherited, objects, depend }) = dependencies(names);
-	    if (map_sizeof(inherited) + map_sizeof(objects) == 0) {
+	    ({ libs, leaves, depend }) = dependencies(sources);
+	    if (map_sizeof(libs) + map_sizeof(leaves) == 0) {
 		return "No existing issues.";
 	    }
 
 	    /*
-	     * check if leaves can be recompiled
+	     * check that leaves can be recompiled
 	     */
-	    leaves = map_values(objects);
-	    for (i = sizeof(leaves); --i >= 0; ) {
-		list = map_indices(leaves[i]);
+	    objects = map_values(leaves);
+	    for (i = sizeof(objects); --i >= 0; ) {
+		list = map_indices(objects[i]);
 		for (j = sizeof(list); --j >= 0; ) {
 		    str = list[j] + ".c";
 		    if (!access(owner, str, WRITE_ACCESS)) {
@@ -412,8 +409,8 @@ mixed upgrade(string owner, string *names, int atom, int patch)
 	     * recompile leaf objects
 	     */
 	    catch {
-		return recompile(names, map_values(inherited), leaves, depend,
-				 atom, patch);
+		return recompile(sources, map_values(libs), objects, depend,
+				 atom, patcher);
 	    } : {
 		object user;
 

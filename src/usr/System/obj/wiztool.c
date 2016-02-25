@@ -222,9 +222,9 @@ static void cmd_issues(object user, string cmd, string str)
  */
 static void cmd_upgrade(object user, string cmd, string str)
 {
-    string *names;
-    int atom, patch, i, sz, len;
-    object objectd;
+    string *sources;
+    int atom, i, sz, len;
+    object patcher;
 
     if (!str || str == "-a") {
 	message("Usage: " + cmd + " [-a|-p] <file> [<file> ...]\n");
@@ -232,39 +232,24 @@ static void cmd_upgrade(object user, string cmd, string str)
     }
     atom = sscanf(str, "-a %s", str);
     if (!atom) {
-	atom = patch = sscanf(str, "-p %s", str);
-    }
-    names = expand(str, 1, TRUE)[0];
-    objectd = find_object(OBJECTSERVER);
-
-    for (i = 0, sz = sizeof(names); i < sz; i++) {
-	str = names[i];
-	len = strlen(str);
-	if (len < 2 || str[len - 2 ..] != ".c") {
-	    message(str + ": No such source file.\n");
-	    names[i] = nil;
-	} else {
-	    str = str[.. len - 3];
-	    if (sizeof(objectd->query_issues(str)) == 0) {
-		message(str + ": No such object.\n");
-		names[i] = nil;
-	    }
+	atom = sscanf(str, "-p %s", str);
+	if (atom) {
+	    patcher = this_object();
 	}
     }
-
-    names -= ({ nil });
-    if (sizeof(names) != 0) {
+    sources = expand(str, 1, TRUE)[0];
+    if (sizeof(sources) != 0) {
 	mixed result;
 
-	result = UPGRADESERVER->upgrade(query_owner(), names, atom, patch);
+	result = UPGRADESERVER->upgrade(query_owner(), sources, atom, patcher);
 	if (typeof(result) == T_STRING) {
 	    message(result + "\n");
 	} else {
 	    if (!atom || sizeof(result) == 0) {
-		names -= ({ nil });
-		if (sizeof(names) != 0) {
+		sources -= ({ nil });
+		if (sizeof(sources) != 0) {
 		    message("Sources successfully upgraded:\n" +
-			    break_string(implode(names, ", "), 0, 2));
+			    break_string(implode(sources, ", "), 0, 2));
 		}
 	    }
 
