@@ -645,12 +645,12 @@ static void shutdown(varargs int hotboot)
  * NAME:	call_touch()
  * DESCRIPTION:	arrange to be warned when a function is called in an object
  */
-static void call_touch(object obj)
+static int call_touch(object obj)
 {
     if (creator != "System") {
 	error("Permission denied");
     }
-    ::call_touch(obj);
+    return ::call_touch(obj);
 }
 
 
