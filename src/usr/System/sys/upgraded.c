@@ -314,6 +314,7 @@ private atomic string *recompile(string *sources, mapping *libs,
 
 		/* recompile failed */
 		failed[tls_get(TLS_COMPILE_FAILED)] = 1;
+		tls_set(TLS_COMPILE_FAILED, nil);
 
 		/* check which upgraded source files are affected */
 		index = issues[j] / factor;

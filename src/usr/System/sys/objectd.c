@@ -536,7 +536,7 @@ void compile(string owner, string path, mapping source, string inherits...)
  */
 void compile_failed(string owner, string path)
 {
-    if (previous_object() == driver) {
+    if (previous_object() == driver && !tls_get(TLS_COMPILE_FAILED)) {
 	tls_set(TLS_COMPILE_FAILED, path);
     }
 }
