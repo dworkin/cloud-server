@@ -19,15 +19,12 @@ void set_object_manager(object objectd)	[System only]
     Install an object manager, in which the following functions will be called
     afterwards:
 
-    * void compiling(string path)
-
-	The given object is about to be compiled.
-
-    * void compile(string owner, string path, string *source,
+    * void compile(string owner, string path, mapping source,
 		   string inherited...)
 
-	The given object has just been compiled.  If the source array is not
-	empty, it was compiled from those strings.
+	The given object has just been compiled.  Source is a mapping from
+	paths to source code, or to the same paths if no source code was
+	provided.
 
     * void compile_failed(string owner, string path)
 
