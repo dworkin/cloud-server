@@ -219,6 +219,7 @@ private atomic object _compile(object driver, string path, string uid,
     int add;
     object obj;
 
+    driver->compiling(path);
     add = !::find_object(path);
     obj = ::compile_object(path, source...);
     if (add) {
@@ -264,7 +265,6 @@ static object compile_object(string path, string source...)
      * do the compiling
      */
     rlimits (-1; -1) {
-	driver->compiling(path);
 	err = catch(obj = _compile(driver, path, uid, source));
 	if (err) {
 	    driver->compile_failed(path, uid);

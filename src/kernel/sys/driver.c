@@ -187,47 +187,37 @@ void set_error_manager(object obj)
 }
 
 /*
- * NAME:	_compile()
- * DESCRIPTION:	automatically compile auto object
- */
-private atomic object _compile()
-{
-    mapping tls;
-    object obj;
-
-    tls = TLS();
-    TLSVAR(tls, TLS_SOURCE) = ([ ]);
-    TLSVAR(tls, TLS_INHERIT) = ({ AUTO });
-    obj = compile_object(AUTO);
-    rsrcd->rsrc_incr("System", "objects", nil, 1);
-    if (objectd) {
-	TLSVAR(tls, TLS_SOURCE)[AUTO + ".c"] = AUTO + ".c";
-	objectd->compile("System", AUTO, TLSVAR(tls, TLS_SOURCE),
-			 TLSVAR(tls, TLS_INHERIT)[1 ..]...);
-    }
-    return obj;
-}
-
-/*
  * NAME:	compiling()
  * DESCRIPTION:	object being compiled
  */
 void compiling(string path)
 {
     if (previous_program() == AUTO) {
-	string err;
 	mapping tls;
+	string err, *mesg, *messages;
 
+	tls = TLS();
 	if (path != AUTO && path != DRIVER && !find_object(AUTO)) {
-	    err = catch(_compile());
+	    TLSVAR(tls, TLS_SOURCE) = ([ AUTO + ".c": AUTO + ".c" ]);
+	    TLSVAR(tls, TLS_INHERIT) = ({ AUTO });
+	    err = catch(compile_object(AUTO));
 	    if (err) {
-		if (objectd) {
-		    objectd->compile_failed("System", AUTO);
+		mesg = ({ "c" + AUTO });
+		messages = TLSVAR(tls, TLS_PUT_ATOMIC);
+		if (messages) {
+		    messages += mesg;
+		} else {
+		    messages = mesg;
 		}
+		TLSVAR(tls, TLS_PUT_ATOMIC) = messages;
 		error(err);
 	    }
+	    rsrcd->rsrc_incr("System", "objects", nil, 1);
+	    if (objectd) {
+		objectd->compile("System", AUTO, TLSVAR(tls, TLS_SOURCE),
+				 TLSVAR(tls, TLS_INHERIT)[1 ..]...);
+	    }
 	}
-	tls = TLS();
 	TLSVAR(tls, TLS_SOURCE) = ([ ]);
 	TLSVAR(tls, TLS_INHERIT) = ({ path });
     }
@@ -593,6 +583,7 @@ static object inherit_program(string from, string path, int priv)
     obj = find_object(path);
     if (!obj) {
 	int *rsrc;
+	string err, *mesg, *messages;
 
 	creator = creator(path);
 	rsrc = rsrcd->rsrc_get(creator, "objects");
@@ -602,7 +593,19 @@ static object inherit_program(string from, string path, int priv)
 
 	TLSVAR(tls, TLS_SOURCE) = ([ ]);
 	TLSVAR(tls, TLS_INHERIT) = ({ path });
-	obj = (str) ? compile_object(path, str...) : compile_object(path);
+	err = catch(obj = (str) ?
+			   compile_object(path, str...) : compile_object(path));
+	if (err) {
+	    mesg = ({ "c" + path });
+	    messages = TLSVAR(tls, TLS_PUT_ATOMIC);
+	    if (messages) {
+		messages += mesg;
+	    } else {
+		messages = mesg;
+	    }
+	    TLSVAR(tls, TLS_PUT_ATOMIC) = messages;
+	    error(err);
+	}
 	rsrcd->rsrc_incr(creator, "objects", nil, 1);
 	if (objectd) {
 	    TLSVAR(tls, TLS_SOURCE)[path + ".c"] = (str) ? str : path + ".c";
@@ -837,7 +840,10 @@ static string runtime_error(string str, int caught, int ticks)
 	string file;
 	int line;
 
-	if (sscanf(messages[i], "\0%s\0%d\0%s", file, line, str) != 0) {
+	str = messages[i][1 ..];
+	switch (messages[i][0]) {
+	case '\0':
+	    sscanf(str, "%s\0%d\0%s", file, line, str);
 	    if (errord) {
 		errord->compile_error(file, line, str);
 	    } else {
@@ -847,8 +853,18 @@ static string runtime_error(string str, int caught, int ticks)
 		}
 	    }
 	    messages[i] = nil;
-	} else {
-	    messages[i] = messages[i][1 ..];
+	    break;
+
+	case 'c':
+	    if (objectd) {
+		objectd->compile_failed(creator(str), str);
+	    }
+	    messages[i] = nil;
+	    break;
+
+	default:
+	    messages[i] = str;
+	    break;
 	}
     }
     str = messages[sz];
@@ -897,7 +913,7 @@ static string atomic_error(string str, int atom, int ticks)
     }
 
     if (trace[atom][TRACE_FUNCTION] != "_compile" ||
-	sscanf(trace[atom][TRACE_PROGNAME], "/kernel/%*s") == 0) {
+	trace[atom][TRACE_PROGNAME] != AUTO) {
 	if (errord) {
 	    errord->atomic_error(str, atom, trace);
 	} else {
