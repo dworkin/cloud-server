@@ -218,7 +218,7 @@ static void cmd_issues(object user, string cmd, string str)
 
 /*
  * NAME:	cmd_upgrade()
- * DESCRIPTION:	upgrade an object and all that depends on it
+ * DESCRIPTION:	upgrade a source file and all that depends on it
  */
 static void cmd_upgrade(object user, string cmd, string str)
 {
@@ -248,7 +248,7 @@ static void cmd_upgrade(object user, string cmd, string str)
 	    if (!atom || sizeof(result) == 0) {
 		sources -= ({ nil });
 		if (sizeof(sources) != 0) {
-		    message("Sources successfully upgraded:\n" +
+		    message("Successfully upgraded:\n" +
 			    break_string(implode(sources, ", "), 0, 2));
 		}
 	    }
