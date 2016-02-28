@@ -158,12 +158,15 @@ private mixed touch_clones(string master)
     for (i = status(ST_OTABSIZE); --i >= 0; ) {
 	obj = find_object(master + i);
 	if (obj) {
-	    if (max == nil && !(obj <- "~/lib/auto")) {
-		return nil;
+	    if (max == nil) {
+		if (obj <- "~/lib/auto") {
+		    max = i;
+		} else {
+		    return nil;
+		}
 	    }
 
 	    call_touch(obj);
-	    max = i;
 	}
     }
 
@@ -227,7 +230,6 @@ static void patcher(object patchtool)
     object obj;
 
     obj = next();
-
     if (obj) {
 	call_out("patcher", 0, patchtool);
 	patchtool->do_patch(obj);
@@ -238,7 +240,7 @@ static void patcher(object patchtool)
  * NAME:	compile()
  * DESCRIPTION:	compile one object
  */
-private void compile(string name, mapping map, object patcher)
+private void compile(string name, mapping map, object patchtool)
 {
     string head, tail;
     object obj;
@@ -248,25 +250,23 @@ private void compile(string name, mapping map, object patcher)
 			     "inherit \"" + head + "/lib/" + tail + "\";\n");
     } else {
 	obj = compile_object(name);
-    }
-
-    if (patcher) {
-	/*
-	 * patch object after compilation
-	 */
-	if (sscanf(name, "%*s/obj/") != 0) {
-	    if (sscanf(name, "/kernel/%*s") == 0 &&
-		name != "/usr/System/obj/objectd") {
-		map[name] = touch_clones(name);
+	if (patchtool) {
+	    /*
+	     * patch object after compilation
+	     */
+	    if (sscanf(name, "%*s/obj/") != 0) {
+		if (sscanf(name, "/kernel/%*s") == 0 &&
+		    name != "/usr/System/obj/objectd") {
+		    map[name] = touch_clones(name);
+		    return;
+		}
+	    } else if (obj && obj <- "~/lib/auto" && call_touch(obj)) {
 		return;
 	    }
-	} else if (obj && obj <- "~/lib/auto") {
-	    call_touch(obj);
-	    return;
 	}
-
-	map[name] = nil;
     }
+
+    map[name] = nil;
 }
 
 /*
@@ -275,7 +275,7 @@ private void compile(string name, mapping map, object patcher)
  */
 private atomic string *recompile(string *sources, mapping *libs,
 				 mapping *leaves, mapping *deps, int atom,
-				 object patcher)
+				 object patchtool)
 {
     int i, j, sz, *issues;
     string name, err, *objects;
@@ -307,7 +307,7 @@ private atomic string *recompile(string *sources, mapping *libs,
 	for (j = 0, sz = sizeof(objects); j < sz; j++) {
 	    /* recompile a leaf object */
 	    name = objects[j];
-	    err = catch(compile(name, map, patcher));
+	    err = catch(compile(name, map, patchtool));
 	    if (err) {
 		int index, k;
 		object user;
@@ -345,12 +345,12 @@ private atomic string *recompile(string *sources, mapping *libs,
 	 */
 	add_atomic_message("#" + implode(objects, "#"));
 	error("Upgrade failed");
-    } else if (patcher) {
+    } else if (patchtool) {
 	/*
 	 * patch affected objects through callout
 	 */
 	patching = leaves;
-	call_out("patcher", 0, patcher);
+	call_out("patcher", 0, patchtool);
     }
     return objects;
 }
@@ -359,13 +359,13 @@ private atomic string *recompile(string *sources, mapping *libs,
  * NAME:	upgrade()
  * DESCRIPTION:	upgrade interface function
  */
-mixed upgrade(string owner, string *sources, int atom, object patcher)
+mixed upgrade(string owner, string *sources, int atom, object patchtool)
 {
     if (SYSTEM()) {
 	rlimits (0; -1) {
 	    int i, j, sz;
 	    string str, *list;
-	    mapping libs, leaves, *depend, *objects;
+	    mapping libs, leaves, *deps, *objects;
 
 	    if (tls_get(TLS_UPGRADE_TASK)) {
 		return "An upgrade was already started.";
@@ -384,7 +384,7 @@ mixed upgrade(string owner, string *sources, int atom, object patcher)
 	    /*
 	     * gather information about the dependencies
 	     */
-	    ({ libs, leaves, depend }) = dependencies(sources);
+	    ({ libs, leaves, deps }) = dependencies(sources);
 	    if (map_sizeof(libs) + map_sizeof(leaves) == 0) {
 		return "No existing issues.";
 	    }
@@ -410,8 +410,8 @@ mixed upgrade(string owner, string *sources, int atom, object patcher)
 	     * recompile leaf objects
 	     */
 	    catch {
-		return recompile(sources, map_values(libs), objects, depend,
-				 atom, patcher);
+		return recompile(sources, map_values(libs), objects, deps, atom,
+				 patchtool);
 	    } : {
 		object user;
 
