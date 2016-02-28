@@ -492,11 +492,12 @@ int **query_inherited(int index)
 
 /*
  * NAME:	forbid_call()
- * DESCRIPTION:	block instantiation of generated leaf objects
+ * DESCRIPTION:	block instantiation of clone masters and generated leaf objects
  */
 int forbid_call(string path)
 {
-    return (sscanf(path, "%*s/@@@/%*s#") == 1);
+    return (sscanf(path, "%*s/obj/%*s#") == 1 ||
+	    sscanf(path, "%*s/@@@/%*s#") == 1);
 }
 
 /*
@@ -583,8 +584,12 @@ void remove_program(string owner, string path, int timestamp, int index)
  * NAME:	inherit_program()
  * DESCRIPTION:	handle inheritance
  */
-mixed inherit_program(string from, string path, int priv)
+string inherit_program(string from, string path, int priv)
 {
+    if (sscanf(path, "%*s/obj/") != 0 || sscanf(path, "%*s/@@@/") != 0 ||
+	sscanf(path, "%*s/sys/") != 0) {
+	return nil;
+    }
     return path;
 }
 

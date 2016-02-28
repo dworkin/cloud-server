@@ -34,18 +34,13 @@ static object clone_object(string path, mixed args...)
 {
     if (path) {
 	path = DRIVER->normalize_path(path);
-	if (sscanf(path, "%*s/lib/") != 0) {
-	    /* let upgrade server generate a leaf object */
-	    path = UPGRADESERVER->generate_leaf(path);
-	} else if (sscanf(path, "%*s/sys/") != 0) {
+	if (sscanf(path, "%*s/obj/") == 0) {
 	    error("Invalid path");
 	}
     }
     ::tls_set(TLS_ARGUMENTS, args);
     return ::clone_object(path);
 }
-
-static void copy() { }		/* default copy function */
 
 /*
  * NAME:	_F_copy()
@@ -54,7 +49,7 @@ static void copy() { }		/* default copy function */
 nomask void _F_copy()
 {
     if (previous_program() == SYSTEMAUTO) {
-	copy();
+	this_object()->copy();
     }
 }
 
@@ -66,11 +61,12 @@ static object new_object(string path, mixed args...)
 {
     if (path) {
 	path = DRIVER->normalize_path(path);
+	if (sscanf(path, "%*s/obj/") != 0 || sscanf(path, "%*s/sys/") != 0) {
+	    error("Invalid path");
+	}
 	if (sscanf(path, "%*s/lib/") != 0) {
 	    /* let upgrade server generate a leaf object */
 	    path = UPGRADESERVER->generate_leaf(path);
-	} else if (sscanf(path, "%*s/sys/") != 0) {
-	    error("Invalid path");
 	}
     }
     ::tls_set(TLS_ARGUMENTS, args);
@@ -95,6 +91,26 @@ static object copy_object()
 }
 
 /*
+ * NAME:	find_object()
+ * DESCRIPTION:	prevent finding clone masters and generated leaf objects by name
+ */
+static object find_object(string path)
+{
+    object obj;
+
+    obj = ::find_object(path);
+    if (obj) {
+	path = object_name(obj);
+	if (sscanf(path, "%*s/obj/%*s#") == 1 ||
+	    sscanf(path, "%*s/@@@/%*s#") == 1) {
+	    return nil;
+	}
+    }
+
+    return obj;
+}
+
+/*
  * NAME:	compile_object()
  * DESCRIPTION:	compile an object
  */
@@ -107,13 +123,18 @@ static object compile_object(string path)
 	if (sscanf(path, "%*s/@@@/") != 0) {
 	    error("Cannot compile leaf object");
 	}
-	if (sscanf(path, "%*s/lib/") + sscanf(path, "%*s/sys/") > 1) {
+	if (sscanf(path, "%*s/lib/") + sscanf(path, "%*s/obj/") +
+	    sscanf(path, "%*s/sys/") > 1) {
 	    error("Ambiguous object");
 	}
     }
     obj = ::compile_object(path);
-    if (obj && sscanf(path, "%*s/sys/") != 0) {
-	call_other(obj, "???");
+    if (obj) {
+	if (sscanf(path, "%*s/obj/") != 0) {
+	    return nil;
+	} else if (sscanf(path, "%*s/sys/") != 0) {
+	    call_other(obj, "???");
+	}
     }
     return obj;
 }
