@@ -163,10 +163,6 @@ static mixed tls_get(string index)
 nomask int _F_touch()
 {
     if (previous_program() == OBJECTSERVER) {
-	if (::tls_get(TLS_UPGRADE_TASK)) {
-	    return TRUE;	/* still upgrading */
-	}
-
 	this_object()->patch();
     }
     return FALSE;

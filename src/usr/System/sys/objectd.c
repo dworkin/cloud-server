@@ -559,6 +559,9 @@ void destruct(string owner, string path)
 int touch(object obj, string func)
 {
     if (previous_object() == driver) {
+	if (tls_get(TLS_UPGRADE_TASK)) {
+	    return TRUE;
+	}
 	return obj->_F_touch();
     }
     return FALSE;
