@@ -71,9 +71,9 @@ private void heirs(int index, mapping known, mapping libs, mapping leaves,
 	     */
 	    map = libs[index / factor];
 	    if (map) {
-		map[path] = index;
+		map[path] = TRUE;
 	    } else {
-		libs[index / factor] = ([ path : index ]);
+		libs[index / factor] = ([ path : TRUE ]);
 	    }
 	    return;
 	}
@@ -90,9 +90,9 @@ private void heirs(int index, mapping known, mapping libs, mapping leaves,
     }
     map = deps[index / factor];
     if (map) {
-	map[path] = index;
+	map[index] = TRUE;
     } else {
-	deps[index / factor] = ([ path : index ]);
+	deps[index / factor] = ([ index : TRUE ]);
     }
 }
 
@@ -317,10 +317,10 @@ private atomic string *recompile(string *sources, mapping *libs,
 		tls_set(TLS_COMPILE_FAILED, nil);
 
 		/* check which upgraded source files are affected */
-		index = issues[j] / factor;
+		index = issues[j];
 		for (k = sizeof(deps); --k >= 0; ) {
-		    map = deps[k][index];
-		    if (map && map[name]) {
+		    map = deps[k][index / factor];
+		    if (map && map[index]) {
 			sources[k] = nil;
 		    }
 		}
