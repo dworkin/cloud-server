@@ -36,7 +36,7 @@ static void create(int size)
     hindex = hmax = 0;
     directory = USR_DIR + "/" + owner;
 
-    driver = find_object(DRIVER);
+    driver = ::find_object(DRIVER);
 }
 
 /*
@@ -220,6 +220,15 @@ static int rsrc_incr(string rowner, string name, mixed index, int incr,
 
 
 /*
+ * NAME:	find_object()
+ * DESCRIPTION:	find object, maskable
+ */
+static object find_object(string path)
+{
+    return ::find_object(path);
+}
+
+/*
  * NAME:	compile_object()
  * DESCRIPTION:	compile_object wrapper
  */
@@ -271,7 +280,7 @@ static int destruct_object(mixed obj)
 	if (lib) {
 	    oowner = driver->creator(path);
 	} else {
-	    obj = find_object(path);
+	    obj = ::find_object(path);
 	    if (!obj) {
 		return FALSE;
 	    }
@@ -888,7 +897,7 @@ static void cmd_code(object user, string cmd, string str)
 
     parsed = parse_code(str);
     name = USR_DIR + "/" + owner + "/_code";
-    obj = find_object(name);
+    obj = ::find_object(name);
     if (obj) {
 	destruct_object(obj);
     }

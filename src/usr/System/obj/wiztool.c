@@ -42,6 +42,15 @@ static void message(string str)
 }
 
 /*
+ * NAME:	find_object()
+ * DESCRIPTION:	find_object wrapper
+ */
+static object find_object(string path)
+{
+    return auto::find_object(path);
+}
+
+/*
  * NAME:	clone_object()
  * DESCRIPTION:	clone_object wrapper
  */
