@@ -186,7 +186,8 @@ static int destruct_object(mixed obj)
 	error("Cannot destruct non-persistent object");
     }
     lib = sscanf(oname, "%*s/lib/");
-    oowner = (lib) ? driver->creator(oname) : obj->query_owner();
+    oowner = (lib || sscanf(oname, "%*s#") == 0) ?
+	      driver->creator(oname) : obj->query_owner();
     if ((sscanf(oname, "/kernel/%*s") != 0 && !lib && !KERNEL()) ||
 	(creator != "System" && owner != oowner)) {
 	error("Cannot destruct object: not owner");
