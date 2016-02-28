@@ -380,7 +380,8 @@ static object new_object(mixed obj, varargs string uid)
 	/*
 	 * check access
 	 */
-	if ((creator != "System" &&
+	if (sscanf(str, "/kernel/%*s") != 0 ||
+	    (creator != "System" &&
 	     !::find_object(ACCESSD)->access(object_name(this_object()), str,
 					     READ_ACCESS))) {
 	    error("Access denied");
