@@ -118,11 +118,10 @@ static mixed *rsrc_get(string owner, string name)
  * DESCRIPTION:	increment or decrement a resource, returning 1 if succeeded,
  *		0 if failed
  */
-static int rsrc_incr(string owner, string name, object obj, int incr,
-		     varargs int force)
+static int rsrc_incr(string owner, string name, int incr, varargs int force)
 {
-    if (!name || (obj && sscanf(object_name(obj), "%*s#-1") != 0)) {
+    if (!name) {
 	error("Bad arguments for rsrc_incr");
     }
-    return rsrcd->rsrc_incr(owner, name, obj, incr, force);
+    return rsrcd->rsrc_incr(owner, name, incr, force);
 }

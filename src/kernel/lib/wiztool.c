@@ -207,14 +207,13 @@ static mixed *rsrc_get(string owner, string name)
  * DESCRIPTION:	increment or decrement a resource, returning TRUE if succeeded,
  *		FALSE if failed
  */
-static int rsrc_incr(string rowner, string name, mixed index, int incr,
-		     varargs int force)
+static int rsrc_incr(string rowner, string name, int incr, varargs int force)
 {
     if (!access(owner, "/", FULL_ACCESS)) {
 	message("Permission denied.\n");
 	return FALSE;
     } else {
-	return ::rsrc_incr(rowner, name, index, incr, force);
+	return ::rsrc_incr(rowner, name, incr, force);
     }
 }
 

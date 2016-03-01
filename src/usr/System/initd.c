@@ -49,7 +49,7 @@ static void create()
     compile_object("/lib/strbuffer");
 
     /* Domain stuff */
-    rsrc_incr(nil, "fileblocks", nil,
+    rsrc_incr(nil, "fileblocks",
 	      DRIVER->file_size("/lib", TRUE) +
 	      DRIVER->file_size("/obj", TRUE), TRUE);
     domains = get_dir("/usr/[A-Z]*")[0];
@@ -57,7 +57,7 @@ static void create()
 	domain = domains[i];
 	if (domain != "System" && file_info("/usr/" + domain + "/initd.c")) {
 	    add_owner(domain);
-	    rsrc_incr(domain, "fileblocks", nil,
+	    rsrc_incr(domain, "fileblocks",
 		      DRIVER->file_size("/usr/" + domain, TRUE), TRUE);
 	    load("/usr/" + domain + "/initd");
 	}
@@ -91,7 +91,7 @@ void reboot()
 	string *owners;
 	int i, sz;
 
-	rsrc_incr(nil, "fileblocks", nil,
+	rsrc_incr(nil, "fileblocks",
 		  DRIVER->file_size("/doc", TRUE) +
 		  DRIVER->file_size("/include", TRUE) +
 		  DRIVER->file_size("/lib", TRUE) +
@@ -101,7 +101,7 @@ void reboot()
 		  TRUE);
 	owners = query_owners();
 	for (i = 1, sz = sizeof(owners); i < sz; i++) {
-	    rsrc_incr(owners[i], "fileblocks", nil,
+	    rsrc_incr(owners[i], "fileblocks",
 		      DRIVER->file_size("/usr/" + owners[i], TRUE) -
 		      rsrc_get(owners[i], "fileblocks")[RSRC_USAGE],
 		      TRUE);

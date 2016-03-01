@@ -22,7 +22,6 @@ private void badarg(int n, string func)
 
 
 private string creator, owner;	/* creator and owner of this object */
-private mapping resources;	/* resources associated with this object */
 
 /*
  * NAME:	query_owner()
@@ -31,23 +30,6 @@ private mapping resources;	/* resources associated with this object */
 nomask string query_owner()
 {
     return owner;
-}
-
-/*
- * NAME:	_F_rsrc_incr()
- * DESCRIPTION:	increase/decrease a resource associated with this object
- */
-nomask void _F_rsrc_incr(string rsrc, int incr)
-{
-    if (previous_program() == RSRCOBJ) {
-	if (!resources) {
-	    resources = ([ rsrc : incr ]);
-	} else if (!resources[rsrc]) {
-	    resources[rsrc] = incr;
-	} else if (!(resources[rsrc] += incr)) {
-	    resources[rsrc] = nil;
-	}
-    }
 }
 
 void create() { }	/* default high-level create function */
@@ -99,31 +81,6 @@ nomask void _F_create()
 # endif
 	}
 	create();
-    }
-}
-
-/*
- * NAME:	_F_destruct()
- * DESCRIPTION:	prepare object for being destructed
- */
-nomask void _F_destruct()
-{
-    if (previous_program() == AUTO && resources) {
-	object rsrcd;
-	string *names;
-	int *values;
-	int i;
-
-	/*
-	 * decrease resources associated with object
-	 */
-	rsrcd = ::find_object(RSRCD);
-	names = map_indices(resources);
-	values = map_values(resources);
-	i = sizeof(names);
-	while (--i >= 0) {
-	    rsrcd->rsrc_incr(owner, names[i], this_object(), -values[i]);
-	}
     }
 }
 
@@ -198,12 +155,9 @@ static int destruct_object(mixed obj)
 	    /*
 	     * non-clones are handled by driver->remove_program()
 	     */
-	    ::find_object(RSRCD)->rsrc_incr(oowner, "objects", nil, -1);
+	    ::find_object(RSRCD)->rsrc_incr(oowner, "objects", -1);
 	} else {
 	    driver->destruct(object_name(obj), oowner);
-	}
-	if (!lib) {
-	    obj->_F_destruct();
 	}
 	::destruct_object(obj);
     }
@@ -224,7 +178,7 @@ private atomic object _compile(object driver, string path, string uid,
     add = !::find_object(path);
     obj = ::compile_object(path, source...);
     if (add) {
-	::find_object(RSRCD)->rsrc_incr(uid, "objects", nil, 1);
+	::find_object(RSRCD)->rsrc_incr(uid, "objects", 1);
     }
     driver->compile(path, uid, source);
     return obj;
@@ -283,7 +237,7 @@ static object compile_object(string path, string source...)
 static atomic private object _clone(string path, string uid, object obj)
 {
     if (path != RSRCOBJ) {
-	::find_object(RSRCD)->rsrc_incr(uid, "objects", nil, 1);
+	::find_object(RSRCD)->rsrc_incr(uid, "objects", 1);
     }
     TLSVAR(TLS(), TLS_ARGUMENT) = uid;
     return ::clone_object(obj);
@@ -823,7 +777,7 @@ static int write_file(string path, string str, varargs int offset)
 	rlimits (-1; -1) {
 	    result = ::write_file(path, str, offset);
 	    if (result != 0 && (size=driver->file_size(path) - size) != 0) {
-		rsrcd->rsrc_incr(fcreator, "fileblocks", nil, size);
+		rsrcd->rsrc_incr(fcreator, "fileblocks", size);
 	    }
 	}
     } : error(TLSVAR(TLS(), TLS_ARGUMENT));
@@ -861,7 +815,7 @@ static int remove_file(string path)
 	    result = ::remove_file(path);
 	    if (result != 0 && size != 0) {
 		::find_object(RSRCD)->rsrc_incr(driver->creator(path),
-						"fileblocks", nil, -size);
+						"fileblocks", -size);
 	    }
 	}
     } : error(TLSVAR(TLS(), TLS_ARGUMENT));
@@ -913,8 +867,8 @@ static int rename_file(string from, string to)
 	rlimits (-1; -1) {
 	    result = ::rename_file(from, to);
 	    if (result != 0 && fcreator != tcreator) {
-		rsrcd->rsrc_incr(tcreator, "fileblocks", nil, size);
-		rsrcd->rsrc_incr(fcreator, "fileblocks", nil, -size);
+		rsrcd->rsrc_incr(tcreator, "fileblocks", size);
+		rsrcd->rsrc_incr(fcreator, "fileblocks", -size);
 	    }
 	}
     } : error(TLSVAR(TLS(), TLS_ARGUMENT));
@@ -1061,7 +1015,7 @@ static int make_dir(string path)
 	rlimits (-1; -1) {
 	    result = ::make_dir(path);
 	    if (result != 0) {
-		rsrcd->rsrc_incr(fcreator, "fileblocks", nil, 1);
+		rsrcd->rsrc_incr(fcreator, "fileblocks", 1);
 	    }
 	}
     } : error(TLSVAR(TLS(), TLS_ARGUMENT));
@@ -1097,7 +1051,7 @@ static int remove_dir(string path)
 	    result = ::remove_dir(path);
 	    if (result != 0) {
 		::find_object(RSRCD)->rsrc_incr(driver->creator(path + "/"),
-						"fileblocks", nil, -1);
+						"fileblocks", -1);
 	    }
 	}
     } : error(TLSVAR(TLS(), TLS_ARGUMENT));
@@ -1164,7 +1118,7 @@ static void save_object(string path)
 	rlimits (-1; -1) {
 	    ::save_object(path);
 	    if ((size=driver->file_size(path) - size) != 0) {
-		rsrcd->rsrc_incr(fcreator, "fileblocks", nil, size);
+		rsrcd->rsrc_incr(fcreator, "fileblocks", size);
 	    }
 	}
     } : error(TLSVAR(TLS(), TLS_ARGUMENT));
@@ -1201,7 +1155,7 @@ static string editor(varargs string cmd)
 		::find_object(USERD)->remove_editor(this_object());
 	    }
 	    if (info) {
-		rsrcd->rsrc_incr(driver->creator(info[0]), "fileblocks", nil,
+		rsrcd->rsrc_incr(driver->creator(info[0]), "fileblocks",
 				 driver->file_size(info[0]) - info[1]);
 	    }
 	}

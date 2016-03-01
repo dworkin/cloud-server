@@ -212,7 +212,7 @@ void compiling(string path)
 		TLSVAR(tls, TLS_PUT_ATOMIC) = messages;
 		error(err);
 	    }
-	    rsrcd->rsrc_incr("System", "objects", nil, 1);
+	    rsrcd->rsrc_incr("System", "objects", 1);
 	    if (objectd) {
 		objectd->compile("System", AUTO, TLSVAR(tls, TLS_SOURCE),
 				 TLSVAR(tls, TLS_INHERIT)[1 ..]...);
@@ -336,11 +336,11 @@ private void _initialize(mapping tls)
 
     /* create initial resource owners */
     rsrcd->add_owner("System");
-    rsrcd->rsrc_incr("System", "fileblocks", nil,
+    rsrcd->rsrc_incr("System", "fileblocks",
 		     dir_size("/kernel") +
 		     file_size(USR_DIR + "/System", TRUE));
     rsrcd->add_owner(nil);	/* Ecru */
-    rsrcd->rsrc_incr(nil, "fileblocks", nil,
+    rsrcd->rsrc_incr(nil, "fileblocks",
 		     file_size("/doc", TRUE) + file_size("/include", TRUE));
 
     /* load remainder of manager objects */
@@ -349,13 +349,13 @@ private void _initialize(mapping tls)
     call_other(load(DEFAULT_WIZTOOL), "???");
 
     /* correct object count */
-    rsrcd->rsrc_incr("System", "objects", nil, 7);
+    rsrcd->rsrc_incr("System", "objects", 7);
 
     /* initialize other users as resource owners */
     users = (accessd->query_users() - ({ "System" })) | ({ "admin" });
     for (i = sizeof(users); --i >= 0; ) {
 	rsrcd->add_owner(users[i]);
-	rsrcd->rsrc_incr(users[i], "fileblocks", nil,
+	rsrcd->rsrc_incr(users[i], "fileblocks",
 			 file_size(USR_DIR + "/" + users[i], TRUE));
     }
 
@@ -606,7 +606,7 @@ static object inherit_program(string from, string path, int priv)
 	    TLSVAR(tls, TLS_PUT_ATOMIC) = messages;
 	    error(err);
 	}
-	rsrcd->rsrc_incr(creator, "objects", nil, 1);
+	rsrcd->rsrc_incr(creator, "objects", 1);
 	if (objectd) {
 	    TLSVAR(tls, TLS_SOURCE)[path + ".c"] = (str) ? str : path + ".c";
 	    objectd->compile(creator, path, TLSVAR(tls, TLS_SOURCE),
@@ -674,7 +674,7 @@ static void remove_program(string path, int timestamp, int index)
 
     creator = creator(path);
     if (path != RSRCOBJ) {
-	rsrcd->rsrc_incr(creator, "objects", nil, -1);
+	rsrcd->rsrc_incr(creator, "objects", -1);
     }
     if (objectd) {
 	objectd->remove_program(creator, path, timestamp, index);

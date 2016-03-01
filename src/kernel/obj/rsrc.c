@@ -163,58 +163,28 @@ mixed *rsrc_get(string name, int *grsrc)
  * DESCRIPTION:	increment or decrement a resource, return 1 if successful,
  *		0 if the maximum would be exceeded
  */
-int rsrc_incr(string name, object obj, int incr, int *grsrc, int force)
+int rsrc_incr(string name, int incr, int *grsrc, int force)
 {
     if (previous_program() == RSRCD && incr != 0) {
-	if (!obj) {
-	    mapping tls, map, pending;
-	    mixed *arr;
+	mapping tls, map, pending;
+	mixed *arr;
 
-	    tls = TLS();
-	    map = TLSVAR(tls, TLS_RESOURCE);
-	    if (!map) {
-		map = TLSVAR(tls, TLS_RESOURCE) = ([ ]);
-	    }
-	    pending = map[this_object()];
-	    if (!pending) {
-		pending = map[this_object()] =
-			  ([ name : ({ (float) incr, grsrc }) ]);
-		call_out("delayed_incr", 0, pending);
-	    } else {
-		arr = pending[name];
-		if (!arr) {
-		    pending[name] = ({ (float) incr, grsrc });
-		} else {
-		    arr[0] += (float) incr;
-		}
-	    }
+	tls = TLS();
+	map = TLSVAR(tls, TLS_RESOURCE);
+	if (!map) {
+	    map = TLSVAR(tls, TLS_RESOURCE) = ([ ]);
+	}
+	pending = map[this_object()];
+	if (!pending) {
+	    pending = map[this_object()] =
+		      ([ name : ({ (float) incr, grsrc }) ]);
+	    call_out("delayed_incr", 0, pending);
 	} else {
-	    mixed *rsrc;
-	    int max;
-
-	    rsrc = resources[name];
-	    if (!rsrc) {
-		/* new resource */
-		rsrc = resources[name] = ({ 0, -1, 0 });
-		max = grsrc[GRSRC_MAX];
+	    arr = pending[name];
+	    if (!arr) {
+		pending[name] = ({ (float) incr, grsrc });
 	    } else {
-		/* existing resource */
-		max = ((int) rsrc[RSRC_MAX] >= 0) ?
-		       rsrc[RSRC_MAX] : grsrc[GRSRC_MAX];
-	    }
-
-	    if (!force && incr > 0 && max >= 0 &&
-		(incr > max || (int) rsrc[RSRC_USAGE] > max - incr)) {
-		return FALSE;	/* would exceed limit */
-	    }
-
-	    rlimits (-1; -1) {
-		catch {
-		    obj->_F_rsrc_incr(name, incr);
-		    rsrc[RSRC_USAGE] += incr;
-		} : {
-		    return FALSE;	/* error: increment failed */
-		}
+		arr[0] += (float) incr;
 	    }
 	}
 
