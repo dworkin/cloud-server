@@ -160,10 +160,9 @@ mixed *rsrc_get(string name, int *grsrc)
 
 /*
  * NAME:	rsrc_incr()
- * DESCRIPTION:	increment or decrement a resource, return 1 if successful,
- *		0 if the maximum would be exceeded
+ * DESCRIPTION:	increment or decrement a resource
  */
-int rsrc_incr(string name, int incr, int *grsrc, int force)
+void rsrc_incr(string name, int incr, int *grsrc, int force)
 {
     if (previous_program() == RSRCD && incr != 0) {
 	mapping tls, map, pending;
@@ -187,8 +186,6 @@ int rsrc_incr(string name, int incr, int *grsrc, int force)
 		arr[0] += (float) incr;
 	    }
 	}
-
-	return TRUE;
     }
 }
 

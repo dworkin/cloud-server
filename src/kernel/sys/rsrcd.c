@@ -225,10 +225,9 @@ mixed *rsrc_get(string owner, string name)
 
 /*
  * NAME:	rsrc_incr()
- * DESCRIPTION:	increment or decrement a resource, returning TRUE if succeeded,
- *		FALSE if failed
+ * DESCRIPTION:	increment or decrement a resource
  */
-int rsrc_incr(string owner, string name, int incr, varargs int force)
+void rsrc_incr(string owner, string name, int incr, varargs int force)
 {
     if (KERNEL()) {
 	object obj;
@@ -240,7 +239,7 @@ int rsrc_incr(string owner, string name, int incr, varargs int force)
 	if (!(rsrc=resources[name])) {
 	    error("No such resource: " + name);
 	}
-	return obj->rsrc_incr(name, incr, rsrc, force);
+	obj->rsrc_incr(name, incr, rsrc, force);
     }
 }
 
