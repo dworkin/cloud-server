@@ -825,17 +825,27 @@ private void _runtime_error(mapping tls, string str, int caught, int ticks,
  */
 static string runtime_error(string str, int caught, int ticks)
 {
+    mixed **trace;
+    mapping tls;
     object user;
     string *messages;
     int i, sz;
-    mixed **trace;
-    mapping tls;
 
+    trace = call_trace();
+    if (sizeof(trace) == 1) {
+	/* top-level error */
+	tls = ([ ]);
+    } else {
+	tls = trace[1][TRACE_FIRSTARG];
+	trace[1][TRACE_FIRSTARG] = nil;
+    }
     user = this_user();
     if (user) {
 	user = user->query_user();
     }
-    messages = explode(str, "\0");
+
+    messages = TLSVAR(tls, TLS_PUT_ATOMIC);
+    messages = explode(str, "\0")[(messages) ? sizeof(messages) : 0 ..];
     for (i = 0, sz = sizeof(messages) - 1; i < sz; i++) {
 	string file;
 	int line;
@@ -868,24 +878,15 @@ static string runtime_error(string str, int caught, int ticks)
 	}
     }
     str = messages[sz];
-    messages[i] = nil;
+    messages[sz] = nil;
 
-    trace = call_trace();
-
-    if (sizeof(trace) == 1) {
-	/* top-level error */
-	tls = ([ ]);
-    } else {
-	tls = trace[1][TRACE_FIRSTARG];
-	trace[1][TRACE_FIRSTARG] = nil;
-	TLSVAR(tls, TLS_GET_ATOMIC) = messages - ({ nil });
-	if (caught <= 1) {
-	    caught = 0;		/* ignore top-level catch */
-	} else if (ticks < 0 && sscanf(trace[caught - 1][TRACE_PROGNAME],
-				       "/kernel/%*s") != 0 &&
-		   trace[caught - 1][TRACE_FUNCTION] != "cmd_code") {
-	    return TLSVAR(tls, TLS_ARGUMENT) = str;
-	}
+    TLSVAR(tls, TLS_GET_ATOMIC) = messages - ({ nil });
+    if (caught <= 1) {
+	caught = 0;		/* ignore top-level catch */
+    } else if (ticks < 0 && sscanf(trace[caught - 1][TRACE_PROGNAME],
+				   "/kernel/%*s") != 0 &&
+	       trace[caught - 1][TRACE_FUNCTION] != "cmd_code") {
+	return TLSVAR(tls, TLS_ARGUMENT) = str;
     }
 
     _runtime_error(tls, str, caught, ticks, trace, user);
