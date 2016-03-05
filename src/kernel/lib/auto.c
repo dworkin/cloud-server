@@ -234,7 +234,7 @@ static object compile_object(string path, string source...)
  * NAME:	_clone()
  * DESCRIPTION:	reversible low-level clone
  */
-static atomic private object _clone(string path, string uid, object obj)
+private atomic object _clone(string path, string uid, object obj)
 {
     if (path != RSRCOBJ) {
 	::find_object(RSRCD)->rsrc_incr(uid, "objects", 1);
