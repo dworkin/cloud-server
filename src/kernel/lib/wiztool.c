@@ -1026,7 +1026,7 @@ static void cmd_clone(object user, string cmd, string str)
 	break;
     }
 
-    if (sscanf(str, "%*s#") != 0 || sscanf(str, "%*s/lib/") != 0) {
+    if (sscanf(str, "%*s#") != 0) {
 	message("Not a master object.\n");
     } else if (status(str, O_INDEX) == nil) {
 	message("No such object.\n");
@@ -1091,10 +1091,9 @@ static void cmd_new(object user, string cmd, string str)
 	break;
     }
 
-    if ((sscanf(str, "%*s#%d", num) != 0 && num != -1) ||
-	sscanf(str, "%*s/lib/") != 0) {
+    if (sscanf(str, "%*s#%d", num) != 0 && num != -1) {
 	message("Not a lightweight master object.\n");
-    } else if (!obj) {
+    } else if (status(str, O_INDEX) == nil) {
 	message("No such object.\n");
     } else {
 	if (num != -1) {
