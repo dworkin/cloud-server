@@ -333,7 +333,7 @@ int update_ticks(mixed *limits, int ticks)
 object initd()
 {
     if (previous_program() == DRIVER) {
-	return compile_object(USR_DIR + "/System/initd");
+	return compile_object("/usr/System/initd");
     }
 }
 

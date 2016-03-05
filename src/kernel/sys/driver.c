@@ -24,7 +24,7 @@ object errord;		/* error manager object */
 string creator(string file)
 {
     return (sscanf(file, "/kernel/%*s") != 0) ? "System" :
-	    (sscanf(file, USR_DIR + "/%s/", file) != 0) ? file : nil;
+	    (sscanf(file, "/usr/%s/", file) != 0) ? file : nil;
 }
 
 /*
@@ -49,9 +49,9 @@ string normalize_path(string file, varargs string dir, string creator)
 	    creator = creator(object_name(previous_object()));
 	}
 	if (creator && (strlen(file) == 1 || file[1] == '/')) {
-	    file = USR_DIR + "/" + creator + file[1 ..];
+	    file = "/usr/" + creator + file[1 ..];
 	} else {
-	    file = USR_DIR + "/" + file[1 ..];
+	    file = "/usr/" + file[1 ..];
 	}
 	/* fall through */
     case '/':
@@ -338,7 +338,7 @@ private void _initialize(mapping tls)
     rsrcd->add_owner("System");
     rsrcd->rsrc_incr("System", "fileblocks",
 		     dir_size("/kernel") +
-		     file_size(USR_DIR + "/System", TRUE));
+		     file_size("/usr/System", TRUE));
     rsrcd->add_owner(nil);	/* Ecru */
     rsrcd->rsrc_incr(nil, "fileblocks",
 		     file_size("/doc", TRUE) + file_size("/include", TRUE));
@@ -356,11 +356,11 @@ private void _initialize(mapping tls)
     for (i = sizeof(users); --i >= 0; ) {
 	rsrcd->add_owner(users[i]);
 	rsrcd->rsrc_incr(users[i], "fileblocks",
-			 file_size(USR_DIR + "/" + users[i], TRUE));
+			 file_size("/usr/" + users[i], TRUE));
     }
 
     /* system-specific initialization */
-    if (file_size(USR_DIR + "/System/initd.c") != 0) {
+    if (file_size("/usr/System/initd.c") != 0) {
 	initd = rsrcd->initd();
 	call_other(initd, "???");
     }

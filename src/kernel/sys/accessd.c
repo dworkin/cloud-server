@@ -69,7 +69,7 @@ int access(string user, string file, int type)
 	mixed access;
 	int i, sz;
 
-	sscanf(file, USR_DIR + "/%s/%s/", dir, str);
+	sscanf(file, "/usr/%s/%s/", dir, str);
 	if (type == READ_ACCESS && (!dir || gaccess[dir] || str == "api") &&
 	    sscanf(file, "/kernel/data/%*s") == 0) {
 	    /*
@@ -79,7 +79,7 @@ int access(string user, string file, int type)
 	    return TRUE;
 	}
 	if (user == dir ||
-	    (user && sscanf(user, USR_DIR + "/%s/", str) != 0 && str == dir)) {
+	    (user && sscanf(user, "/usr/%s/", str) != 0 && str == dir)) {
 	    /*
 	     * full access to own/owner directory
 	     */
@@ -146,7 +146,7 @@ void remove_user(string user)
 		uaccess[user] = nil;
 		users = map_indices(uaccess);
 		values = map_values(uaccess);
-		user = USR_DIR + "/" + user;
+		user = "/usr/" + user;
 		for (i = sizeof(values); --i >= 0; ) {
 		    access = values[i];
 		    if (typeof(access) == T_MAPPING) {

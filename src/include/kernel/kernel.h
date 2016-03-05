@@ -7,7 +7,7 @@
  * privilege levels
  */
 # define KERNEL()	sscanf(previous_program(), "/kernel/%*s")
-# define SYSTEM()	sscanf(previous_program(), USR_DIR + "/System/%*s")
+# define SYSTEM()	sscanf(previous_program(), "/usr/System/%*s")
 
 /*
  * kernel TLS

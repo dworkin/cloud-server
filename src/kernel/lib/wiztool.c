@@ -34,7 +34,7 @@ static void create(int size)
 
     history = allocate(hsize = size);
     hindex = hmax = 0;
-    directory = USR_DIR + "/" + owner;
+    directory = "/usr/" + owner;
 
     driver = ::find_object(DRIVER);
 }
@@ -894,7 +894,7 @@ static void cmd_code(object user, string cmd, string str)
     }
 
     parsed = parse_code(str);
-    name = USR_DIR + "/" + owner + "/_code";
+    name = "/usr/" + owner + "/_code";
     obj = ::find_object(name);
     if (obj) {
 	destruct_object(obj);
@@ -903,7 +903,7 @@ static void cmd_code(object user, string cmd, string str)
 	return;
     }
 
-    str = USR_DIR + "/" + owner + "/include/code.h";
+    str = "/usr/" + owner + "/include/code.h";
     if (file_info(str)) {
 	str = "# include \"~/include/code.h\"\n";
     } else {
@@ -1529,9 +1529,9 @@ static void cmd_access(object user, string cmd, string str)
     }
 
     if (str == "global") {
-	str = implode(query_global_access(), "\n " + USR_DIR + "/");
+	str = implode(query_global_access(), "\n " + "/usr/");
 	if (strlen(str) != 0) {
-	    message("Global read access:\n " + USR_DIR + "/" + str + "\n");
+	    message("Global read access:\n " + "/usr/" + str + "\n");
 	}
     } else if (sizeof(query_users() & ({ str })) != 0) {
 	access = query_user_access(str);
@@ -1618,10 +1618,8 @@ static void cmd_grant(object user, string cmd, string str)
 	/*
 	 * global access
 	 */
-	if (sscanf(str, USR_DIR + "/%s", str) == 0 || sscanf(str, "%*s/") != 0)
-	{
-	    message("Global read access is for directories under " + USR_DIR +
-		    " only.\n");
+	if (sscanf(str, "/usr/%s", str) == 0 || sscanf(str, "%*s/") != 0) {
+	    message("Global read access is for directories under /usr only.\n");
 	} else if (sizeof(query_global_access() & ({ str })) != 0) {
 	    message("That global access already exists.\n");
 	} else {
@@ -1640,7 +1638,7 @@ static void cmd_grant(object user, string cmd, string str)
 	} else {
 	    ::add_user(who);
 	    ::add_owner(who);
-	    ::make_dir(USR_DIR + "/" + who);
+	    ::make_dir("/usr/" + who);
 	}
     } else {
 	/*
@@ -1680,10 +1678,8 @@ static void cmd_ungrant(object user, string cmd, string str)
 	/*
 	 * global access
 	 */
-	if (sscanf(str, USR_DIR + "/%s", str) == 0 || sscanf(str, "%*s/") != 0)
-	{
-	    message("Global read access is for directories under " + USR_DIR +
-		    " only.\n");
+	if (sscanf(str, "/usr/%s", str) == 0 || sscanf(str, "%*s/") != 0) {
+	    message("Global read access is for directories under /usr only.\n");
 	} else if (sizeof(query_global_access() & ({ str })) == 0) {
 	    message("That global access does not exist.\n");
 	} else {

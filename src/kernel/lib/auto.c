@@ -72,7 +72,7 @@ nomask void _F_create()
 
 # ifdef CREATOR
 	    cname = function_object(CREATOR, this_object());
-	    if (cname && sscanf(cname, USR_DIR + "/System/%*s") != 0) {
+	    if (cname && sscanf(cname, "/usr/System/%*s") != 0) {
 		/* extra initialisation function */
 		if (call_other(this_object(), CREATOR)) {
 		    return;
