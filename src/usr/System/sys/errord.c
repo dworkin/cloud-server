@@ -152,7 +152,7 @@ void compile_error(string file, int line, string error)
 
 	str = file + ", " + line + ": " + error;
 	if (auto::tls_get(TLS_COMPILE_ERRORS)) {
-	    add_atomic_message(str);
+	    send_atomic_message(str);
 	}
 	str += "\n";
 	driver->message(str);

@@ -2,7 +2,7 @@ NAME
 	compile_object - compile an object
 
 SYNOPSIS
-	object compile_object(string file, varargs string source)
+	object compile_object(string file, string source...)
 
 
 DESCRIPTION

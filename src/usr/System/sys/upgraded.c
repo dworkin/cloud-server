@@ -326,7 +326,7 @@ private atomic string *recompile(string *sources, mapping *libs,
 		}
 
 		if (atom) {
-		    add_atomic_message(err);
+		    send_atomic_message(err);
 		} else if ((user=this_user())) {
 		    user->message(MSG_FORMATTED, err + "\n");
 		}
@@ -343,7 +343,7 @@ private atomic string *recompile(string *sources, mapping *libs,
 	/*
 	 * some objects could not be compiled -- fail atomically
 	 */
-	add_atomic_message("#" + implode(objects, "#"));
+	send_atomic_message("#" + implode(objects, "#"));
 	error("Upgrade failed");
     } else if (patchtool) {
 	/*
@@ -415,7 +415,7 @@ mixed upgrade(string owner, string *sources, int atom, object patchtool)
 	    } : {
 		object user;
 
-		list = get_atomic_messages();
+		list = retrieve_atomic_messages();
 		sz = sizeof(list);
 		if (sz != 0) {
 		    str = list[sz - 1];

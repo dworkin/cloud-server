@@ -835,15 +835,15 @@ static string runtime_error(string str, int caught, int ticks)
     if (user) {
 	user = user->query_user();
     }
-    messages = explode(str, "\n");
+    messages = explode(str, "\0");
     for (i = 0, sz = sizeof(messages) - 1; i < sz; i++) {
 	string file;
 	int line;
 
 	str = messages[i][1 ..];
 	switch (messages[i][0]) {
-	case '\0':
-	    sscanf(str, "%s\0%d\0%s", file, line, str);
+	case 'e':
+	    sscanf(str, "%s#%d#%s", file, line, str);
 	    if (errord) {
 		errord->compile_error(file, line, str);
 	    } else {
@@ -907,7 +907,7 @@ static string atomic_error(string str, int atom, int ticks)
     trace = call_trace();
     messages = TLSVAR(trace[1][TRACE_FIRSTARG], TLS_PUT_ATOMIC);
     if (messages) {
-	mesg = implode(messages, "\n") + "\n" + str;
+	mesg = implode(messages, "\0") + "\0" + str;
     } else {
 	mesg = str;
     }
@@ -973,7 +973,7 @@ static void compile_error(string file, int line, string err)
     string *mesg, *messages;
     mapping tls;
 
-    mesg = ({ "\0" + file + "\0" + line + "\0" + err });
+    mesg = ({ "e" + file + "#" + line + "#" + err });
     tls = TLS();
     messages = TLSVAR(tls, TLS_PUT_ATOMIC);
     if (messages) {

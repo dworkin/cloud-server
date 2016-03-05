@@ -1189,16 +1189,16 @@ static mixed tls_get(mixed index)
 }
 
 /*
- * NAME:	add_atomic_message()
+ * NAME:	send_atomic_message()
  * DESCRIPTION:	add a message to be passed on through an atomic error
  */
-static void add_atomic_message(string str)
+static void send_atomic_message(string str)
 {
     mapping tls;
     string *mesg, *messages;
 
-    if (!str || sscanf(str, "*%s\n") != 0) {
-	badarg(1, "add_atomic_message");
+    if (!str || sscanf(str, "*%s\0") != 0) {
+	badarg(1, "send_atomic_message");
     }
 
     mesg = ({ "." + str });
@@ -1213,10 +1213,10 @@ static void add_atomic_message(string str)
 }
 
 /*
- * NAME:	get_atomic_messages()
+ * NAME:	retrieve_atomic_messages()
  * DESCRIPTION:	retrieve messages after an atomic error
  */
-static string *get_atomic_messages()
+static string *retrieve_atomic_messages()
 {
     mapping tls;
     string *messages;
@@ -1233,7 +1233,7 @@ static string *get_atomic_messages()
  */
 static void error(string str)
 {
-    if (!str || sscanf(str, "%*s\n") != 0) {
+    if (!str || sscanf(str, "%*s\0") != 0) {
 	badarg(1, "error");
     }
     ::error(str);
