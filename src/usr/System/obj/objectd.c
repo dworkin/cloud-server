@@ -168,10 +168,12 @@ void add_object(mixed files, int index, int *list)
 	if (typeof(files) == T_STRING) {
 	    sscanf(files, "/usr/%*s/%s", files);
 	    path = files;
-	} else if (creator) {
-	    path = "/usr/" + creator + "/%s";
-	    for (i = sizeof(files); --i >= 0; ) {
-		sscanf(files[i], path, files[i]);
+	} else {
+	    if (creator) {
+		path = "/usr/" + creator + "/%s";
+		for (i = sizeof(files); --i >= 0; ) {
+		    sscanf(files[i], path, files[i]);
+		}
 	    }
 	    path = files[0];
 	}
