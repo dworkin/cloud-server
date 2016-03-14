@@ -17,6 +17,7 @@ nomask int _F_init()
 	mixed *args;
 
 	args = ::tls_get(TLS_ARGUMENTS);
+	::tls_set(TLS_ARGUMENTS, nil);
 	if (args) {
 	    create(args...);
 	} else {
