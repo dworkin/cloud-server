@@ -35,6 +35,8 @@ void runtime_error(string error, int caught, mixed **trace)
 	mixed *ftrace, *lines;
 	object user;
 
+	auto::tls_set(TLS_ARGUMENTS, nil);
+
 	if (caught != 0) {
 	    error += " [caught]";
 	}
