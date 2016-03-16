@@ -1,4 +1,4 @@
-# include <string.h>
+# include <String.h>
 # include <status.h>
 # include <type.h>
 

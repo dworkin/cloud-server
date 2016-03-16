@@ -1,2 +1,2 @@
-# define STRING		"/lib/string"
+# define STRING		"/lib/String"
 # define String		object STRING

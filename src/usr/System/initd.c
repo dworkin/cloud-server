@@ -47,7 +47,7 @@ static void create()
     compile_object("/sys/utf8encode");
     compile_object("/sys/utf8decode");
     compile_object("/lib/strbuffer");
-    compile_object("/lib/string");
+    compile_object("/lib/String");
 
     /* Domain stuff */
     rsrc_incr(nil, "fileblocks",
