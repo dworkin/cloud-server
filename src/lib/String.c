@@ -293,6 +293,7 @@ private int *buildUTF8(string *data, int bufMax, int strMax)
 static void create(mixed data, varargs string utf8)
 {
     int bufMax, strMax, index, byteOffset, charOffset;
+    string remainder;
 
     if (utf8 && utf8 != "UTF8") {
 	error("Bad encoding");
@@ -307,15 +308,15 @@ static void create(mixed data, varargs string utf8)
 	    bytes = ({ data, strlen(data) });
 	    chars = ({ nil, bytes[1] });
 	} else {
-	    data = UTF8DECODE->decode(data);
-	    if (!data || data[1] != "") {
+	    ({ data, remainder }) = UTF8DECODE->decode(data);
+	    if (!data || remainder != "") {
 		error("Invalid UTF8 sequence");
 	    }
 	    bytes = allocate(INITIAL_SIZE);
 	    chars = allocate(INITIAL_SIZE);
 	    chars[1] = bytes[1] = 0;
 	    ({ index, byteOffset, charOffset }) =
-		appendChars(data[0], 0, 0, 0, bufMax, strMax);
+		appendChars(data, 0, 0, 0, bufMax, strMax);
 	}
 	break;
 
@@ -360,18 +361,29 @@ int length()
 }
 
 /*
- * NAME:	index()
- * DESCRIPTION:	return an index descriptor for the string
- *		({ bufIndex, buffer, offset, index })
- *		offset == nil: buffer is a string or *int
- *		offset != nil: buffer is an array of strings or *int
+ * NAME:	isBytes()
+ * DESCRIPTION:	return TRUE if the string contains bytes only
  */
-private mixed *index(int index, varargs int low)
+int isBytes()
 {
-    int high, mid, start;
+    return (chars[0] == nil);
+}
+
+/*
+ * NAME:	[]
+ * DESCRIPTION:	index a string
+ */
+static int operator[] (int index)
+{
+    int low, high, mid, offset;
     mixed *buffer;
 
+    if (index < 0 || index >= length()) {
+	error("String index out of range");
+    }
+
     /* binary search for the buffer index */
+    low = 0;
     high = sizeof(bytes);
     while (low < high) {
 	mid = ((low + high) >> 1) & ~1;
@@ -380,11 +392,11 @@ private mixed *index(int index, varargs int low)
 	    low = mid + 2;
 	} else if (mid == 0) {
 	    /* found at the beginning */
-	    start = 0;
+	    offset = 0;
 	    break;
 	}
-	start = chars[mid - 1];
-	if (start <= index) {
+	offset = chars[mid - 1];
+	if (offset <= index) {
 	    /* found at this offset */
 	    break;
 	}
@@ -398,39 +410,18 @@ private mixed *index(int index, varargs int low)
 	buffer = bytes;
     } else {
 	/* chars */
-	start = bytes[mid + 1];
+	offset = bytes[mid + 1];
 	buffer = chars;
     }
-    index -= start;
+    index -= offset;
 
     if (typeof(buffer[mid][0]) == T_INT) {
 	/* one string or *int */
-	return ({ mid, buffer, nil, index });
+	return buffer[mid][index];
     } else {
 	/* array of strings or *int */
-	high = sizeof(buffer[mid][0]);
-	return ({ mid, buffer, index / high, index % high });
-    }
-}
-
-/*
- * NAME:	[]
- * DESCRIPTION:	index a string
- */
-static int operator[] (int index)
-{
-    int bufIndex;
-    mixed *buffer, offset;
-
-    if (index < 0 || index >= length()) {
-	error("String index out of range");
-    }
-
-    ({ bufIndex, buffer, offset, index }) = index(index);
-    if (offset == nil) {
-	return buffer[bufIndex][index];
-    } else {
-	return buffer[bufIndex][offset][index];
+	offset = sizeof(buffer[mid][0]);
+	return buffer[mid][index / offset][index % offset];
     }
 }
 
@@ -438,7 +429,7 @@ static int operator[] (int index)
  * NAME:	[]=
  * DESCRIPTION:	assign to string index not permitted
  */
-static int operator[]= (int index, int value)
+static void operator[]= (int index, int value)
 {
     error("Strings are immutable");
 }
