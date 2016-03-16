@@ -43,10 +43,11 @@ static void create()
     load("sys/errord");
     load("sys/upgraded");
 
-    /* global lib objects */
+    /* global objects */
     compile_object("/sys/utf8encode");
     compile_object("/sys/utf8decode");
     compile_object("/lib/strbuffer");
+    compile_object("/lib/string");
 
     /* Domain stuff */
     rsrc_incr(nil, "fileblocks",

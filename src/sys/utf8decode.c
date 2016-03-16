@@ -36,8 +36,7 @@ LowSeq: LowSeq LowChar							\
 LowChar: ascii								\
 LowChar: upper				? upper				\
 \
-High: HighChar								\
-High: HighSeq HighChar			? collect			\
+High: HighSeq				? collect			\
 \
 HighSeq: HighChar							\
 HighSeq: HighSeq HighChar						\
@@ -46,6 +45,7 @@ HighChar: char2				? char2				\
 HighChar: char3				? char3				\
 HighChar: char4				? char4", str);
     }
+    return ({ nil, "" });
 }
 
 /*
@@ -54,7 +54,7 @@ HighChar: char4				? char4", str);
  */
 static mixed *full(mixed *parsed)
 {
-    return ({ parsed, nil });
+    return ({ parsed, "" });
 }
 
 /*
