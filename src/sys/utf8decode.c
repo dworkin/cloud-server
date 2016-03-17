@@ -5,7 +5,9 @@
 mixed *decode(string str)
 {
     catch {
-	return parse_string("\
+	mixed *result;
+
+	result = parse_string("\
 ascii = /[\x00-\x7f]+/							\
 upper = /[\xc2-\xc3][\x80-\xbf]/					\
 char2 = /[\xc4-\xdf][\x80-\xbf]/					\
@@ -44,6 +46,9 @@ HighSeq: HighSeq HighChar						\
 HighChar: char2				? char2				\
 HighChar: char3				? char3				\
 HighChar: char4				? char4", str);
+	if (result) {
+	    return result;
+	}
     }
     return ({ nil, "" });
 }
