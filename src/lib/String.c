@@ -9,7 +9,7 @@
 
 
 private mixed *bytes;	/* ({ ({ "text", " " }), 5, "23", 8 }) */
-private mixed *chars;	/* ({ '1', 6, ({ '4', '5' }) }), 10 */
+private mixed *chars;	/* ({ '1', 6, ({ '4', '5' }), 10 }) */
 
 /*
  * NAME:	strLength()
@@ -228,62 +228,45 @@ private int *appendChars(mixed *data, int index, int byteOffset, int charOffset,
 }
 
 /*
- * NAME:	buildBytes()
- * DESCRIPTION:	build a byte string
+ * NAME:	appendUTF8()
+ * DESCRIPTION:	append a UTF8-encoded string
  */
-private int *buildBytes(string *strs, int bufMax, int strMax)
+private mixed *appendUTF8(string remainder, string str, int index,
+			  int byteOffset, int charOffset, int bufMax,
+			  int strMax)
 {
-    int index, byteOffset, charOffset, i, sz;
-
-    index = byteOffset = charOffset = 0;
-    for (i = 0, sz = sizeof(strs); i < sz; i++) {
-	({ index, byteOffset, charOffset }) =
-	    appendBytes(strs[i], index, byteOffset, charOffset, bufMax, strMax);
-    }
-    return ({ index, byteOffset });
-}
-
-/*
- * NAME:	buildUTF8()
- * DESCRIPTION:	build a string from UTF8
- */
-private int *buildUTF8(string *data, int bufMax, int strMax)
-{
-    object decoder;
-    string str, left, remainder;
-    int index, byteOffset, charOffset, i, sz;
+    string left;
     mixed *buf;
 
-    decoder = find_object(UTF8DECODE);
-    remainder = "";
-    index = byteOffset = charOffset = 0;
-    for (i = 0, sz = sizeof(data); i < sz; i++) {
-	str = data[i];
-	if (strlen(remainder) + strlen(str) > strMax) {
-	    left = str[strMax - strlen(remainder) ..];
-	    str = remainder + str[.. strMax - strlen(remainder) - 1];
-	} else {
-	    left = "";
-	}
-	({ buf, remainder }) = decoder->decode(remainder + str);
-	if (!buf) {
-	    error("Invalid UTF8 sequence");
-	}
-	remainder += left;
+    if (strlen(remainder) + strlen(str) > strMax) {
+	left = str[strMax - strlen(remainder) ..];
+	str = remainder + str[.. strMax - strlen(remainder) - 1];
+    } else {
+	left = "";
+    }
+    ({ buf, remainder }) = UTF8DECODE->decode(remainder + str);
+    if (!buf) {
+	error("Invalid UTF8 sequence");
+    }
+    remainder += left;
+    if (sizeof(buf) != 0) {
 	({ index, byteOffset, charOffset }) =
 	    appendChars(buf, index, byteOffset, charOffset, bufMax, strMax);
-    }
 
-    if (strlen(remainder) != 0) {
-	({ buf, remainder }) = decoder->decode(remainder);
-	if (!buf || remainder != "") {
-	    error("Invalid UTF8 sequence");
+	if (strlen(remainder) != 0) {
+	    ({ buf, remainder }) = UTF8DECODE->decode(remainder);
+	    if (!buf) {
+		error("Invalid UTF8 sequence");
+	    }
+	    if (sizeof(buf) != 0) {
+		({ index, byteOffset, charOffset }) =
+		    appendChars(buf, index, byteOffset, charOffset, bufMax,
+				strMax);
+	    }
 	}
-	({ index, byteOffset, charOffset }) =
-	    appendChars(buf, index, byteOffset, charOffset, bufMax, strMax);
     }
 
-    return ({ index, byteOffset, charOffset });
+    return ({ remainder, index, byteOffset, charOffset });
 }
 
 /*
@@ -292,7 +275,7 @@ private int *buildUTF8(string *data, int bufMax, int strMax)
  */
 static void create(mixed data, varargs string utf8)
 {
-    int bufMax, strMax, index, byteOffset, charOffset;
+    int bufMax, strMax, index, byteOffset, charOffset, i, sz;
     string remainder;
 
     if (utf8 && utf8 != "UTF8") {
@@ -325,11 +308,21 @@ static void create(mixed data, varargs string utf8)
 	chars = allocate(INITIAL_SIZE);
 	chars[1] = bytes[1] = 0;
 	if (!utf8) {
-	    ({ index, byteOffset, charOffset }) =
-		buildBytes(data, bufMax, strMax);
+	    for (i = 0, sz = sizeof(data); i < sz; i++) {
+		({ index, byteOffset, charOffset }) =
+		    appendBytes(data[i], index, byteOffset, charOffset, bufMax,
+				strMax);
+	    }
 	} else {
-	    ({ index, byteOffset, charOffset }) =
-		buildUTF8(data, bufMax, strMax);
+	    remainder = "";
+	    for (i = 0, sz = sizeof(data); i < sz; i++) {
+		({ remainder, index, byteOffset, charOffset }) =
+		    appendUTF8(remainder, data[i], index, byteOffset,
+			       charOffset, bufMax, strMax);
+	    }
+	    if (remainder != "") {
+		error("Incomplete UTF8 sequence");
+	    }
 	}
 	break;
     }
