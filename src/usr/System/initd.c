@@ -48,6 +48,7 @@ static void create()
     compile_object("/sys/utf8decode");
     compile_object("/lib/strbuffer");
     compile_object("/lib/String");
+    compile_object("/lib/StringStream");
 
     /* Domain stuff */
     rsrc_incr(nil, "fileblocks",

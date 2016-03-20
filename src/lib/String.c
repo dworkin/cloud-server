@@ -1,4 +1,5 @@
 # include <String.h>
+# include <StringStream.h>
 # include <status.h>
 # include <type.h>
 
@@ -208,8 +209,8 @@ private int *appendSequence(mixed *data, int index, int byteOffset,
  * NAME:	appendUTF8()
  * DESCRIPTION:	append a UTF8-encoded string
  */
-private mixed *appendUTF8(string remainder, string str, int index,
-			  int byteOffset, int charOffset, int bufMax,
+private mixed *appendUTF8(object decoder, string remainder, string str,
+			  int index, int byteOffset, int charOffset, int bufMax,
 			  int strMax)
 {
     string left;
@@ -221,7 +222,7 @@ private mixed *appendUTF8(string remainder, string str, int index,
     } else {
 	left = "";
     }
-    ({ buf, remainder }) = UTF8DECODE->decode(remainder + str);
+    ({ buf, remainder }) = decoder->decode(remainder + str);
     if (!buf) {
 	error("Invalid UTF8 sequence");
     }
@@ -231,7 +232,7 @@ private mixed *appendUTF8(string remainder, string str, int index,
 	    appendSequence(buf, index, byteOffset, charOffset, bufMax, strMax);
 
 	if (strlen(remainder) != 0) {
-	    ({ buf, remainder }) = UTF8DECODE->decode(remainder);
+	    ({ buf, remainder }) = decoder->decode(remainder);
 	    if (!buf) {
 		error("Invalid UTF8 sequence");
 	    }
@@ -247,6 +248,70 @@ private mixed *appendUTF8(string remainder, string str, int index,
 }
 
 /*
+ * NAME:	inputChars()
+ * DESCRIPTION:	process input characters
+ */
+private mixed *inputChars(int *characters)
+{
+    mixed *input, *output;
+    int i, sz, *segments, numSegments, c;
+    string char;
+
+    /*
+     * scan for byte and wide character segments
+     */
+    input = characters[..];
+    sz = sizeof(input);
+    segments = allocate_int(sz);
+    numSegments = 0;
+    char = " ";
+    for (i = 0; i < sz; ) {
+	c = input[i];
+	if (c < 0 || c > 0x10ffff) {
+	    error("Invalid character for String");
+	}
+	if (c <= 0xff) {
+	    /* bytes */
+	    do {
+		char[0] = c;
+		input[i] = char;
+		if (++i >= sz) {
+		    break;
+		}
+		c = input[i];
+	    } while (c >= 0 && c <= 0xff);
+	    segments[numSegments++] = i;
+	} else {
+	    /* wide characters */
+	    do {
+		if (++i >= sz) {
+		    break;
+		}
+		c = input[i];
+	    } while (c > 0xff && c <= 0x10ffff);
+	    segments[numSegments++] = -i;
+	}
+    }
+
+    /*
+     * build output array of strings and wide character sequences
+     */
+    output = allocate(numSegments);
+    for (i = sz = 0; i < numSegments; i++) {
+	if (segments[i] > 0) {
+	    /* bytes */
+	    output[i] = implode(input[sz .. segments[i] - 1], "");
+	    sz = segments[i];
+	} else {
+	    /* wide characters */
+	    output[i] = input[sz .. -segments[i] - 1];
+	    sz = -segments[i];
+	}
+    }
+    return output;
+}
+
+/*
  * NAME:	create()
  * DESCRIPTION:	initialize a string
  */
@@ -254,6 +319,8 @@ static void create(mixed data, varargs string utf8)
 {
     int bufMax, strMax, index, byteOffset, charOffset, i, sz;
     string remainder;
+    object decoder;
+    StringStream streamer;
 
     if (utf8 && utf8 != "UTF8") {
 	error("Bad encoding");
@@ -291,10 +358,50 @@ static void create(mixed data, varargs string utf8)
 				strMax);
 	    }
 	} else {
+	    decoder = find_object(UTF8DECODE);
 	    remainder = "";
 	    for (i = 0, sz = sizeof(data); i < sz; i++) {
 		({ remainder, index, byteOffset, charOffset }) =
-		    appendUTF8(remainder, data[i], index, byteOffset,
+		    appendUTF8(decoder, remainder, data[i], index, byteOffset,
+			       charOffset, bufMax, strMax);
+	    }
+	    if (remainder != "") {
+		error("Incomplete UTF8 sequence");
+	    }
+	}
+	break;
+
+    case T_OBJECT:
+	streamer = data;
+	bytes = allocate(INITIAL_SIZE);
+	chars = allocate(INITIAL_SIZE);
+	chars[1] = bytes[1] = 0;
+	if (!utf8) {
+	    for (;;) {
+		data = streamer->bufferedChunk();
+		if (!data) {
+		    break;
+		}
+		if (typeof(data) == T_STRING) {
+		    ({ index, byteOffset, charOffset }) =
+			appendBytes(data, index, byteOffset, charOffset, bufMax,
+				    strMax);
+		} else {
+		    ({ index, byteOffset, charOffset }) =
+			appendSequence(inputChars(data), index, byteOffset,
+				       charOffset, bufMax, strMax);
+		}
+	    }
+	} else {
+	    decoder = find_object(UTF8DECODE);
+	    remainder = "";
+	    for (;;) {
+		data = streamer->bufferedChunk();
+		if (!data) {
+		    break;
+		}
+		({ remainder, index, byteOffset, charOffset }) =
+		    appendUTF8(decoder, remainder, data, index, byteOffset,
 			       charOffset, bufMax, strMax);
 	    }
 	    if (remainder != "") {
@@ -410,4 +517,80 @@ static int operator[] (int index)
 static void operator[]= (int index, int value)
 {
     error("Strings are immutable");
+}
+
+/*
+ * NAME:	exportData()
+ * DESCRIPTION:	export internal data to a StringStream
+ */
+mixed *exportData()
+{
+    if (previous_program() == STRING_STREAM) {
+	return ({ bytes, chars });
+    }
+}
+
+/*
+ * NAME:	stream()
+ * DESCRIPTION:	create a StringStream for this String
+ */
+StringStream stream()
+{
+    return new StringStream(this_object());
+}
+
+/*
+ * NAME:	[..]
+ * DESCRIPTION:	String subrange
+ */
+static String operator[..] (mixed from, mixed to)
+{
+    if (from == nil) {
+	from = 0;
+    } else if (typeof(from) != T_INT || from < 0 || from >= length()) {
+	error("Bad subrange for String");
+    }
+    if (to == nil) {
+	to = length() - 1;
+    } else if (typeof(to) != T_INT || to < from - 1 || to >= length()) {
+	error("Bad subrange for String");
+    }
+
+    return new String(new StringStream(this_object(), SSO_RANGE, from,
+				       to - from + 1));
+}
+
+/*
+ * NAME:	+
+ * DESCRIPTION:	add String and something else
+ */
+static String operator+ (mixed str)
+{
+    switch (typeof(str)) {
+    case T_INT:
+    case T_FLOAT:
+	str = (string) str;
+	/* fall through */
+    case T_STRING:
+	break;
+
+    case T_OBJECT:
+	if (str <- String) {
+	    break;
+	}
+	/* fall through */
+    default:
+	error("Bad object added to String");
+    }
+
+    return new String(new StringStream(this_object(), SSO_ADD, str));
+}
+
+/*
+ * NAME:	exportUTF8()
+ * DESCRIPTION:	export String as UTF8
+ */
+StringStream exportUTF8()
+{
+    return new StringStream(this_object(), SSO_UTF8);
 }
