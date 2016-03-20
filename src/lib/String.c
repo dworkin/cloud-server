@@ -25,7 +25,7 @@ private int strLength(mixed str)
  * DESCRIPTION:	append a string (which can be an array of integers) to a
  *		buffer, which is either a string or an array of strings
  */
-private mixed *append(mixed buffer, mixed str, int index, int bufMax,
+private mixed *append(mixed buffer, int index, mixed str, int bufMax,
 		      int strMax)
 {
     int len;
@@ -36,53 +36,22 @@ private mixed *append(mixed buffer, mixed str, int index, int bufMax,
     }
 
     if (!buffer) {
-	return ({ str, 0 });		/* start new buffer */
+	return ({ ({ str }), 0 });	/* start new buffer */
     }
 
-    if (typeof(buffer[0]) == T_INT) {
-	/*
-	 * buffer is a string
-	 */
-	len = strLength(buffer);
-	if (len < strMax) {
-	    if (len + strLength(str) <= strMax) {
-		/*
-		 * simple append to string
-		 */
-		return ({ buffer + str, 0 });
-	    } else {
-		/*
-		 * buffer becomes array of strings
-		 */
-		len = strMax - len;
-		buffer = ({ buffer + str[.. len - 1] });
-		str = str[len ..];
-	    }
-	} else {
+    chunk = buffer[index];
+    len = strLength(chunk);
+    if (len < strMax) {
+	if (len + strLength(str) <= strMax) {
 	    /*
-	     * buffer becomes array of strings
+	     * append to last string in buffer
 	     */
-	    buffer = ({ buffer });
-	}
-	index = 0;
-    } else {
-	/*
-	 * buffer is an array of strings
-	 */
-	chunk = buffer[index];
-	len = strLength(chunk);
-	if (len < strMax) {
-	    if (len + strLength(str) <= strMax) {
-		/*
-		 * simple append to last string in buffer
-		 */
-		buffer[index] = chunk + str;
-		return ({ buffer, index });
-	    } else {
-		len = strMax - len;
-		buffer[index] = chunk + str[.. len - 1];
-		str = str[len ..];
-	    }
+	    buffer[index] = chunk + str;
+	    return ({ buffer, index });
+	} else {
+	    len = strMax - len;
+	    buffer[index] = chunk + str[.. len - 1];
+	    str = str[len ..];
 	}
     }
 
@@ -106,10 +75,10 @@ private mixed *append(mixed buffer, mixed str, int index, int bufMax,
 }
 
 /*
- * NAME:	appendAsChars()
+ * NAME:	appendChars()
  * DESCRIPTION:	append a string as an array of chars
  */
-private int appendAsChars(string str, int index, int charOffset, int bufMax)
+private int appendChars(string str, int index, int charOffset, int bufMax)
 {
     int i, *buf;
 
@@ -119,7 +88,7 @@ private int appendAsChars(string str, int index, int charOffset, int bufMax)
 	    buf[i] = str[i];
 	}
 	({ chars[index], charOffset }) =
-	    append(chars[index], buf, charOffset, bufMax, bufMax);
+	    append(chars[index], charOffset, buf, bufMax, bufMax);
 	chars[index + 1] += bufMax;
 	str = str[bufMax ..];
     }
@@ -129,7 +98,7 @@ private int appendAsChars(string str, int index, int charOffset, int bufMax)
 	buf[i] = str[i];
     }
     ({ chars[index], charOffset }) =
-	append(chars[index], buf, charOffset, bufMax, bufMax);
+	append(chars[index], charOffset, buf, bufMax, bufMax);
     chars[index + 1] += sizeof(buf);
 
     if (chars[index + 1] > MAX_LENGTH) {
@@ -156,18 +125,26 @@ private int *appendBytes(string str, int index, int byteOffset, int charOffset,
 	     * out of space for bytes -- append as chars
 	     */
 	    return ({ index, byteOffset,
-		      appendAsChars(str, index, charOffset, bufMax) });
+		      appendChars(str, index, charOffset, bufMax) });
 	}
 
 	/*
 	 * previous bytes were followed by chars
 	 */
 	/* trim buffers */
-	if (typeof(bytes[index]) != T_STRING) {
-	    bytes[index] = bytes[index][.. byteOffset];
+	if (typeof(bytes[index]) == T_ARRAY) {
+	    if (byteOffset == 0) {
+		bytes[index] = bytes[index][0];
+	    } else if (sizeof(bytes[index]) > byteOffset + 1) {
+		bytes[index] = bytes[index][.. byteOffset];
+	    }
 	}
-	if (chars[index] && typeof(chars[index][0]) != T_INT) {
-	    chars[index] = chars[index][.. charOffset];
+	if (typeof(chars[index]) == T_ARRAY) {
+	    if (charOffset == 0) {
+		chars[index] = chars[index][0];
+	    } else if (sizeof(chars[index]) > charOffset + 1) {
+		chars[index] = chars[index][.. charOffset];
+	    }
 	}
 
 	index += 2;
@@ -188,7 +165,7 @@ private int *appendBytes(string str, int index, int byteOffset, int charOffset,
     }
 
     ({ bytes[index], byteOffset }) =
-	append(bytes[index], str, byteOffset, bufMax, strMax);
+	append(bytes[index], byteOffset, str, bufMax, strMax);
     chars[index + 1] = bytes[index + 1] = len + strlen(str);
 
     if (chars[index + 1] > MAX_LENGTH) {
@@ -199,11 +176,11 @@ private int *appendBytes(string str, int index, int byteOffset, int charOffset,
 }
 
 /*
- * NAME:	appendChars()
+ * NAME:	appendSequence()
  * DESCRIPTION:	append sequence to bytes and chars
  */
-private int *appendChars(mixed *data, int index, int byteOffset, int charOffset,
-			int bufMax, int strMax)
+private int *appendSequence(mixed *data, int index, int byteOffset,
+			    int charOffset, int bufMax, int strMax)
 {
     int i, sz;
     mixed str;
@@ -215,7 +192,7 @@ private int *appendChars(mixed *data, int index, int byteOffset, int charOffset,
 		appendBytes(str, index, byteOffset, charOffset, bufMax, strMax);
 	} else {
 	    ({ chars[index], charOffset }) =
-		append(chars[index], str, charOffset, bufMax, bufMax);
+		append(chars[index], charOffset, str, bufMax, bufMax);
 	    chars[index + 1] += sizeof(str);
 
 	    if (chars[index + 1] > MAX_LENGTH) {
@@ -251,7 +228,7 @@ private mixed *appendUTF8(string remainder, string str, int index,
     remainder += left;
     if (sizeof(buf) != 0) {
 	({ index, byteOffset, charOffset }) =
-	    appendChars(buf, index, byteOffset, charOffset, bufMax, strMax);
+	    appendSequence(buf, index, byteOffset, charOffset, bufMax, strMax);
 
 	if (strlen(remainder) != 0) {
 	    ({ buf, remainder }) = UTF8DECODE->decode(remainder);
@@ -260,8 +237,8 @@ private mixed *appendUTF8(string remainder, string str, int index,
 	    }
 	    if (sizeof(buf) != 0) {
 		({ index, byteOffset, charOffset }) =
-		    appendChars(buf, index, byteOffset, charOffset, bufMax,
-				strMax);
+		    appendSequence(buf, index, byteOffset, charOffset, bufMax,
+				   strMax);
 	    }
 	}
     }
@@ -299,7 +276,7 @@ static void create(mixed data, varargs string utf8)
 	    chars = allocate(INITIAL_SIZE);
 	    chars[1] = bytes[1] = 0;
 	    ({ index, byteOffset, charOffset }) =
-		appendChars(data, 0, 0, 0, bufMax, strMax);
+		appendSequence(data, 0, 0, 0, bufMax, strMax);
 	}
 	break;
 
@@ -332,11 +309,19 @@ static void create(mixed data, varargs string utf8)
     }
 
     /* trim buffers */
-    if (byteOffset > 0) {
-	bytes[index] = bytes[index][.. byteOffset];
+    if (typeof(bytes[index]) == T_ARRAY) {
+	if (byteOffset == 0) {
+	    bytes[index] = bytes[index][0];
+	} else if (sizeof(bytes[index]) > byteOffset + 1) {
+	    bytes[index] = bytes[index][.. byteOffset];
+	}
     }
-    if (charOffset > 0) {
-	chars[index] = chars[index][.. charOffset];
+    if (typeof(chars[index]) == T_ARRAY) {
+	if (charOffset == 0) {
+	    chars[index] = chars[index][0];
+	} else if (sizeof(chars[index]) > charOffset + 1) {
+	    chars[index] = chars[index][.. charOffset];
+	}
     }
     if (sizeof(bytes) > index + 1) {
 	bytes = bytes[.. index + 1];
