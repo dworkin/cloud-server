@@ -545,19 +545,7 @@ StringStream stream()
  */
 static String operator[..] (mixed from, mixed to)
 {
-    if (from == nil) {
-	from = 0;
-    } else if (typeof(from) != T_INT || from < 0 || from >= length()) {
-	error("Bad subrange for String");
-    }
-    if (to == nil) {
-	to = length() - 1;
-    } else if (typeof(to) != T_INT || to < from - 1 || to >= length()) {
-	error("Bad subrange for String");
-    }
-
-    return new String(new StringStream(this_object(), SSO_RANGE, from,
-				       to - from + 1));
+    return new String(new StringStream(this_object(), SSO_RANGE, from, to));
 }
 
 /*
@@ -566,23 +554,6 @@ static String operator[..] (mixed from, mixed to)
  */
 static String operator+ (mixed str)
 {
-    switch (typeof(str)) {
-    case T_INT:
-    case T_FLOAT:
-	str = (string) str;
-	/* fall through */
-    case T_STRING:
-	break;
-
-    case T_OBJECT:
-	if (str <- String) {
-	    break;
-	}
-	/* fall through */
-    default:
-	error("Bad object added to String");
-    }
-
     return new String(new StringStream(this_object(), SSO_ADD, str));
 }
 

@@ -119,6 +119,84 @@ void reset()
 }
 
 /*
+ * NAME:	create()
+ * DESCRIPTION:	initialize StringStream
+ */
+static void create(String str, varargs int operation, mixed arg1, mixed arg2)
+{
+    ({ bytes, chars }) = str->exportData();
+    switch (operation) {
+    case SSO_STREAM:
+	/* stream String */
+	zeroIndex();
+	initLength = str->length();
+	state = S_STREAM;
+	reset();
+	break;
+
+    case SSO_RANGE:
+	/* stream subrange of String */
+	length = str->length();
+	if (arg1 == nil) {
+	    arg1 = 0;
+	} else if (typeof(arg1) != T_INT || arg1 < 0 || arg1 >= length) {
+	    error("Invalid String subrange");
+	}
+	if (arg2 == nil) {
+	    arg2 = length - 1;
+	} else if (typeof(arg2) != T_INT || arg2 < arg1 - 1 || arg2 >= length) {
+	    error("Invalid String subrange");
+	}
+
+	setIndex(arg1);
+	initLength = arg2 - arg1 + 1;
+	state = S_STREAM;
+	reset();
+	break;
+
+    case SSO_ADD:
+	/* stream the concatenation of two Strings */
+	switch (typeof(arg1)) {
+	case T_INT:
+	case T_FLOAT:
+	    arg1 = (string) arg1;
+	    /* fall through */
+	case T_STRING:
+	    str2Bytes = ({ arg1, strlen(arg1) });
+	    str2Chars = ({ nil, strlen(arg1) });
+	    initLength = str->length() + strlen(arg1);
+	    break;
+
+	case T_OBJECT:
+	    if (arg1 <- String) {
+		({ str2Bytes, str2Chars }) = arg1->exportData();
+		initLength = str->length() + arg1->length();
+		break;
+	    }
+	    /* fall through */
+	default:
+	    error("Bad argument for String addition");
+	}
+
+	str1Bytes = bytes;
+	str1Chars = chars;
+	zeroIndex();
+	state = S_STREAM1;
+	reset();
+	break;
+
+    case SSO_UTF8:
+	/* UTF8-encode String */
+	encoder = find_object(UTF8ENCODE);
+	zeroIndex();
+	initLength = str->length();
+	state = S_UTF8;
+	reset();
+	break;
+    }
+}
+
+/*
  * NAME:	chunk()
  * DESCRIPTION:	get another chunk of input
  */
@@ -176,60 +254,6 @@ mixed chunk()
     }
 
     return buf;
-}
-
-/*
- * NAME:	create()
- * DESCRIPTION:	initialize StringStream
- */
-static void create(String str, varargs int operation, mixed arg1, mixed arg2)
-{
-    ({ bytes, chars }) = str->exportData();
-    switch (operation) {
-    case SSO_STREAM:
-	/* stream String */
-	zeroIndex();
-	initLength = str->length();
-	state = S_STREAM;
-	reset();
-	break;
-
-    case SSO_RANGE:
-	/* stream subrange of String */
-	setIndex(arg1);
-	initLength = arg2;
-	state = S_STREAM;
-	reset();
-	break;
-
-    case SSO_ADD:
-	/* stream the concatenation of two Strings */
-	str1Bytes = bytes;
-	str1Chars = chars;
-	zeroIndex();
-	initLength = str->length();
-	if (typeof(arg1) == T_STRING) {
-	    /* str2 is a byte string */
-	    str2Bytes = ({ arg1, strlen(arg1) });
-	    str2Chars = ({ nil, strlen(arg1) });
-	    initLength += strlen(arg1);
-	} else {
-	    ({ str2Bytes, str2Chars }) = arg1->exportData();
-	    initLength += arg1->length();
-	}
-	state = S_STREAM1;
-	reset();
-	break;
-
-    case SSO_UTF8:
-	/* UTF8-encode String */
-	encoder = find_object(UTF8ENCODE);
-	zeroIndex();
-	initLength = str->length();
-	state = S_UTF8;
-	reset();
-	break;
-    }
 }
 
 mixed bufferedChunk()
