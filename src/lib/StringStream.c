@@ -22,15 +22,6 @@ private int state;
 private object encoder;
 
 /*
- * NAME:	import()
- * DESCRIPTION:	import buffers from string
- */
-static mixed *import(String str)
-{
-    return str->exportData();
-}
-
-/*
  * NAME:	zeroIndex()
  * DESCRIPTION:	start at offset 0
  */
@@ -49,7 +40,7 @@ private void zeroIndex()
 
 /*
  * NAME:	index()
- * DESCRIPTION:	set initial index descriptor for the string
+ * DESCRIPTION:	set initial index for string
  */
 private void setIndex(int index)
 {
@@ -131,37 +122,44 @@ void reset()
  * NAME:	chunk()
  * DESCRIPTION:	get another chunk of input
  */
-static mixed chunk()
+mixed chunk()
 {
     mixed buf;
     int len;
 
     if (length == 0) {
-	return nil;
+	return nil;	/* no chunks left */
     }
 
+    /* get chunk */
     buf = buffer[bufIndex];
     if (chunkOffset >= 0) {
 	buf = buf[chunkOffset];
     }
     len = (typeof(buf) == T_STRING) ? strlen(buf) : sizeof(buf);
     if (len - chunkIndex >= length) {
+	/* no chunks left */
 	buf = buf[chunkIndex .. chunkIndex + length - 1];
 	length = 0;
 	return buf;
     }
-
     buf = buf[chunkIndex ..];
     length -= len - chunkIndex;
+
+    /* prepare for next chunk */
     if (chunkOffset >= 0 && ++chunkOffset < sizeof(buffer[bufIndex])) {
 	chunkIndex = 0;
     } else {
+	/* change buffers */
 	if (buffer == bytes && chars[bufIndex]) {
+	    /* from bytes to chars */
 	    buffer = chars;
 	} else {
+	    /* from chars to bytes */
 	    buffer = bytes;
 	    bufIndex += 2;
 	    if (bufIndex == sizeof(buffer)) {
+		/* switch to added string */
 		state = S_STREAM2;
 		bytes = str2Bytes;
 		chars = str2Chars;
@@ -182,40 +180,52 @@ static mixed chunk()
 
 /*
  * NAME:	create()
- * DESCRIPTION:	initialize
+ * DESCRIPTION:	initialize StringStream
  */
 static void create(String str, varargs int operation, mixed arg1, mixed arg2)
 {
-    ({ bytes, chars }) = import(str);
+    ({ bytes, chars }) = str->exportData();
     switch (operation) {
     case SSO_STREAM:
-	initLength = str->length();
+	/* stream String */
 	zeroIndex();
+	initLength = str->length();
 	state = S_STREAM;
 	reset();
 	break;
 
     case SSO_RANGE:
-	initLength = arg2;
+	/* stream subrange of String */
 	setIndex(arg1);
+	initLength = arg2;
 	state = S_STREAM;
 	reset();
 	break;
 
     case SSO_ADD:
+	/* stream the concatenation of two Strings */
 	str1Bytes = bytes;
 	str1Chars = chars;
-	({ str2Bytes, str2Chars }) = import(arg1);
-	initLength = str->length() + arg1->length();
 	zeroIndex();
+	initLength = str->length();
+	if (typeof(arg1) == T_STRING) {
+	    /* str2 is a byte string */
+	    str2Bytes = ({ arg1, strlen(arg1) });
+	    str2Chars = ({ nil, strlen(arg1) });
+	    initLength += strlen(arg1);
+	} else {
+	    ({ str2Bytes, str2Chars }) = arg1->exportData();
+	    initLength += arg1->length();
+	}
 	state = S_STREAM1;
 	reset();
 	break;
 
     case SSO_UTF8:
+	/* UTF8-encode String */
 	encoder = find_object(UTF8ENCODE);
-	initLength = str->length();
 	zeroIndex();
+	initLength = str->length();
 	state = S_UTF8;
 	reset();
 	break;
