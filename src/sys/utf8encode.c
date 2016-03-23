@@ -30,7 +30,7 @@ static mixed *upper1char(mixed *parsed)
     string str;
 
     str = "\xc2 ";
-    str[1] = parsed[0][0] & ~0x40;
+    str[1] = parsed[0][0];
     return ({ str });
 }
 
@@ -53,14 +53,7 @@ static mixed *upper2char(mixed *parsed)
  */
 static mixed *upper1str(mixed *parsed)
 {
-    string *upper;
-    int i;
-
-    upper = explode(parsed[0], "");
-    for (i = sizeof(upper); i > 0; ) {
-	upper[--i][0] &= ~0x40;
-    }
-    return ({ "\xc2" + implode(upper, "\xc2") });
+    return ({ "\xc2" + implode(explode(parsed[0], ""), "\xc2") });
 }
 
 /*
