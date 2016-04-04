@@ -1,5 +1,6 @@
 # include <String.h>
 # include <StringStream.h>
+# include <StringBuffer.h>
 # include <status.h>
 # include <type.h>
 
@@ -525,7 +526,7 @@ static void operator[]= (int index, int value)
  */
 mixed *exportData()
 {
-    if (previous_program() == STRING_STREAM) {
+    if (previous_program() == STRING_STREAM || previous_program() == STRING_BUFFER) {
 	return ({ bytes, chars });
     }
 }
@@ -537,6 +538,15 @@ mixed *exportData()
 StringStream stream()
 {
     return new StringStream(this_object());
+}
+
+/*
+ * NAME:	buffer()
+ * DESCRIPTION:	create a StringBuffer for this String
+ */
+StringBuffer buffer()
+{
+    return new StringBuffer(this_object());
 }
 
 /*
