@@ -4,6 +4,7 @@
 # include <type.h>
 
 # define UTF8DECODE	"/sys/utf8decode"
+# define UTF8ENCODE	"/sys/utf8encode"
 
 # define MAX_LENGTH	16777216
 # define INITIAL_SIZE	16
@@ -517,35 +518,76 @@ static void operator[]= (int index, int value)
 }
 
 /*
+ * NAME:	encodeUTF8String()
+ * DESCRIPTION:	encode a string as UTF8
+ */
+private void encodeUTF8String(StringBuffer buffer, string chunk, object encoder,
+			      int max)
+{
+    while (strlen(chunk) > max) {
+	buffer->append(encoder->encode(chunk[.. max - 1]));
+	chunk = chunk[max ..];
+    }
+    buffer->append(chunk);
+}
+
+/*
+ * NAME:	encodeUTF8Chars()
+ * DESCRIPTION:	encode characters as UTF8
+ */
+private void encodeUTF8Chars(StringBuffer buffer, int *chunk)
+{
+    string str;
+    int i, j, sz, c;
+
+    for (i = j = 0, sz = sizeof(chunk); i < sz; i++) {
+	c = chunk[i];
+	switch (c) {
+	case 0x000100 .. 0x0007ff:
+	    str = "  ";
+	    str[0] = 0xc0 + (c >> 6);
+	    str[1] = 0x80 + (c & 0x3f);
+	    buffer->append(str);
+	    break;
+
+	case 0x000800 .. 0x00ffff:
+	    str = "   ";
+	    str[0] = 0xe0 + (c >> 12);
+	    str[1] = 0x80 + ((c >> 6) & 0x3f);
+	    str[2] = 0x80 + (c & 0x3f);
+	    buffer->append(str);
+	    break;
+
+	case 0x010000 .. 0x10ffff:
+	    str = "    ";
+	    str[0] = 0xf0 + (c >> 18);
+	    str[1] = 0x80 + ((c >> 12) & 0x3f);
+	    str[2] = 0x80 + ((c >> 6) & 0x3f);
+	    str[3] = 0x80 + (c & 0x3f);
+	    buffer->append(str);
+	    break;
+	}
+    }
+}
+
+/*
  * NAME:	buffer()
  * DESCRIPTION:	create a StringBuffer for this String
  */
-StringBuffer buffer()
+StringBuffer buffer(varargs string utf8)
 {
     StringBuffer buffer;
+    object encoder;
     mixed chunk;
-    int i, j, size, sz;
+    int max, i, j, size, sz;
 
     buffer = new StringBuffer;
-    if (bytes[0] != "") {
-	for (i = 0, size = sizeof(bytes); i < size; i += 2) {
-	    chunk = bytes[i];
-	    switch (typeof(chunk)) {
-	    case T_STRING:
-		buffer->append(chunk);
-		break;
-
-	    case T_ARRAY:
-		for (j = 0, sz = sizeof(chunk); j < sz; j++) {
-		    buffer->append(chunk[j]);
-		}
-		break;
-	    }
-
-	    chunk = chars[i];
-	    if (chunk) {
-		switch (typeof(chunk[0])) {
-		case T_INT:
+    if (!utf8) {
+	if (bytes[0] != "") {
+	    for (i = 0, size = sizeof(bytes); i < size; i += 2) {
+		chunk = bytes[i];
+		switch (typeof(chunk)) {
+		case T_STRING:
 		    buffer->append(chunk);
 		    break;
 
@@ -554,6 +596,59 @@ StringBuffer buffer()
 			buffer->append(chunk[j]);
 		    }
 		    break;
+		}
+
+		chunk = chars[i];
+		if (chunk) {
+		    switch (typeof(chunk[0])) {
+		    case T_INT:
+			buffer->append(chunk);
+			break;
+
+		    case T_ARRAY:
+			for (j = 0, sz = sizeof(chunk); j < sz; j++) {
+			    buffer->append(chunk[j]);
+			}
+			break;
+		    }
+		}
+	    }
+	}
+    } else {
+	if (utf8 != "UTF8") {
+	    error("Bad encoding");
+	}
+
+	if (bytes[0] != "") {
+	    encoder = find_object(UTF8ENCODE);
+	    max = status(ST_STRSIZE) >> 1;
+	    for (i = 0, size = sizeof(bytes); i < size; i += 2) {
+		chunk = bytes[i];
+		switch (typeof(chunk)) {
+		case T_STRING:
+		    encodeUTF8String(buffer, chunk, encoder, max);
+		    break;
+
+		case T_ARRAY:
+		    for (j = 0, sz = sizeof(chunk); j < sz; j++) {
+			encodeUTF8String(buffer, chunk[j], encoder, max);
+		    }
+		    break;
+		}
+
+		chunk = chars[i];
+		if (chunk) {
+		    switch (typeof(chunk[0])) {
+		    case T_INT:
+			encodeUTF8Chars(buffer, chunk);
+			break;
+
+		    case T_ARRAY:
+			for (j = 0, sz = sizeof(chunk); j < sz; j++) {
+			    encodeUTF8Chars(buffer, chunk[j]);
+			}
+			break;
+		    }
 		}
 	    }
 	}
