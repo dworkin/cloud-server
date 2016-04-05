@@ -1,5 +1,4 @@
 # include <String.h>
-# include <StringStream.h>
 # include <StringBuffer.h>
 # include <status.h>
 # include <type.h>
@@ -321,7 +320,7 @@ static void create(mixed data, varargs string utf8)
     int bufMax, strMax, index, byteOffset, charOffset, i, sz;
     string remainder;
     object decoder;
-    StringStream streamer;
+    object buffer;
 
     if (utf8 && utf8 != "UTF8") {
 	error("Bad encoding");
@@ -331,6 +330,10 @@ static void create(mixed data, varargs string utf8)
 
     index = byteOffset = charOffset = 0;
     switch (typeof(data)) {
+    case T_INT:
+    case T_FLOAT:
+	data = (string) data;
+	/* fall through */
     case T_STRING:
 	if (!utf8) {
 	    bytes = ({ data, strlen(data) });
@@ -348,38 +351,14 @@ static void create(mixed data, varargs string utf8)
 	}
 	break;
 
-    case T_ARRAY:
-	bytes = allocate(INITIAL_SIZE);
-	chars = allocate(INITIAL_SIZE);
-	chars[1] = bytes[1] = 0;
-	if (!utf8) {
-	    for (i = 0, sz = sizeof(data); i < sz; i++) {
-		({ index, byteOffset, charOffset }) =
-		    appendBytes(data[i], index, byteOffset, charOffset, bufMax,
-				strMax);
-	    }
-	} else {
-	    decoder = find_object(UTF8DECODE);
-	    remainder = "";
-	    for (i = 0, sz = sizeof(data); i < sz; i++) {
-		({ remainder, index, byteOffset, charOffset }) =
-		    appendUTF8(decoder, remainder, data[i], index, byteOffset,
-			       charOffset, bufMax, strMax);
-	    }
-	    if (remainder != "") {
-		error("Incomplete UTF8 sequence");
-	    }
-	}
-	break;
-
     case T_OBJECT:
-	streamer = data;
+	buffer = data;
 	bytes = allocate(INITIAL_SIZE);
 	chars = allocate(INITIAL_SIZE);
 	chars[1] = bytes[1] = 0;
 	if (!utf8) {
 	    for (;;) {
-		data = streamer->bufferedChunk();
+		data = buffer->chunk();
 		if (!data) {
 		    break;
 		}
@@ -397,7 +376,7 @@ static void create(mixed data, varargs string utf8)
 	    decoder = find_object(UTF8DECODE);
 	    remainder = "";
 	    for (;;) {
-		data = streamer->bufferedChunk();
+		data = buffer->chunk();
 		if (!data) {
 		    break;
 		}
@@ -410,6 +389,9 @@ static void create(mixed data, varargs string utf8)
 	    }
 	}
 	break;
+
+    default:
+	error("Invalid initialization value for String");
     }
 
     if (chars[1] == 0) {
@@ -456,17 +438,13 @@ int isBytes()
 }
 
 /*
- * NAME:	[]
+ * NAME:	index
  * DESCRIPTION:	index a string
  */
-static int operator[] (int index)
+private mixed *index(int index)
 {
     int low, high, mid, offset;
     mixed *buffer;
-
-    if (index < 0 || index >= length()) {
-	error("String index out of range");
-    }
 
     /* binary search for the buffer index */
     low = 0;
@@ -503,12 +481,30 @@ static int operator[] (int index)
 
     if (typeof(buffer[mid][0]) == T_INT) {
 	/* one string or *int */
-	return buffer[mid][index];
+	return ({ buffer, mid, -1, index });
     } else {
 	/* array of strings or *int */
 	offset = sizeof(buffer[mid][0]);
-	return buffer[mid][index / offset][index % offset];
+	return ({ buffer, mid, index / offset, index % offset });
     }
+}
+
+/*
+ * NAME:	[]
+ * DESCRIPTION:	index a string
+ */
+static int operator[] (int index)
+{
+    mixed *buffer;
+    int bufIndex, offset;
+
+    if (index < 0 || index >= length()) {
+	error("String index out of range");
+    }
+
+    ({ buffer, bufIndex, offset, index }) = index(index);
+    return (offset < 0) ?
+	    buffer[bufIndex][index] : buffer[bufIndex][offset][index];
 }
 
 /*
@@ -518,26 +514,6 @@ static int operator[] (int index)
 static void operator[]= (int index, int value)
 {
     error("Strings are immutable");
-}
-
-/*
- * NAME:	exportData()
- * DESCRIPTION:	export internal data to a StringStream
- */
-mixed *exportData()
-{
-    if (previous_program() == STRING_STREAM) {
-	return ({ bytes, chars });
-    }
-}
-
-/*
- * NAME:	stream()
- * DESCRIPTION:	create a StringStream for this String
- */
-StringStream stream()
-{
-    return new StringStream(this_object());
 }
 
 /*
@@ -587,12 +563,152 @@ StringBuffer buffer()
 }
 
 /*
+ * NAME:	chunkRange()
+ * DESCRIPTION:	append a range of chunks to a StringBuffer
+ */
+private int chunkRange(StringBuffer buffer, mixed chunk, int offset, int length)
+{
+    int len, size;
+
+    if (typeof(chunk[0]) == T_INT) {
+	/*
+	 * simple string or character array
+	 */
+	len = strLength(chunk);
+	if (length < len) {
+	    buffer->append(chunk[.. length - 1]);
+	    return 0;
+	}
+	buffer->append(chunk);
+	length -= len;
+    } else {
+	/*
+	 * array of strings or character arrays
+	 */
+	for (size = sizeof(chunk); offset < size; offset++) {
+	    len = strLength(chunk[offset]);
+	    if (length < len) {
+		buffer->append(chunk[offset][.. length - 1]);
+		return 0;
+	    }
+	    buffer->append(chunk[offset]);
+	    length -= len;
+	    if (length == 0) {
+		return 0;
+	    }
+	}
+    }
+
+    return length;
+}
+
+/*
+ * NAME:	bufferRange()
+ * DESCRIPTION:	return a StringBuffer for a subrange
+ */
+StringBuffer bufferRange(varargs mixed from, mixed to)
+{
+    int length, bufIndex, offset, index, len, size;
+    StringBuffer buffer;
+    mixed *buf, chunk;
+
+    /*
+     * check subrange
+     */
+    length = length();
+    if (from == nil) {
+	from = 0;
+    } else if (typeof(from) != T_INT || from < 0 || from >= length) {
+	error("Invalid String subrange");
+    }
+    if (to == nil) {
+	to = length - 1;
+    } else if (typeof(to) != T_INT || to < from - 1 || to >= length) {
+	error("Invalid String subrange");
+    }
+    if (from == 0 && to == length - 1) {
+	return buffer();
+    }
+
+    /* determine index and size */
+    length = to - from + 1;
+    buffer = new StringBuffer;
+    ({ buf, bufIndex, offset, index }) = index(from);
+
+    chunk = buf[bufIndex];
+    if (offset < 0) {
+	/*
+	 * initial chunk is simple string or character array
+	 */
+	len = strLength(chunk);
+	if (index + length < len) {
+	    buffer->append(chunk[index .. index + length - 1]);
+	    return buffer;
+	}
+	if (index == 0) {
+	    buffer->append(chunk);
+	} else {
+	    buffer->append(chunk[index ..]);
+	}
+	length -= len - index;
+    } else {
+	/*
+	 * initial chunk from array of strings or character arrays
+	 */
+	len = strLength(chunk[offset]);
+	if (index + length < len) {
+	    buffer->append(chunk[offset][index .. index + length - 1]);
+	    return buffer;
+	}
+	if (index == 0) {
+	    buffer->append(chunk[offset]);
+	} else {
+	    buffer->append(chunk[offset][index ..]);
+	}
+	length -= len;
+	if (length == 0) {
+	    return buffer;
+	}
+
+	/* followup chunks from the same array */
+	length = chunkRange(buffer, chunk, offset + 1, length);
+    }
+    if (length == 0) {
+	return buffer;
+    }
+
+    if (buf == bytes) {
+	/* followup chunks are character arrays */
+	length = chunkRange(buffer, chars[bufIndex], 0, length);
+	if (length == 0) {
+	    return buffer;
+	}
+    }
+
+    for (;;) {
+	bufIndex += 2;
+
+	/* strings */
+	length = chunkRange(buffer, bytes[bufIndex], 0, length);
+	if (length == 0) {
+	    return buffer;
+	}
+
+	/* character arrays */
+	length = chunkRange(buffer, chars[bufIndex], 0, length);
+	if (length == 0) {
+	    return buffer;
+	}
+    }
+}
+
+/*
  * NAME:	[..]
  * DESCRIPTION:	String subrange
  */
 static String operator[..] (mixed from, mixed to)
 {
-    return new String(new StringStream(this_object(), SSO_RANGE, from, to));
+    return new String(bufferRange(from, to));
 }
 
 /*
@@ -601,14 +717,25 @@ static String operator[..] (mixed from, mixed to)
  */
 static String operator+ (mixed str)
 {
-    return new String(new StringStream(this_object(), SSO_ADD, str));
-}
+    StringBuffer buffer;
 
-/*
- * NAME:	exportUTF8()
- * DESCRIPTION:	export String as UTF8
- */
-StringStream exportUTF8()
-{
-    return new StringStream(this_object(), SSO_UTF8);
+    switch (typeof(str)) {
+    case T_INT:
+    case T_FLOAT:
+	str = (string) str;
+	/* fall through */
+    case T_STRING:
+	break;
+
+    case T_OBJECT:
+	str = ((String) str)->buffer();
+	break;
+
+    default:
+	error("Bad value added to String");
+    }
+
+    buffer = buffer();
+    buffer->append(str);
+    return new String(buffer);
 }
