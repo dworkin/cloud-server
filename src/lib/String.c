@@ -249,10 +249,10 @@ private mixed *appendUTF8(object decoder, string remainder, string str,
 }
 
 /*
- * NAME:	inputChars()
- * DESCRIPTION:	process input characters
+ * NAME:	processChars()
+ * DESCRIPTION:	process wide characters
  */
-private mixed *inputChars(int *characters)
+private mixed *processChars(int *characters)
 {
     mixed *input, *output;
     int i, sz, *segments, numSegments, c;
@@ -318,7 +318,7 @@ private mixed *inputChars(int *characters)
  */
 static void create(mixed data, varargs string utf8)
 {
-    int bufMax, strMax, index, byteOffset, charOffset, i, sz;
+    int bufMax, strMax, index, byteOffset, charOffset;
     string remainder;
     object decoder;
     object buffer;
@@ -369,7 +369,7 @@ static void create(mixed data, varargs string utf8)
 				    strMax);
 		} else {
 		    ({ index, byteOffset, charOffset }) =
-			appendSequence(inputChars(data), index, byteOffset,
+			appendSequence(processChars(data), index, byteOffset,
 				       charOffset, bufMax, strMax);
 		}
 	    }
@@ -414,9 +414,9 @@ static void create(mixed data, varargs string utf8)
 	    chars[index] = chars[index][.. charOffset];
 	}
     }
-    if (sizeof(bytes) > index + 1) {
-	bytes = bytes[.. index + 1];
-	chars = chars[.. index + 1];
+    if (sizeof(bytes) > ++index) {
+	bytes = bytes[.. index];
+	chars = chars[.. index];
     }
 }
 
