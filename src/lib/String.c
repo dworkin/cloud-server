@@ -526,7 +526,7 @@ static void operator[]= (int index, int value)
  */
 mixed *exportData()
 {
-    if (previous_program() == STRING_STREAM || previous_program() == STRING_BUFFER) {
+    if (previous_program() == STRING_STREAM) {
 	return ({ bytes, chars });
     }
 }
@@ -546,7 +546,44 @@ StringStream stream()
  */
 StringBuffer buffer()
 {
-    return new StringBuffer(this_object());
+    StringBuffer buffer;
+    mixed chunk;
+    int i, j, size, sz;
+
+    buffer = new StringBuffer;
+    if (bytes[0] != "") {
+	for (i = 0, size = sizeof(bytes); i < size; i += 2) {
+	    chunk = bytes[i];
+	    switch (typeof(chunk)) {
+	    case T_STRING:
+		buffer->append(chunk);
+		break;
+
+	    case T_ARRAY:
+		for (j = 0, sz = sizeof(chunk); j < sz; j++) {
+		    buffer->append(chunk[j]);
+		}
+		break;
+	    }
+
+	    chunk = chars[i];
+	    if (chunk) {
+		switch (typeof(chunk[0])) {
+		case T_INT:
+		    buffer->append(chunk);
+		    break;
+
+		case T_ARRAY:
+		    for (j = 0, sz = sizeof(chunk); j < sz; j++) {
+			buffer->append(chunk[j]);
+		    }
+		    break;
+		}
+	    }
+	}
+    }
+
+    return buffer;
 }
 
 /*

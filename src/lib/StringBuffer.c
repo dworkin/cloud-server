@@ -235,6 +235,9 @@ private void appendChars(int *chars)
  */
 void append(mixed str)
 {
+    StringBuffer buffer;
+    mixed chunk;
+
     switch (typeof(str)) {
     case T_STRING:
 	appendString(str);
@@ -245,71 +248,28 @@ void append(mixed str)
 	break;
 
     case T_OBJECT:
-	if (str <- String) {
-	    mixed *bytes, *chars;
-	    int i, j, size, sz;
-
-	    /*
-	     * append String
-	     */
-	    ({ bytes, chars }) = str->exportData();
-	    if (bytes[0] != "") {
-		for (i = 0, size = sizeof(bytes); i < size; i += 2) {
-		    str = bytes[i];
-		    switch (typeof(str)) {
-		    case T_STRING:
-			appendString(str);
-			break;
-
-		    case T_ARRAY:
-			for (j = 0, sz = sizeof(str); j < sz; j++) {
-			    appendString(str[j]);
-			}
-			break;
-		    }
-
-		    str = chars[i];
-		    if (str) {
-			switch (typeof(str[0])) {
-			case T_INT:
-			    appendChars(str);
-			    break;
-
-			case T_ARRAY:
-			    for (j = 0, sz = sizeof(str); j < sz; j++) {
-				appendChars(str[j]);
-			    }
-			    break;
-			}
-		    }
-		}
-	    }
-	    break;
-	} else if (str <- StringBuffer) {
-	    mixed chunk;
-
-	    if (str == this_object()) {
-		error("StringBuffer appended to itself");
-	    }
-
-	    /*
-	     * append a different StringBuffer
-	     */
-	    for (;;) {
-		chunk = str->chunk();
-		if (!chunk) {
-		    break;
-		}
-
-		if (typeof(chunk) == T_STRING) {
-		    appendString(chunk);
-		} else {
-		    appendChars(chunk);
-		}
-	    }
-	    break;
+	buffer = str;
+	if (buffer == this_object()) {
+	    error("StringBuffer appended to itself");
 	}
-	/* fall through */
+
+	/*
+	 * append a different StringBuffer
+	 */
+	for (;;) {
+	    chunk = buffer->chunk();
+	    if (!chunk) {
+		break;
+	    }
+
+	    if (typeof(chunk) == T_STRING) {
+		appendString(chunk);
+	    } else {
+		appendChars(chunk);
+	    }
+	}
+	break;
+
     default:
 	error("Invalid value appended to StringBuffer");
     }
