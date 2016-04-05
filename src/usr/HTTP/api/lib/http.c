@@ -1,5 +1,5 @@
 # include <kernel/kernel.h>
-# include <strbuffer.h>
+# include <StringBuffer.h>
 # include "~/api/include/http.h"
 
 inherit "~/lib/user";
@@ -20,8 +20,8 @@ static object response(int code, string str, varargs string type, int length,
     if (!body) {
 	body = "";
     }
-    return new StrBuffer(http_response(code, str, type, length, modtime) +
-			 body);
+    return new StringBuffer(http_response(code, str, type, length, modtime) +
+			    body);
 }
 
 static object bad_request()

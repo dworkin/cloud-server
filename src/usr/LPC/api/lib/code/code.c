@@ -1,4 +1,4 @@
-# include <strbuffer.h>
+# include <StringBuffer.h>
 # include "code.h"
 
 
@@ -23,7 +23,7 @@ static void create(varargs int line)
 void start()
 {
     tls_set(LINE, 1);
-    tls_set(EMIT, new StrBuffer(""));
+    tls_set(EMIT, new StringBuffer);
 }
 
 /*
@@ -36,13 +36,13 @@ void code();
  * NAME:	end()
  * DESCRIPTION:	finish emitting code
  */
-string *end()
+StringBuffer end()
 {
-    StrBuffer buffer;
+    StringBuffer buffer;
 
     buffer = tls_get(EMIT);
     buffer->append("\n");
-    return buffer->chunks();
+    return buffer;
 }
 
 /*
