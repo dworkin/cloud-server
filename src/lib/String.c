@@ -27,7 +27,7 @@ private int strLength(mixed str)
  * DESCRIPTION:	append a string (which can be an array of integers) to a
  *		buffer, which is either a string or an array of strings
  */
-private mixed *append(mixed buffer, int index, mixed str, int bufMax,
+private mixed *append(mixed *buffer, int index, mixed str, int bufMax,
 		      int strMax)
 {
     int len;
@@ -118,7 +118,6 @@ private int *appendBytes(string str, int index, int byteOffset, int charOffset,
 			 int bufMax, int strMax)
 {
     int len, size;
-    mixed *extend;
 
     len = chars[index + 1];
     if (bytes[index + 1] < len) {
@@ -158,9 +157,8 @@ private int *appendBytes(string str, int index, int byteOffset, int charOffset,
 	    if (size > bufMax - size) {
 		size = bufMax - size;
 	    }
-	    extend = allocate(size);
-	    bytes += extend;
-	    chars += extend;
+	    bytes += allocate(size);
+	    chars += allocate(size);
 	}
 
 	charOffset = byteOffset = 0;
