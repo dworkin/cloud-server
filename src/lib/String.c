@@ -489,6 +489,60 @@ private mixed *index(int index)
 }
 
 /*
+ * NAME:	streamStart()
+ * DESCRIPTION:	start stream
+ */
+private mixed *streamStart()
+{
+    mixed *buf;
+
+    buf = (bytes[0]) ? bytes : chars;
+    return ({ buf, 0, (typeof(buf[0][0]) == T_INT) ? -1 : 0 });
+}
+
+/*
+ * NAME:	streamChunk()
+ * DESCRIPTION:	return chunk from stream
+ */
+private mixed *streamChunk(mixed *buffer, int bufIndex, int offset)
+{
+    mixed chunk;
+
+    if (!buffer) {
+	/* no more chunks */
+	return ({ nil, 0, 0, nil });
+    }
+
+    if (offset < 0) {
+	chunk = buffer[bufIndex];
+    } else {
+	chunk = buffer[bufIndex][offset];
+	if (++offset < sizeof(buffer[bufIndex])) {
+	    return ({ buffer, bufIndex, offset, chunk });
+	}
+    }
+
+    /* switch buffers */
+    if (buffer == bytes) {
+	buffer = chars;
+	if (!buffer[bufIndex]) {
+	    /* no trailing chars */
+	    return ({ nil, 0, 0, chunk });
+	}
+	offset = (typeof(buffer[bufIndex][0]) == T_INT) ? -1 : 0;
+    } else {
+	buffer = bytes;
+	bufIndex += 2;
+	if (bufIndex >= sizeof(buffer)) {
+	    /* out of range */
+	    return ({ nil, 0, 0, chunk });
+	}
+    }
+
+    return ({ buffer, bufIndex, offset, chunk });
+}
+
+/*
  * NAME:	[]
  * DESCRIPTION:	index a string
  */
@@ -576,40 +630,21 @@ StringBuffer buffer(varargs string utf8)
 {
     StringBuffer buffer;
     object encoder;
-    mixed chunk;
-    int max, i, j, size, sz;
+    int max, bufIndex, offset, index;
+    mixed *buf, chunk;
 
     buffer = new StringBuffer;
     if (!utf8) {
 	if (bytes[0] != "") {
-	    for (i = 0, size = sizeof(bytes); i < size; i += 2) {
-		chunk = bytes[i];
-		switch (typeof(chunk)) {
-		case T_STRING:
-		    buffer->append(chunk);
-		    break;
+	    ({ buf, bufIndex, offset }) = streamStart();
 
-		case T_ARRAY:
-		    for (j = 0, sz = sizeof(chunk); j < sz; j++) {
-			buffer->append(chunk[j]);
-		    }
-		    break;
+	    for (;;) {
+		({ buf, bufIndex, offset, chunk }) =
+		    streamChunk(buf, bufIndex, offset);
+		if (!chunk) {
+		    return buffer;
 		}
-
-		chunk = chars[i];
-		if (chunk) {
-		    switch (typeof(chunk[0])) {
-		    case T_INT:
-			buffer->append(chunk);
-			break;
-
-		    case T_ARRAY:
-			for (j = 0, sz = sizeof(chunk); j < sz; j++) {
-			    buffer->append(chunk[j]);
-			}
-			break;
-		    }
-		}
+		buffer->append(chunk);
 	    }
 	}
     } else {
@@ -620,33 +655,22 @@ StringBuffer buffer(varargs string utf8)
 	if (bytes[0] != "") {
 	    encoder = find_object(UTF8ENCODE);
 	    max = status(ST_STRSIZE) >> 1;
-	    for (i = 0, size = sizeof(bytes); i < size; i += 2) {
-		chunk = bytes[i];
+	    ({ buf, bufIndex, offset }) = streamStart();
+
+	    for (;;) {
+		({ buf, bufIndex, offset, chunk }) =
+		    streamChunk(buf, bufIndex, offset);
 		switch (typeof(chunk)) {
+		case T_NIL:
+		    return buffer;
+
 		case T_STRING:
 		    encodeUTF8String(buffer, chunk, encoder, max);
 		    break;
 
 		case T_ARRAY:
-		    for (j = 0, sz = sizeof(chunk); j < sz; j++) {
-			encodeUTF8String(buffer, chunk[j], encoder, max);
-		    }
+		    encodeUTF8Chars(buffer, chunk);
 		    break;
-		}
-
-		chunk = chars[i];
-		if (chunk) {
-		    switch (typeof(chunk[0])) {
-		    case T_INT:
-			encodeUTF8Chars(buffer, chunk);
-			break;
-
-		    case T_ARRAY:
-			for (j = 0, sz = sizeof(chunk); j < sz; j++) {
-			    encodeUTF8Chars(buffer, chunk[j]);
-			}
-			break;
-		    }
 		}
 	    }
 	}
@@ -656,52 +680,12 @@ StringBuffer buffer(varargs string utf8)
 }
 
 /*
- * NAME:	chunkRange()
- * DESCRIPTION:	append a range of chunks to a StringBuffer
- */
-private int chunkRange(StringBuffer buffer, mixed chunk, int offset, int length)
-{
-    int len, size;
-
-    if (typeof(chunk[0]) == T_INT) {
-	/*
-	 * simple string or character array
-	 */
-	len = strLength(chunk);
-	if (length < len) {
-	    buffer->append(chunk[.. length - 1]);
-	    return 0;
-	}
-	buffer->append(chunk);
-	length -= len;
-    } else {
-	/*
-	 * array of strings or character arrays
-	 */
-	for (size = sizeof(chunk); offset < size; offset++) {
-	    len = strLength(chunk[offset]);
-	    if (length < len) {
-		buffer->append(chunk[offset][.. length - 1]);
-		return 0;
-	    }
-	    buffer->append(chunk[offset]);
-	    length -= len;
-	    if (length == 0) {
-		return 0;
-	    }
-	}
-    }
-
-    return length;
-}
-
-/*
  * NAME:	bufferRange()
  * DESCRIPTION:	return a StringBuffer for a subrange
  */
 StringBuffer bufferRange(varargs mixed from, mixed to)
 {
-    int length, bufIndex, offset, index, len, size;
+    int length, bufIndex, offset, index, len;
     StringBuffer buffer;
     mixed *buf, chunk;
 
@@ -728,71 +712,36 @@ StringBuffer bufferRange(varargs mixed from, mixed to)
     buffer = new StringBuffer;
     ({ buf, bufIndex, offset, index }) = index(from);
 
-    chunk = buf[bufIndex];
-    if (offset < 0) {
-	/*
-	 * initial chunk is simple string or character array
-	 */
-	len = strLength(chunk);
-	if (index + length < len) {
-	    buffer->append(chunk[index .. index + length - 1]);
-	    return buffer;
-	}
-	if (index == 0) {
-	    buffer->append(chunk);
-	} else {
-	    buffer->append(chunk[index ..]);
-	}
+    /*
+     * get first chunk
+     */
+    ({ buf, bufIndex, offset, chunk }) = streamChunk(buf, bufIndex, offset);
+    len = strLength(chunk);
+    if (index + length < len) {
+	chunk = chunk[index .. index + length - 1];
+	length = 0;
+    } else if (index > 0) {
+	chunk = chunk[index ..];
 	length -= len - index;
     } else {
-	/*
-	 * initial chunk from array of strings or character arrays
-	 */
-	len = strLength(chunk[offset]);
-	if (index + length < len) {
-	    buffer->append(chunk[offset][index .. index + length - 1]);
-	    return buffer;
-	}
-	if (index == 0) {
-	    buffer->append(chunk[offset]);
-	} else {
-	    buffer->append(chunk[offset][index ..]);
+	length -= len;
+    }
+    buffer->append(chunk);
+
+    /*
+     * get further chunks
+     */
+    while (length > 0) {
+	({ buf, bufIndex, offset, chunk }) = streamChunk(buf, bufIndex, offset);
+	len = strLength(chunk);
+	if (length < len) {
+	    chunk = chunk[.. length - 1];
 	}
 	length -= len;
-	if (length == 0) {
-	    return buffer;
-	}
-
-	/* followup chunks from the same array */
-	length = chunkRange(buffer, chunk, offset + 1, length);
-    }
-    if (length == 0) {
-	return buffer;
+	buffer->append(chunk);
     }
 
-    if (buf == bytes) {
-	/* followup chunks are character arrays */
-	length = chunkRange(buffer, chars[bufIndex], 0, length);
-	if (length == 0) {
-	    return buffer;
-	}
-    }
-
-    for (;;) {
-	bufIndex += 2;
-
-	/* strings */
-	length = chunkRange(buffer, bytes[bufIndex], 0, length);
-	if (length == 0) {
-	    return buffer;
-	}
-
-	/* character arrays */
-	length = chunkRange(buffer, chars[bufIndex], 0, length);
-	if (length == 0) {
-	    return buffer;
-	}
-    }
+    return buffer;
 }
 
 /*
