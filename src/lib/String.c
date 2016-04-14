@@ -1,7 +1,11 @@
 # include <String.h>
+# include <Iterator.h>
 # include <StringBuffer.h>
 # include <status.h>
 # include <type.h>
+
+inherit Iterable;
+
 
 # define UTF8DECODE	"/sys/utf8decode"
 # define UTF8ENCODE	"/sys/utf8encode"
@@ -780,4 +784,61 @@ static String operator+ (mixed str)
     buffer = buffer();
     buffer->append(str);
     return new String(buffer);
+}
+
+
+/*
+ * NAME:	iteratorStart()
+ * DESCRIPTION:	reset an iterator
+ */
+mixed iteratorStart(mixed state)
+{
+    StringBuffer buffer;
+    mixed chunk;
+
+    buffer = buffer();
+    chunk = buffer->chunk();
+    return ({ buffer, chunk, 0 });
+}
+
+/*
+ * NAME:	iteratorNext()
+ * DESCRIPTION:	return the next state for an iterator
+ */
+mixed *iteratorNext(mixed state)
+{
+    StringBuffer buffer;
+    mixed chunk;
+    int index, char;
+
+    ({ buffer, chunk, index }) = state;
+    if (!chunk) {
+	/* reached the end */
+	return ({ ({ nil, nil, 0 }), nil });
+    }
+
+    char = chunk[index];
+    if (++index == strLength(chunk)) {
+	chunk = buffer->chunk();
+	index = 0;
+    }
+    return ({ ({ buffer, chunk, index }), char });
+}
+
+/*
+ * NAME:	iteratorEnd()
+ * DESCRIPTION:	check if an iterator is at its end
+ */
+int iteratorEnd(mixed state)
+{
+    return (!state[1]);
+}
+
+/*
+ * NAME:	iterator()
+ * DESCRIPTION:	return an iterator for this String
+ */
+Iterator iterator()
+{
+    return new Iterator(this_object(), iteratorStart(nil));
 }
