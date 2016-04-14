@@ -842,3 +842,110 @@ Iterator iterator()
 {
     return new Iterator(this_object(), iteratorStart(nil));
 }
+
+
+/*
+ * NAME:	capitalize()
+ * DESCRIPTION:	return String with first character converted to upper case
+ */
+String capitalize()
+{
+    StringBuffer buffer;
+    mixed *buf, chunk;
+    int bufIndex, offset;
+
+    if (length() == 0) {
+	return new String("");
+    }
+
+    /* create StringBuffer and modify first char */
+    buffer = new StringBuffer();
+    ({ buf, bufIndex, offset }) = streamStart();
+    ({ buf, bufIndex, offset, chunk }) = streamChunk(buf, bufIndex, offset);
+    if (typeof(chunk) == T_STRING && chunk[0] >= 'a' && chunk[0] <= 'z') {
+	/* XXX full unicode conversion */
+	chunk[0] -= 'a' - 'A';
+    }
+    buffer->append(chunk);
+
+    /* copy remaining chunks */
+    for (;;) {
+	({ buf, bufIndex, offset, chunk }) = streamChunk(buf, bufIndex, offset);
+	if (!chunk) {
+	    return new String(buffer);
+	}
+	buffer->append(chunk);
+    }
+}
+
+/*
+ * NAME:	upperCase()
+ * DESCRIPTION:	return String converted to upper case
+ */
+String upperCase()
+{
+    StringBuffer buffer;
+    mixed *buf, chunk;
+    int bufIndex, offset, i, len;
+
+    /* create StringBuffer and modify chars */
+    buffer = new StringBuffer();
+    ({ buf, bufIndex, offset }) = streamStart();
+
+    for (;;) {
+	({ buf, bufIndex, offset, chunk }) = streamChunk(buf, bufIndex, offset);
+	switch (typeof(chunk)) {
+	case T_NIL:
+	    return new String(buffer);
+
+	case T_STRING:
+	    for (i = 0, len = strlen(chunk); i < len; i++) {
+		if (chunk[i] >= 'a' && chunk[i] <= 'z') {
+		    chunk[i] -= 'a' - 'A';
+		}
+	    }
+	    break;
+
+	case T_ARRAY:
+	    /* XXX full unicode conversion */
+	    break;
+	}
+	buffer->append(chunk);
+    }
+}
+
+/*
+ * NAME:	lowerCase()
+ * DESCRIPTION:	return String converted to lower case
+ */
+String lowerCase()
+{
+    StringBuffer buffer;
+    mixed *buf, chunk;
+    int bufIndex, offset, i, len;
+
+    /* create StringBuffer and modify chars */
+    buffer = new StringBuffer();
+    ({ buf, bufIndex, offset }) = streamStart();
+
+    for (;;) {
+	({ buf, bufIndex, offset, chunk }) = streamChunk(buf, bufIndex, offset);
+	switch (typeof(chunk)) {
+	case T_NIL:
+	    return new String(buffer);
+
+	case T_STRING:
+	    for (i = 0, len = strlen(chunk); i < len; i++) {
+		if (chunk[i] >= 'A' && chunk[i] <= 'Z') {
+		    chunk[i] += 'a' - 'A';
+		}
+	    }
+	    break;
+
+	case T_ARRAY:
+	    /* XXX full unicode conversion */
+	    break;
+	}
+	buffer->append(chunk);
+    }
+}
