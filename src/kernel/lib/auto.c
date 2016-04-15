@@ -32,7 +32,11 @@ nomask string query_owner()
     return owner;
 }
 
-void create() { }	/* default high-level create function */
+void create() { }		/* default high-level create function */
+
+# ifdef CREATOR
+int CREATOR() { return FALSE; }	/* default System-level creator function */
+# endif
 
 /*
  * NAME:	_F_create()
@@ -42,9 +46,6 @@ nomask void _F_create()
 {
     if (!creator) {
 	string oname;
-# ifdef CREATOR
-	string cname;
-# endif
 	object driver;
 	int clone;
 
@@ -71,12 +72,9 @@ nomask void _F_create()
 	    }
 
 # ifdef CREATOR
-	    cname = function_object(CREATOR, this_object());
-	    if (cname && sscanf(cname, "/usr/System/%*s") != 0) {
-		/* extra initialisation function */
-		if (call_other(this_object(), CREATOR)) {
-		    return;
-		}
+	    /* call System-level creator function */
+	    if (CREATOR()) {
+		return;
 	    }
 # endif
 	}
