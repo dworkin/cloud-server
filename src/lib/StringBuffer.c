@@ -296,7 +296,8 @@ mixed chunk()
 	    }
 	}
 
-	chunk = chunks[chunkIndex++];
+	chunk = chunks[chunkIndex];
+	chunks[chunkIndex++] = nil;
 	if (!chunk || chunkIndex == sizeof(chunks)) {
 	    if (ringStart == ringEnd) {
 		chunkType = T_NIL;
