@@ -584,7 +584,7 @@ private void encodeUTF8String(StringBuffer buffer, string chunk, object encoder,
 	buffer->append(encoder->encode(chunk[.. max - 1]));
 	chunk = chunk[max ..];
     }
-    buffer->append(chunk);
+    buffer->append(encoder->encode(chunk));
 }
 
 /*
@@ -713,7 +713,6 @@ StringBuffer bufferRange(varargs mixed from, mixed to)
 
     /* determine index and size */
     length = to - from + 1;
-    buffer = new StringBuffer;
     ({ buf, bufIndex, offset, index }) = index(from);
 
     /*
@@ -730,6 +729,7 @@ StringBuffer bufferRange(varargs mixed from, mixed to)
     } else {
 	length -= len;
     }
+    buffer = new StringBuffer;
     buffer->append(chunk);
 
     /*
