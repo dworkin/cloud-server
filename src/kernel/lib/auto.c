@@ -778,7 +778,7 @@ static int write_file(string path, string str, varargs int offset)
 		rsrcd->rsrc_incr(fcreator, "fileblocks", size);
 	    }
 	}
-    } : error(TLSVAR(TLS(), TLS_ARGUMENT));
+    } : error(TLSVAR(TLS(), TLS_ERROR));
 
     return result;
 }
@@ -816,7 +816,7 @@ static int remove_file(string path)
 						"fileblocks", -size);
 	    }
 	}
-    } : error(TLSVAR(TLS(), TLS_ARGUMENT));
+    } : error(TLSVAR(TLS(), TLS_ERROR));
     return result;
 }
 
@@ -869,7 +869,7 @@ static int rename_file(string from, string to)
 		rsrcd->rsrc_incr(fcreator, "fileblocks", -size);
 	    }
 	}
-    } : error(TLSVAR(TLS(), TLS_ARGUMENT));
+    } : error(TLSVAR(TLS(), TLS_ERROR));
     return result;
 }
 
@@ -1016,7 +1016,7 @@ static int make_dir(string path)
 		rsrcd->rsrc_incr(fcreator, "fileblocks", 1);
 	    }
 	}
-    } : error(TLSVAR(TLS(), TLS_ARGUMENT));
+    } : error(TLSVAR(TLS(), TLS_ERROR));
     return result;
 }
 
@@ -1052,7 +1052,7 @@ static int remove_dir(string path)
 						"fileblocks", -1);
 	    }
 	}
-    } : error(TLSVAR(TLS(), TLS_ARGUMENT));
+    } : error(TLSVAR(TLS(), TLS_ERROR));
     return result;
 }
 
@@ -1119,7 +1119,7 @@ static void save_object(string path)
 		rsrcd->rsrc_incr(fcreator, "fileblocks", size);
 	    }
 	}
-    } : error(TLSVAR(TLS(), TLS_ARGUMENT));
+    } : error(TLSVAR(TLS(), TLS_ERROR));
 }
 
 /*
@@ -1157,7 +1157,7 @@ static string editor(varargs string cmd)
 				 driver->file_size(info[0]) - info[1]);
 	    }
 	}
-    } : error(TLSVAR(TLS(), TLS_ARGUMENT));
+    } : error(TLSVAR(TLS(), TLS_ERROR));
     return result;
 }
 

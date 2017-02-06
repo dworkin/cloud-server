@@ -886,7 +886,7 @@ static string runtime_error(string str, int caught, int ticks)
     } else if (ticks < 0 && sscanf(trace[caught - 1][TRACE_PROGNAME],
 				   "/kernel/%*s") != 0 &&
 	       trace[caught - 1][TRACE_FUNCTION] != "cmd_code") {
-	return TLSVAR(tls, TLS_ARGUMENT) = str;
+	return TLSVAR(tls, TLS_ERROR) = str;
     }
 
     _runtime_error(tls, str, caught, ticks, trace, user);
