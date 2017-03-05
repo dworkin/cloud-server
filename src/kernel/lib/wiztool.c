@@ -2126,7 +2126,7 @@ static void cmd_snapshot(object user, string cmd, string str)
 	return;
     }
 
-    dump_state(TRUE);
+    dump_state(FALSE);
 }
 
 /*
