@@ -174,7 +174,7 @@ static void raw_message()
 	    buffer = "";
 	}
 	tls = ([ ]);
-	TLS(tls, 3) = this_object();
+	TLS(tls, TLS_USER) = this_object();
 	::receive_message(tls, str);
     }
 }

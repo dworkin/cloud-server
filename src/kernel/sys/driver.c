@@ -715,6 +715,15 @@ static object binary_connect(int port)
 }
 
 /*
+ * NAME:	datagram_connect()
+ * DESCRIPTION:	return a datagram connection user object
+ */
+static object datagram_connect(int port)
+{
+    return userd->datagram_connection(([ ]), port);
+}
+
+/*
  * NAME:	_interrupt()
  * DESCRIPTION:	handle interrupt signal, with proper TLS on the stack
  */

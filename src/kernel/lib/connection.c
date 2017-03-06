@@ -67,10 +67,12 @@ static void open(mapping tls)
     int timeout;
     string banner;
 
-    banner = call_other(userd, "query_" + conntype + "_banner", port,
-			this_object());
-    if (banner) {
-	send_message(banner);
+    if (conntype != "datagram") {
+	banner = call_other(userd, "query_" + conntype + "_banner", port,
+			    this_object());
+	if (banner) {
+	    send_message(banner);
+	}
     }
 
     timeout = call_other(userd, "query_" + conntype + "_timeout", port,

@@ -4,11 +4,11 @@
 # include <status.h>
 
 
-object *users;		/* user mappings */
-mapping names;		/* name : connection object */
-object *connections;	/* saved connections */
-mapping telnet, binary;	/* port managers */
-mapping editors;	/* editor : TRUE */
+object *users;				/* user mappings */
+mapping names;				/* name : connection object */
+object *connections;			/* saved connections */
+mapping telnet, binary, datagram;	/* port managers */
+mapping editors;			/* editor : TRUE */
 
 /*
  * NAME:	create()
@@ -17,15 +17,17 @@ mapping editors;	/* editor : TRUE */
 static void create()
 {
     /* load essential objects */
-    if (!find_object(TELNET_CONN)) { compile_object(TELNET_CONN); }
-    if (!find_object(BINARY_CONN)) { compile_object(BINARY_CONN); }
-    if (!find_object(DEFAULT_USER)) { compile_object(DEFAULT_USER); }
+    compile_object(TELNET_CONN);
+    compile_object(BINARY_CONN);
+    compile_object(DATAGRAM_CONN);
+    compile_object(DEFAULT_USER);
 
     /* initialize user arrays */
     users = ({ });
     names = ([ ]);
     telnet = ([ ]);
     binary = ([ ]);
+    datagram = ([ ]);
     editors = ([ ]);
 }
 
@@ -60,6 +62,21 @@ object binary_connection(mapping tls, int port)
 }
 
 /*
+ * NAME:	datagram_connection()
+ * DESCRIPTION:	return a new datagram connection object
+ */
+object datagram_connection(mapping tls, int port)
+{
+    if (previous_program() == DRIVER) {
+	object conn;
+
+	conn = clone_object(DATAGRAM_CONN);
+	conn->set_port(port);
+	return conn;
+    }
+}
+
+/*
  * NAME:	set_telnet_manager()
  * DESCRIPTION:	set the telnet manager object, which determines what the
  *		user object is, based on the first line of input
@@ -80,6 +97,18 @@ void set_binary_manager(int port, object manager)
 {
     if (SYSTEM()) {
 	binary[port] = manager;
+    }
+}
+
+/*
+ * NAME:	set_datagram_manager()
+ * DESCRIPTION:	set the datagram manager object, which determines what the
+ *		user object is, based on the first datagram
+ */
+void set_datagram_manager(int port, object manager)
+{
+    if (SYSTEM()) {
+	datagram[port] = manager;
     }
 }
 
@@ -131,6 +160,29 @@ object binary_user(int port, string str)
 }
 
 /*
+ * NAME:	datagram_user()
+ * DESCRIPTION:	select user object for datagram connection, based on the first
+ *		datagram
+ */
+object datagram_user(int port, string str)
+{
+    if (previous_program() == LIB_CONN) {
+	object user;
+
+	user = names[str];
+	if (!user) {
+	    user = datagram[port];
+	    if (user) {
+		user = (object LIB_USER) user->select(str);
+	    } else {
+		user = clone_object(DEFAULT_USER);
+	    }
+	}
+	return user;
+    }
+}
+
+/*
  * NAME:	query_telnet_timeout()
  * DESCRIPTION:	return the current telnet connection timeout
  */
@@ -154,6 +206,20 @@ int query_binary_timeout(int port, object obj)
 	object manager;
 
 	manager = binary[port];
+	return (manager) ? manager->query_timeout(obj) : DEFAULT_TIMEOUT;
+    }
+}
+
+/*
+ * NAME:	query_datagram_timeout()
+ * DESCRIPTION:	return the current datagram connection timeout
+ */
+int query_datagram_timeout(int port, object obj)
+{
+    if (previous_program() == LIB_CONN) {
+	object manager;
+
+	manager = datagram[port];
 	return (manager) ? manager->query_timeout(obj) : DEFAULT_TIMEOUT;
     }
 }
