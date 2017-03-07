@@ -275,13 +275,13 @@ void datagram_challenge(string str)
 }
 
 /*
- * NAME:	open_datagram()
- * DESCRIPTION:	open a datagram channel for this connection
+ * NAME:	datagram_attach()
+ * DESCRIPTION:	attach a datagram channel to this connection
  */
-static void open_datagram(mapping tls)
+static void datagram_attach(mapping tls)
 {
     if (user) {
-	user->open_datagram();
+	user->datagram_attach();
     }
 }
 

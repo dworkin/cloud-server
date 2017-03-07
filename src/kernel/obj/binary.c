@@ -201,12 +201,12 @@ static void message_done()
 }
 
 /*
- * NAME:	open_datagram()
- * DESCRIPTION:	open a datagram channel for this connection
+ * NAME:	datagram_attach()
+ * DESCRIPTION:	attach a datagram channel to this connection
  */
-static void open_datagram()
+static void datagram_attach()
 {
-    ::open_datagram(([ ]));
+    ::datagram_attach(([ ]));
 }
 
 /*
