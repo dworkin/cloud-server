@@ -1,5 +1,5 @@
 # include <kernel/kernel.h>
-# include <StringBuffer.h>
+# include <String.h>
 # include "~/api/include/http.h"
 
 inherit "~/lib/user";

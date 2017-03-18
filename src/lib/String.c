@@ -1,6 +1,5 @@
 # include <String.h>
 # include <Iterator.h>
-# include <StringBuffer.h>
 # include <status.h>
 # include <type.h>
 
