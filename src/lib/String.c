@@ -833,15 +833,6 @@ int iteratorEnd(mixed state)
     return (!state[1]);
 }
 
-/*
- * NAME:	iterator()
- * DESCRIPTION:	return an iterator for this String
- */
-Iterator iterator()
-{
-    return new Iterator(this_object(), iteratorStart(nil));
-}
-
 
 /*
  * NAME:	capitalize()
