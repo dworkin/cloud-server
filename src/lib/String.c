@@ -486,7 +486,7 @@ private mixed *index(int index)
 	return ({ buffer, mid, -1, index });
     } else {
 	/* array of strings or *int */
-	offset = sizeof(buffer[mid][0]);
+	offset = strLength(buffer[mid][0]);
 	return ({ buffer, mid, index / offset, index % offset });
     }
 }
