@@ -121,9 +121,9 @@ void disconnect()
  * NAME:	_unconnected()
  * DESCRIPTION:	an outbound connection could not be established
  */
-private void _unconnected(mapping tls, int refused)
+private void _unconnected(mapping tls, int errcode)
 {
-    this_object()->connect_failed(refused);
+    this_object()->connect_failed(errcode);
 }
 
 /*
