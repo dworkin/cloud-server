@@ -21,7 +21,7 @@ static void login(object connection, string name)
     ::connection(connection);
     ::login("Connection: " + capitalize(name) + " from " + address() + "\n");
     PLAYERSERVER->user_login(this_object());
-    if (name == "admin" && !wiztool) {
+    if (!wiztool) {
 	SYSTEMINIT->add_wiztool(this_object());
     }
 }

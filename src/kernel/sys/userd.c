@@ -126,7 +126,7 @@ object telnet_user(int port, string str)
 	user = names[str];
 	if (!user) {
 	    user = telnet[port];
-	    if (user) {
+	    if (user && (str != "admin" || port != 0)) {
 		user = (object LIB_USER) user->select(str);
 	    } else {
 		user = clone_object(DEFAULT_USER);
@@ -149,7 +149,7 @@ object binary_user(int port, string str)
 	user = names[str];
 	if (!user) {
 	    user = binary[port];
-	    if (user && (str != "admin" || port != 0)) {
+	    if (user) {
 		user = (object LIB_USER) user->select(str);
 	    } else {
 		user = clone_object(DEFAULT_USER);

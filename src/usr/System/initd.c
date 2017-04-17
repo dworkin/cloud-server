@@ -120,7 +120,8 @@ void add_wiztool(object user)
 {
     if (SYSTEM() ||
 	(previous_program() == "/usr/Player/lib/interface" &&
-	 user->query_name() == "admin" && user->query_conn())) {
+	 user->query_conn() &&
+	 (rsrc::query_owners() & ({ user->query_name() })))) {
 	user->add_wiztool(clone_object(WIZTOOL, user->query_name()));
     }
 }
