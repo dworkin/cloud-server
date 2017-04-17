@@ -94,6 +94,19 @@ static void remove_user(string user)
 }
 
 /*
+ * NAME:	save_access()
+ * DESCRIPTION:	save the state of the access server to file
+ */
+static void save_access()
+{
+    if (!access(owner, "/", FULL_ACCESS)) {
+	message("Insufficient access granting privileges.\n");
+    } else {
+	::save_access();
+    }
+}
+
+/*
  * NAME:	set_access()
  * DESCRIPTION:	set access
  */
@@ -1623,6 +1636,7 @@ static void cmd_grant(object user, string cmd, string str)
 	    message("That global access already exists.\n");
 	} else {
 	    set_global_access(str, TRUE);
+	    save_access();
 	}
     } else if (dir == "access") {
 	/*
@@ -1638,6 +1652,7 @@ static void cmd_grant(object user, string cmd, string str)
 	    ::add_user(who);
 	    ::add_owner(who);
 	    ::make_dir("/usr/" + who);
+	    save_access();
 	}
     } else {
 	/*
@@ -1649,6 +1664,7 @@ static void cmd_grant(object user, string cmd, string str)
 	    message(who + " already has that access.\n");
 	} else {
 	    set_access(who, str, type);
+	    save_access();
 	}
     }
 }
@@ -1683,6 +1699,7 @@ static void cmd_ungrant(object user, string cmd, string str)
 	    message("That global access does not exist.\n");
 	} else {
 	    set_global_access(str, FALSE);
+	    save_access();
 	}
     } else if (dir == "access") {
 	/*
@@ -1692,6 +1709,7 @@ static void cmd_ungrant(object user, string cmd, string str)
 	    message(who + " has no file access.\n");
 	} else {
 	    remove_user(who);
+	    save_access();
 	}
     } else {
 	/*
@@ -1703,6 +1721,7 @@ static void cmd_ungrant(object user, string cmd, string str)
 	    message(who + " has no such access.\n");
 	} else {
 	    set_access(who, str, 0);
+	    save_access();
 	}
     }
 }
