@@ -853,43 +853,45 @@ static string runtime_error(string str, int caught, int ticks)
 	user = user->query_user();
     }
 
-    messages = TLSVAR(tls, TLS_PUT_ATOMIC);
-    messages = explode(str, "\0")[(messages) ? sizeof(messages) : 0 ..];
-    for (i = 0, sz = sizeof(messages) - 1; i < sz; i++) {
-	string file;
-	int line;
+    if (sscanf(str, "%*s\0") != 0) {
+	messages = TLSVAR(tls, TLS_PUT_ATOMIC);
+	messages = explode(str, "\0")[(messages) ? sizeof(messages) : 0 ..];
+	for (i = 0, sz = sizeof(messages) - 1; i < sz; i++) {
+	    string file;
+	    int line;
 
-	str = messages[i][1 ..];
-	switch (messages[i][0]) {
-	case 'e':
-	    sscanf(str, "%s#%d#%s", file, line, str);
-	    if (errord) {
-		errord->compile_error(file, line, str);
-	    } else {
-		send_message(file += ", " + line + ": " + str + "\n");
-		if (user) {
-		    user->message(file);
+	    str = messages[i][1 ..];
+	    switch (messages[i][0]) {
+	    case 'e':
+		sscanf(str, "%s#%d#%s", file, line, str);
+		if (errord) {
+		    errord->compile_error(file, line, str);
+		} else {
+		    send_message(file += ", " + line + ": " + str + "\n");
+		    if (user) {
+			user->message(file);
+		    }
 		}
-	    }
-	    messages[i] = nil;
-	    break;
+		messages[i] = nil;
+		break;
 
-	case 'c':
-	    if (objectd) {
-		objectd->compile_failed(creator(str), str);
-	    }
-	    messages[i] = nil;
-	    break;
+	    case 'c':
+		if (objectd) {
+		    objectd->compile_failed(creator(str), str);
+		}
+		messages[i] = nil;
+		break;
 
-	default:
-	    messages[i] = str;
-	    break;
+	    default:
+		messages[i] = str;
+		break;
+	    }
 	}
+	str = messages[sz];
+	messages[sz] = nil;
+	TLSVAR(tls, TLS_GET_ATOMIC) = messages - ({ nil });
     }
-    str = messages[sz];
-    messages[sz] = nil;
 
-    TLSVAR(tls, TLS_GET_ATOMIC) = messages - ({ nil });
     if (caught <= 1) {
 	caught = 0;		/* ignore top-level catch */
     } else if (ticks < 0 && sscanf(trace[caught - 1][TRACE_PROGNAME],
