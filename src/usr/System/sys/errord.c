@@ -1,5 +1,4 @@
 # include <kernel/kernel.h>
-# include <messages.h>
 # include <trace.h>
 # include <type.h>
 # include "tls.h"
@@ -82,7 +81,7 @@ void runtime_error(string error, int caught, mixed **trace)
 
 	driver->message(str);
 	if (caught == 0 && (user=this_user())) {
-	    user->message(MSG_FORMATTED, str);
+	    user->message(str);
 	}
     }
 }
@@ -160,7 +159,7 @@ void compile_error(string file, int line, string error)
 	driver->message(str);
 	user = this_user();
 	if (user) {
-	    user->message(MSG_FORMATTED, str);
+	    user->message(str);
 	}
     }
 }

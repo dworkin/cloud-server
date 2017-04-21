@@ -7,7 +7,7 @@ inherit access API_ACCESS;
 inherit rsrc API_RSRC;
 
 # define BINARYSERVER	"/usr/WWW/sys/server"
-# define TELNETSERVER	"/usr/Player/sys/userd"
+# define TELNETSERVER	"/usr/System/sys/userd"
 # define WIZTOOL	"/usr/System/obj/wiztool"
 
 
@@ -42,6 +42,7 @@ static void create()
     /* server objects */
     load("sys/errord");
     load("sys/upgraded");
+    load("sys/userd");
 
     /* global objects */
     compile_object("/sys/utf8encode");
@@ -66,7 +67,7 @@ static void create()
     }
 
     /* clonables */
-    compile_object("obj/wiztool");
+    compile_object("obj/user");
 
     /* connections */
     USERD->set_binary_manager(0, find_object(BINARYSERVER));

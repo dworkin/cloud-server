@@ -1,6 +1,5 @@
 # include <kernel/kernel.h>
 # include <kernel/access.h>
-# include <messages.h>
 # include <status.h>
 # include <type.h>
 # include "tls.h"
@@ -328,7 +327,7 @@ private atomic string *recompile(string *sources, mapping *libs,
 		if (atom) {
 		    send_atomic_message(err);
 		} else if ((user=this_user())) {
-		    user->message(MSG_FORMATTED, err + "\n");
+		    user->message(err + "\n");
 		}
 	    }
 	}
@@ -425,7 +424,7 @@ mixed upgrade(string owner, string *sources, int atom, object patchtool)
 		    user = this_user();
 		    if (user) {
 			for (i = 0; i < sz; i++) {
-			    user->message(MSG_FORMATTED, list[i] + "\n");
+			    user->message(list[i] + "\n");
 			}
 		    }
 		    if (str[0] == '#') {

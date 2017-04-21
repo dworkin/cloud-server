@@ -18,7 +18,7 @@ private int hsize, hindex, hmax; /* expression table size and index */
 private string directory;	/* current directory */
 private object driver;		/* driver object */
 
-static void message(string str);
+int message(string str);
 
 /*
  * NAME:	create()
