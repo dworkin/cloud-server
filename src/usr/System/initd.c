@@ -111,33 +111,3 @@ void reboot()
 	}
     }
 }
-
-
-/*
- * NAME:	add_wiztool()
- * DESCRIPTION:	give user a wiztool
- */
-void add_wiztool(object user)
-{
-    if (SYSTEM() ||
-	(previous_program() == "/usr/Player/lib/interface" &&
-	 user->query_conn() &&
-	 (rsrc::query_owners() & ({ user->query_name() })))) {
-	user->add_wiztool(clone_object(WIZTOOL, user->query_name()));
-    }
-}
-
-/*
- * NAME:	remove_wiztool()
- * DESCRIPTION:	remove user's wiztool
- */
-void remove_wiztool(object user)
-{
-    if (SYSTEM()) {
-	object wiztool;
-
-	wiztool = user->query_wiztool();
-	user->remove_wiztool();
-	destruct_object(wiztool);
-    }
-}

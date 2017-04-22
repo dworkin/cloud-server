@@ -1,11 +1,11 @@
 # include <kernel/kernel.h>
-# include <kernel/rsrc.h>
+# include <kernel/access.h>
 # include <kernel/user.h>
 
 inherit kernel AUTO;
 inherit "~/lib/auto";
 inherit "~/lib/user";
-inherit rsrc API_RSRC;
+inherit access API_ACCESS;
 
 private inherit "/lib/util/string";
 
@@ -22,7 +22,7 @@ string banner;		/* login message */
  */
 static void create()
 {
-    rsrc::create();
+    access::create();
     userd = find_object(USERD);
     users = ([ ]);
     banner = "\n" +
@@ -60,7 +60,7 @@ static object get_user(string name)
     }
 
     name = lower_case(name);
-    if (sizeof(rsrc::query_owners() & ({ name })) == 0) {
+    if (sizeof(access::query_users() & ({ name })) == 0) {
 	return nil;
     }
 
