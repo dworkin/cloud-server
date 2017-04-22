@@ -1,2 +1,2 @@
-This bare-bones MUD library for DGD, with the parts that are not open source
-stripped out, will eventually become something different.
+The Cloud Server library is intended to become a showcase of the capabilities
+of DGD and Hydra, and a basis for other LPC projects.
