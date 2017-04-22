@@ -36,9 +36,9 @@ static create()
  * NAME:	message()
  * DESCRIPTION:	pass on a message to the user
  */
-static void message(string str)
+static int message(string str)
 {
-    user->message(MSG_FORMATTED, str);
+    return user->message(MSG_FORMATTED, str);
 }
 
 /*
