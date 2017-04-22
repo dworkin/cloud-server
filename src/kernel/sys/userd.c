@@ -83,7 +83,7 @@ object datagram_connection(mapping tls, int port)
  */
 void set_telnet_manager(int port, object manager)
 {
-    if (SYSTEM()) {
+    if (SYSTEM() && !telnet[port]) {
 	telnet[port] = manager;
     }
 }
@@ -95,7 +95,7 @@ void set_telnet_manager(int port, object manager)
  */
 void set_binary_manager(int port, object manager)
 {
-    if (SYSTEM()) {
+    if (SYSTEM() && !binary[port]) {
 	binary[port] = manager;
     }
 }
@@ -107,7 +107,7 @@ void set_binary_manager(int port, object manager)
  */
 void set_datagram_manager(int port, object manager)
 {
-    if (SYSTEM()) {
+    if (SYSTEM() && !datagram[port]) {
 	datagram[port] = manager;
     }
 }

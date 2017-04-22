@@ -44,6 +44,12 @@ static void create()
     load("sys/upgraded");
     load("sys/userd");
 
+    /* clonables */
+    compile_object("obj/user");
+
+    /* dev connections */
+    USERD->set_telnet_manager(0, find_object(TELNETSERVER));
+
     /* global objects */
     compile_object("/sys/utf8encode");
     compile_object("/sys/utf8decode");
@@ -65,13 +71,6 @@ static void create()
 	    load("/usr/" + domain + "/initd");
 	}
     }
-
-    /* clonables */
-    compile_object("obj/user");
-
-    /* connections */
-    USERD->set_binary_manager(0, find_object(BINARYSERVER));
-    USERD->set_telnet_manager(0, find_object(TELNETSERVER));
 }
 
 /*
@@ -110,4 +109,13 @@ void reboot()
 		      TRUE);
 	}
     }
+}
+
+/*
+ * NAMR:	set_connection_manager()
+ * DESCRIPRION:	first come, first go
+ */
+void set_connection_manager(string type, int port, object manager)
+{
+    call_other(USERD, "set_" + type + "_manager", port, manager);
 }

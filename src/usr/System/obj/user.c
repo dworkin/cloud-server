@@ -212,32 +212,6 @@ static void call_patch(object obj)
 
 
 /*
- * NAME:	list_access()
- * DESCRIPTION:	return an access listing in string form
- */
-private string list_access(mapping access)
-{
-    string str, *files;
-    int i, *values;
-
-    files = map_indices(access);
-    values = map_values(access);
-    for (i = sizeof(files); --i >= 0; ) {
-	switch (values[i]) {
-	case READ_ACCESS:
-	    files[i] += " [read-only]";
-	    break;
-
-	case FULL_ACCESS:
-	    files[i] += " [full]";
-	    break;
-	}
-    }
-
-    return " " + implode(files, "\n ") + "\n";
-}
-
-/*
  * NAME:	access()
  * DESCRIPTION:	list special access
  */

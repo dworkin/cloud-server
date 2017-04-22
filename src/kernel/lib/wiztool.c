@@ -1503,7 +1503,7 @@ static void cmd_ed(object user, string cmd, string str)
  * NAME:	list_access()
  * DESCRIPTION:	return an access listing in string form
  */
-private string list_access(mapping access)
+static string list_access(mapping access)
 {
     string str, *files;
     int i, *values;
@@ -1731,7 +1731,7 @@ static void cmd_ungrant(object user, string cmd, string str)
  * NAME:	ralign()
  * DESCRIPTION:	return a number as a right-aligned string
  */
-private string ralign(mixed num, int width)
+static string ralign(mixed num, int width)
 {
     string str;
 
@@ -1743,7 +1743,7 @@ private string ralign(mixed num, int width)
  * NAME:	list_resources()
  * DESCRIPTION:	create a listing of resource usage, limits etc
  */
-private string list_resources(string name, string *names, mixed *resources)
+static string list_resources(string name, string *names, mixed *resources)
 {
     int i, n;
     mixed *rsrc;
@@ -1946,7 +1946,7 @@ static void cmd_people(object user, string cmd, string str)
  * NAME:	swapavg()
  * DESCRIPTION:	return a swap average in X.XX format
  */
-private string swapavg(int num, int div)
+static string swapavg(int num, int div)
 {
     string str;
 
@@ -1962,7 +1962,7 @@ private string swapavg(int num, int div)
  * NAME:	ntoa()
  * DESCRIPTION:	convert a positive integer (or float) to a string
  */
-private string ntoa(mixed num)
+static string ntoa(mixed num)
 {
     string str;
     float mantissa;
@@ -1987,7 +1987,7 @@ private string ntoa(mixed num)
  * NAME:	percentage()
  * DESCRIPTION:	show a percentage
  */
-private string percentage(mixed part, mixed total)
+static string percentage(mixed part, mixed total)
 {
     if (total == 0) {
 	return "(  0%)";
