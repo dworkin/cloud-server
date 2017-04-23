@@ -24,6 +24,7 @@ static void create()
 {
     access::create();
     userd = find_object(USERD);
+    userd->set_telnet_manager(0, this_object());
     users = ([ ]);
     banner = "\n" +
 	     "Welcome to the Cloud Server.\n" +

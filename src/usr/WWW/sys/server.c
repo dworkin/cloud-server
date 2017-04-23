@@ -4,6 +4,7 @@
 
 inherit "~System/lib/user";
 
+# define SYS_INITD	"/usr/System/initd"
 
 object userd;		/* user daemon */
 string httphost;
@@ -14,6 +15,7 @@ string errormessage;	/* message returned in case of a login error */
 static void create()
 {
     userd = find_object(USERD);
+    SYS_INITD->set_connection_manager("binary", 0, this_object());
     httphost = "localhost:8080";
     ftphost = "ftphost:8080";
     urlmap = ([ "" : "~/obj/http" ]);

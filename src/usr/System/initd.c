@@ -47,9 +47,6 @@ static void create()
     /* clonables */
     compile_object("obj/user");
 
-    /* dev connections */
-    USERD->set_telnet_manager(0, find_object(TELNETSERVER));
-
     /* global objects */
     compile_object("/sys/utf8encode");
     compile_object("/sys/utf8decode");
