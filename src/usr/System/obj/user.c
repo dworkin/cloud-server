@@ -724,7 +724,7 @@ int receive_message(string str)
 	    }
 
 	    if (str) {
-		command(str);
+		call_limited("command", str);
 	    }
 	    break;
 
