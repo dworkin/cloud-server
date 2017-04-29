@@ -1,5 +1,2 @@
-# define ITERABLE	"/lib/Iterable"
-# define ITERATOR	"/lib/Iterator"
-
-# define Iterable	object ITERABLE
-# define Iterator	object ITERATOR
+# define Iterable	object "/lib/Iterable"
+# define Iterator	object "/lib/Iterator"
