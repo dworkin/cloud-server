@@ -576,7 +576,7 @@ static string dump_value(mixed value, mapping seen)
     case T_FLOAT:
 	str = (string) value;
 	if (sscanf(str, "%*s.") == 0 && sscanf(str, "%*se") == 0) {
-	    str += "." + (int) (fabs(value) * 10.0) % 10;
+	    str += "." + (int) fmod(fabs(value) * 10.0, 10.0);
 	}
 	return str;
 
