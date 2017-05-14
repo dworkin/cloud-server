@@ -65,7 +65,7 @@ static object new_object(string path, mixed args...)
 	if (sscanf(path, "%*s/obj/") != 0 || sscanf(path, "%*s/sys/") != 0) {
 	    error("Invalid path");
 	}
-	if (sscanf(path, "%*s/lib/") != 0) {
+	if (sscanf(path, "%*s/lib/") != 0 && status(path, O_INDEX) != nil) {
 	    /* let upgrade server generate a leaf object */
 	    path = UPGRADESERVER->generate_leaf(path);
 	}
