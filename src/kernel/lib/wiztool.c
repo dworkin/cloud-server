@@ -576,7 +576,14 @@ static string dump_value(mixed value, mapping seen)
     case T_FLOAT:
 	str = (string) value;
 	if (sscanf(str, "%*s.") == 0 && sscanf(str, "%*se") == 0) {
-	    str += "." + (int) fmod(fabs(value) * 10.0, 10.0);
+	    if (value >= 0.0) {
+		value += .05;
+		str = (string) floor(value);
+	    } else {
+		value -= .05;
+		str = (string) ceil(value);
+	    }
+	    str += "." + floor(fmod(fabs(value) * 10.0, 10.0));
 	}
 	return str;
 
