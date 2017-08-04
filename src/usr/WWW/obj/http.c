@@ -41,6 +41,9 @@ private string file_type(string file)
 	case "mov":
 	    return "video/quicktime";
 
+	case "pdf":
+	    return "application/pdf";
+
 	case "zip":
 	    return "application/zip";
 
