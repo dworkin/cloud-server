@@ -2,6 +2,7 @@
 
 private Iterable iterated;	/* object iterated over */
 private mixed state;		/* iteration state */
+private mixed item;		/* current iterated element */
 
 /*
  * NAME:	create()
@@ -11,6 +12,7 @@ static void create(Iterable obj, mixed newState)
 {
     iterated = obj;
     state = newState;
+    item = nil;
 }
 
 /*
@@ -20,6 +22,16 @@ static void create(Iterable obj, mixed newState)
 void reset()
 {
     state = iterated->iteratorStart(state);
+    item = nil;
+}
+
+/*
+ * NAME:	current()
+ * DESCRIPTION:	get current item from Iterator
+ */
+mixed current()
+{
+    return item;
 }
 
 /*
@@ -28,10 +40,8 @@ void reset()
  */
 mixed next()
 {
-    mixed result;
-
-    ({ state, result }) = iterated->iteratorNext(state);
-    return result;
+    ({ state, item }) = iterated->iteratorNext(state);
+    return item;
 }
 
 /*
@@ -42,3 +52,6 @@ int end()
 {
     return iterated->iteratorEnd(state);
 }
+
+
+Iterable iterated()	{ return iterated; }
