@@ -6,8 +6,7 @@ inherit LPCCode;
 private LPCStatement next;	/* next in list */
 
 /*
- * NAME:	setNext()
- * DESCRIPTION:	set the next statement in the list
+ * set the next statement in the list
  */
 void setNext(LPCStatement stmt)
 {
@@ -15,8 +14,7 @@ void setNext(LPCStatement stmt)
 }
 
 /*
- * NAME:	next()
- * DESCRIPTION:	return the next statement in the list
+ * return the next statement in the list
  */
 LPCStatement next()
 {
@@ -24,8 +22,7 @@ LPCStatement next()
 }
 
 /*
- * NAME:	code()
- * DESCRIPTION:	emit code for empty statement
+ * emit code for empty statement
  */
 void code()
 {

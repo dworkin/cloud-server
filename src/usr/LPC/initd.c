@@ -1,8 +1,7 @@
 # include "compiler.h"
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize LPC compiler
+ * initialize LPC compiler
  */
 static void create()
 {

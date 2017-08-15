@@ -8,8 +8,7 @@ inherit LPC_PARSE_UTIL;
 object stringParser;	/* separate parser for strings */
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize LPC parser
+ * initialize LPC parser
  */
 static void create()
 {
@@ -17,8 +16,7 @@ static void create()
 }
 
 /*
- * NAME:	compile()
- * DESCRIPTION:	compile LPC source code to program
+ * compile LPC source code to program
  */
 LPCCode compile(string source)
 {
@@ -279,8 +277,7 @@ OptAssocListComma: AssocList ','			? noCommaList	",
 }
 
 /*
- * NAME:	program()
- * DESCRIPTION: ({ ({ }), ({ }) })
+ * ({ ({ }), ({ }) })
  */
 static mixed *program(mixed *parsed)
 {
@@ -288,8 +285,7 @@ static mixed *program(mixed *parsed)
 }
 
 /*
- * NAME:	inh()
- * DESCRIPTION:	({ private, "inherit", label, LPCExpression })
+ * ({ private, "inherit", label, LPCExpression })
  */
 static mixed *inh(mixed *parsed)
 {
@@ -297,8 +293,7 @@ static mixed *inh(mixed *parsed)
 }
 
 /*
- * NAME:	classType()
- * DESCRIPTION:	({ "private", "int" })
+ * ({ "private", "int" })
  */
 static mixed *classType(mixed *parsed)
 {
@@ -306,8 +301,7 @@ static mixed *classType(mixed *parsed)
 }
 
 /*
- * NAME:	classTypeName()
- * DESCRIPTION:	({ "private", "object", LPCExpression })
+ * ({ "private", "object", LPCExpression })
  */
 static mixed *classTypeName(mixed *parsed)
 {
@@ -318,8 +312,7 @@ static mixed *classTypeName(mixed *parsed)
 }
 
 /*
- * NAME:	noCommaList()
- * DESCRIPTION:	({ parsed1, ",", parsed2 })
+ * ({ parsed1, ",", parsed2 })
  */
 static mixed *noCommaList(mixed *parsed)
 {
@@ -327,8 +320,7 @@ static mixed *noCommaList(mixed *parsed)
 }
 
 /*
- * NAME:	dataDecl()
- * DESCRIPTION:	({ "private int", nil, ({ ({ 0, "a" }), ({ 1, "b" }) }) })
+ * ({ "private int", nil, ({ ({ 0, "a" }), ({ 1, "b" }) }) })
  */
 static mixed *dataDecl(mixed *parsed)
 {
@@ -348,8 +340,7 @@ static mixed *dataDecl(mixed *parsed)
 }
 
 /*
- * NAME:	noArguments()
- * DESCRIPTION:	({ })
+ * ({ })
  */
 static mixed *noArguments(mixed *parsed)
 {
@@ -357,8 +348,7 @@ static mixed *noArguments(mixed *parsed)
 }
 
 /*
- * NAME:	arguments()
- * DESCRIPTION:	({ parsed1, ",", parsed2 })
+ * ({ parsed1, ",", parsed2 })
  */
 static mixed *arguments(mixed *parsed)
 {
@@ -366,8 +356,7 @@ static mixed *arguments(mixed *parsed)
 }
 
 /*
- * NAME:	ellipsis()
- * DESCRIPTION:	({ parsed1, ",", parsed2, "..." })
+ * ({ parsed1, ",", parsed2, "..." })
  */
 static mixed *ellipsis(mixed *parsed)
 {
@@ -375,8 +364,7 @@ static mixed *ellipsis(mixed *parsed)
 }
 
 /*
- * NAME:	formal()
- * DESCRIPTION:	({ "private int", nil, 0, "a" })
+ * ({ "private int", nil, 0, "a" })
  */
 static mixed *formal(mixed *parsed)
 {
@@ -385,8 +373,7 @@ static mixed *formal(mixed *parsed)
 }
 
 /*
- * NAME:	formalMixed()
- * DESCRIPTION:	({ "a" })
+ * ({ "a" })
  */
 static mixed *formalMixed(mixed *parsed)
 {
@@ -394,8 +381,7 @@ static mixed *formalMixed(mixed *parsed)
 }
 
 /*
- * NAME:	functionDecl()
- * DESCRIPTION:	({ "private int", nil, 0, "func", ({ }), FALSE, LPCStmtBlock })
+ * ({ "private int", nil, 0, "func", ({ }), FALSE, LPCStmtBlock })
  */
 static mixed *functionDecl(mixed *parsed)
 {
@@ -404,8 +390,7 @@ static mixed *functionDecl(mixed *parsed)
 }
 
 /*
- * NAME:	voidDecl()
- * DESCRIPTION:	({ "private", nil, "func", ({ }), FALSE, LPCStmtBlock })
+ * ({ "private", nil, "func", ({ }), FALSE, LPCStmtBlock })
  */
 static mixed *voidDecl(mixed *parsed)
 {
@@ -414,8 +399,7 @@ static mixed *voidDecl(mixed *parsed)
 }
 
 /*
- * NAME:	listStmt()
- * DESCRIPTION:	({ firstStmt, lastStmt, additionalStmt })
+ * ({ firstStmt, lastStmt, additionalStmt })
  */
 static mixed *listStmt(mixed *parsed)
 {
@@ -427,8 +411,7 @@ static mixed *listStmt(mixed *parsed)
 }
 
 /*
- * NAME:	expStmt()
- * DESCRIPTION:	({ LPCExpression, ";" })
+ * ({ LPCExpression, ";" })
  */
 static mixed *expStmt(mixed *parsed)
 {
@@ -436,8 +419,7 @@ static mixed *expStmt(mixed *parsed)
 }
 
 /*
- * NAME:	emptyStmt()
- * DESCRIPTION:	({ ";" })
+ * ({ ";" })
  */
 static mixed *emptyStmt(mixed *parsed)
 {
@@ -445,8 +427,7 @@ static mixed *emptyStmt(mixed *parsed)
 }
 
 /*
- * NAME:	compoundStmt()
- * DESCRIPTION:	({ "{" ({ }), firstStmt, lastStmt, "}" })
+ * ({ "{" ({ }), firstStmt, lastStmt, "}" })
  */
 static mixed *compoundStmt(mixed *parsed)
 {
@@ -455,8 +436,7 @@ static mixed *compoundStmt(mixed *parsed)
 }
 
 /*
- * NAME:	expIntDec()
- * DESCRIPTION:	({ "1234" })
+ * ({ "1234" })
  */
 static mixed *expIntDec(mixed *parsed)
 {
@@ -464,8 +444,7 @@ static mixed *expIntDec(mixed *parsed)
 }
 
 /*
- * NAME:	expIntOct()
- * DESCRIPTION:	({ "0123" })
+ * ({ "0123" })
  */
 static mixed *expIntOct(mixed *parsed)
 {
@@ -473,8 +452,7 @@ static mixed *expIntOct(mixed *parsed)
 }
 
 /*
- * NAME:	expIntHex()
- * DESCRIPTION:	({ "0x123" })
+ * ({ "0x123" })
  */
 static mixed *expIntHex(mixed *parsed)
 {
@@ -482,8 +460,7 @@ static mixed *expIntHex(mixed *parsed)
 }
 
 /*
- * NAME:	expFloat()
- * DESCRIPTION:	({ "12.34" })
+ * ({ "12.34" })
  */
 static mixed *expFloat(mixed *parsed)
 {
@@ -491,8 +468,7 @@ static mixed *expFloat(mixed *parsed)
 }
 
 /*
- * NAME:	simpleString()
- * DESCRIPTION:	({ "\"abc\"" })
+ * ({ "\"abc\"" })
  */
 static mixed *simpleString(mixed *parsed)
 {
@@ -504,8 +480,7 @@ static mixed *simpleString(mixed *parsed)
 }
 
 /*
- * NAME:	complexString()
- * DESCRIPTION:	({ "\"ab\\nc\"" })
+ * ({ "\"ab\\nc\"" })
  */
 static mixed *complexString(mixed *parsed)
 {
@@ -517,8 +492,7 @@ static mixed *complexString(mixed *parsed)
 }
 
 /*
- * NAME:	simpleChar()
- * DESCRIPTION:	({ "'a'" })
+ * ({ "'a'" })
  */
 static mixed *simpleChar(mixed *parsed)
 {
@@ -526,8 +500,7 @@ static mixed *simpleChar(mixed *parsed)
 }
 
 /*
- * NAME:	complexChar()
- * DESCRIPTION:	({ "'\\n'" })
+ * ({ "'\\n'" })
  */
 static mixed *complexChar(mixed *parsed)
 {
@@ -539,8 +512,7 @@ static mixed *complexChar(mixed *parsed)
 }
 
 /*
- * NAME:	expNil()
- * DESCRIPTION:	({ "nil" })
+ * ({ "nil" })
  */
 static mixed *expNil(mixed *parsed)
 {
@@ -548,8 +520,7 @@ static mixed *expNil(mixed *parsed)
 }
 
 /*
- * NAME:	expArray()
- * DESCRIPTION:	({ "(", "{", ({ }), "}", ")" })
+ * ({ "(", "{", ({ }), "}", ")" })
  */
 static mixed *expArray(mixed *parsed)
 {
@@ -557,8 +528,7 @@ static mixed *expArray(mixed *parsed)
 }
 
 /*
- * NAME:	expMapping()
- * DESCRIPTION:	({ "(", "[", ({ }), "]", ")" })
+ * ({ "(", "[", ({ }), "]", ")" })
  */
 static mixed *expMapping(mixed *parsed)
 {
@@ -566,8 +536,7 @@ static mixed *expMapping(mixed *parsed)
 }
 
 /*
- * NAME:	expVar()
- * DESCRIPTION:	({ "a" })
+ * ({ "a" })
  */
 static mixed *expVar(mixed *parsed)
 {
@@ -575,8 +544,7 @@ static mixed *expVar(mixed *parsed)
 }
 
 /*
- * NAME:	expFuncall()
- * DESCRIPTION:	({ "func", "(", ({ }), FALSE, ")" })
+ * ({ "func", "(", ({ }), FALSE, ")" })
  */
 static mixed *expFuncall(mixed *parsed)
 {
@@ -597,8 +565,7 @@ static mixed *expFuncall(mixed *parsed)
 }
 
 /*
- * NAME:	expCatch()
- * DESCRIPTION:	({ "catch", "(", LPCExpression, ")" })
+ * ({ "catch", "(", LPCExpression, ")" })
  */
 static mixed *expCatch(mixed *parsed)
 {
@@ -606,8 +573,7 @@ static mixed *expCatch(mixed *parsed)
 }
 
 /*
- * NAME:	expNew1()
- * DESCRIPTION:	({ "new", LPCExpression })
+ * ({ "new", LPCExpression })
  */
 static mixed *expNew1(mixed *parsed)
 {
@@ -615,8 +581,7 @@ static mixed *expNew1(mixed *parsed)
 }
 
 /*
- * NAME:	expNew2()
- * DESCRIPTION:	({ "new", "(", LPCExpression, ")" })
+ * ({ "new", "(", LPCExpression, ")" })
  */
 static mixed *expNew2(mixed *parsed)
 {
@@ -624,8 +589,7 @@ static mixed *expNew2(mixed *parsed)
 }
 
 /*
- * NAME:	expNew3()
- * DESCRIPTION:	({ "new", LPCExpression, "(", ({ }), FALSE, ")" })
+ * ({ "new", LPCExpression, "(", ({ }), FALSE, ")" })
  */
 static mixed *expNew3(mixed *parsed)
 {
@@ -634,8 +598,7 @@ static mixed *expNew3(mixed *parsed)
 }
 
 /*
- * NAME:	expNew4()
- * DESCRIPTION:	({ "new", "(", LPCExpression, ")", "(", ({ }), FALSE, ")" })
+ * ({ "new", "(", LPCExpression, ")", "(", ({ }), FALSE, ")" })
  */
 static mixed *expNew4(mixed *parsed)
 {
@@ -644,8 +607,7 @@ static mixed *expNew4(mixed *parsed)
 }
 
 /*
- * NAME:	expCallOther()
- * DESCRIPTION:	({ LPCExpression, "->", "func", "(", ({ }), FALSE, ")" })
+ * ({ LPCExpression, "->", "func", "(", ({ }), FALSE, ")" })
  */
 static mixed *expCallOther(mixed *parsed)
 {
@@ -656,8 +618,7 @@ static mixed *expCallOther(mixed *parsed)
 }
 
 /*
- * NAME:	expInstance1()
- * DESCRIPTION:	({ LPCExpression, "<-", LPCExpression })
+ * ({ LPCExpression, "<-", LPCExpression })
  */
 static mixed *expInstance1(mixed *parsed)
 {
@@ -665,8 +626,7 @@ static mixed *expInstance1(mixed *parsed)
 }
 
 /*
- * NAME:	expInstance2()
- * DESCRIPTION:	({ LPCExpression, "<-", "(", LPCExpression, ")", })
+ * ({ LPCExpression, "<-", "(", LPCExpression, ")", })
  */
 static mixed *expInstance2(mixed *parsed)
 {
@@ -674,8 +634,7 @@ static mixed *expInstance2(mixed *parsed)
 }
 
 /*
- * NAME:	expIndex()
- * DESCRIPTION:	({ LPCExpression, "[", LPCExpression, "]" })
+ * ({ LPCExpression, "[", LPCExpression, "]" })
  */
 static mixed *expIndex(mixed *parsed)
 {
@@ -683,9 +642,7 @@ static mixed *expIndex(mixed *parsed)
 }
 
 /*
- * NAME:	expRange()
- * DESCRIPTION:	({ LPCExpression, "[", LPCExpression, "..", LPCExpression,
- *		   "]" })
+ * ({ LPCExpression, "[", LPCExpression, "..", LPCExpression, "]" })
  */
 static mixed *expRange(mixed *parsed)
 {
@@ -693,8 +650,7 @@ static mixed *expRange(mixed *parsed)
 }
 
 /*
- * NAME:	expPostIncr()
- * DESCRIPTION:	({ LPCExpression, "++" })
+ * ({ LPCExpression, "++" })
  */
 static mixed *expPostIncr(mixed *parsed)
 {
@@ -702,8 +658,7 @@ static mixed *expPostIncr(mixed *parsed)
 }
 
 /*
- * NAME:	expPostDecr()
- * DESCRIPTION:	({ LPCExpression, "--" })
+ * ({ LPCExpression, "--" })
  */
 static mixed *expPostDecr(mixed *parsed)
 {
@@ -711,8 +666,7 @@ static mixed *expPostDecr(mixed *parsed)
 }
 
 /*
- * NAME:	expPreIncr()
- * DESCRIPTION:	({ "++", LPCExpression })
+ * ({ "++", LPCExpression })
  */
 static mixed *expPreIncr(mixed *parsed)
 {
@@ -720,8 +674,7 @@ static mixed *expPreIncr(mixed *parsed)
 }
 
 /*
- * NAME:	expPreDecl()
- * DESCRIPTION:	({ "--", LPCExpression })
+ * ({ "--", LPCExpression })
  */
 static mixed *expPreDecr(mixed *parsed)
 {
@@ -729,8 +682,7 @@ static mixed *expPreDecr(mixed *parsed)
 }
 
 /*
- * NAME:	expPlus()
- * DESCRIPTION:	({ "+", LPCExpression })
+ * ({ "+", LPCExpression })
  */
 static mixed *expPlus(mixed *parsed)
 {
@@ -738,8 +690,7 @@ static mixed *expPlus(mixed *parsed)
 }
 
 /*
- * NAME:	expMinus()
- * DESCRIPTION:	({ "-", LPCExpression })
+ * ({ "-", LPCExpression })
  */
 static mixed *expMinus(mixed *parsed)
 {
@@ -747,8 +698,7 @@ static mixed *expMinus(mixed *parsed)
 }
 
 /*
- * NAME:	expNot()
- * DESCRIPTION:	({ "!", LPCExpression })
+ * ({ "!", LPCExpression })
  */
 static mixed *expNot(mixed *parsed)
 {
@@ -756,8 +706,7 @@ static mixed *expNot(mixed *parsed)
 }
 
 /*
- * NAME:	expNegate()
- * DESCRIPTION:	({ "~", LPCExpression })
+ * ({ "~", LPCExpression })
  */
 static mixed *expNegate(mixed *parsed)
 {
@@ -765,8 +714,7 @@ static mixed *expNegate(mixed *parsed)
 }
 
 /*
- * NAME:	expCast()
- * DESCRIPTION:	({ "(", "private int", nil, 0, ")", LPCExpression })
+ * ({ "(", "private int", nil, 0, ")", LPCExpression })
  */
 static mixed *expCast(mixed *parsed)
 {
@@ -775,8 +723,7 @@ static mixed *expCast(mixed *parsed)
 }
 
 /*
- * NAME:	expMult()
- * DESCRIPTION:	({ LPCExpression, "*", LPCExpression })
+ * ({ LPCExpression, "*", LPCExpression })
  */
 static mixed *expMult(mixed *parsed)
 {
@@ -784,8 +731,7 @@ static mixed *expMult(mixed *parsed)
 }
 
 /*
- * NAME:	expDiv()
- * DESCRIPTION:	({ LPCExpression, "/", LPCExpression })
+ * ({ LPCExpression, "/", LPCExpression })
  */
 static mixed *expDiv(mixed *parsed)
 {
@@ -793,8 +739,7 @@ static mixed *expDiv(mixed *parsed)
 }
 
 /*
- * NAME:	expMod()
- * DESCRIPTION:	({ LPCExpression, "%", LPCExpression })
+ * ({ LPCExpression, "%", LPCExpression })
  */
 static mixed *expMod(mixed *parsed)
 {
@@ -802,8 +747,7 @@ static mixed *expMod(mixed *parsed)
 }
 
 /*
- * NAME:	expAdd()
- * DESCRIPTION:	({ LPCExpression, "+", LPCExpression })
+ * ({ LPCExpression, "+", LPCExpression })
  */
 static mixed *expAdd(mixed *parsed)
 {
@@ -811,8 +755,7 @@ static mixed *expAdd(mixed *parsed)
 }
 
 /*
- * NAME:	expSub()
- * DESCRIPTION:	({ LPCExpression, "-", LPCExpression })
+ * ({ LPCExpression, "-", LPCExpression })
  */
 static mixed *expSub(mixed *parsed)
 {
@@ -820,8 +763,7 @@ static mixed *expSub(mixed *parsed)
 }
 
 /*
- * NAME:	expLShift()
- * DESCRIPTION:	({ LPCExpression, "<<", LPCExpression })
+ * ({ LPCExpression, "<<", LPCExpression })
  */
 static mixed *expLShift(mixed *parsed)
 {
@@ -829,8 +771,7 @@ static mixed *expLShift(mixed *parsed)
 }
 
 /*
- * NAME:	expRShift()
- * DESCRIPTION:	({ LPCExpression, ">>", LPCExpression })
+ * ({ LPCExpression, ">>", LPCExpression })
  */
 static mixed *expRShift(mixed *parsed)
 {
@@ -838,8 +779,7 @@ static mixed *expRShift(mixed *parsed)
 }
 
 /*
- * NAME:	expLess()
- * DESCRIPTION:	({ LPCExpression, "<", LPCExpression })
+ * ({ LPCExpression, "<", LPCExpression })
  */
 static mixed *expLess(mixed *parsed)
 {
@@ -847,8 +787,7 @@ static mixed *expLess(mixed *parsed)
 }
 
 /*
- * NAME:	expGreater()
- * DESCRIPTION:	({ LPCExpression, ">", LPCExpression })
+ * ({ LPCExpression, ">", LPCExpression })
  */
 static mixed *expGreater(mixed *parsed)
 {
@@ -856,8 +795,7 @@ static mixed *expGreater(mixed *parsed)
 }
 
 /*
- * NAME:	expLessEq()
- * DESCRIPTION:	({ LPCExpression, "<=", LPCExpression })
+ * ({ LPCExpression, "<=", LPCExpression })
  */
 static mixed *expLessEq(mixed *parsed)
 {
@@ -865,8 +803,7 @@ static mixed *expLessEq(mixed *parsed)
 }
 
 /*
- * NAME:	expGreaterEq()
- * DESCRIPTION:	({ LPCExpression, ">=", LPCExpression })
+ * ({ LPCExpression, ">=", LPCExpression })
  */
 static mixed *expGreaterEq(mixed *parsed)
 {
@@ -874,8 +811,7 @@ static mixed *expGreaterEq(mixed *parsed)
 }
 
 /*
- * NAME:	expEqual()
- * DESCRIPTION:	({ LPCExpression, "==", LPCExpression })
+ * ({ LPCExpression, "==", LPCExpression })
  */
 static mixed *expEqual(mixed *parsed)
 {
@@ -883,8 +819,7 @@ static mixed *expEqual(mixed *parsed)
 }
 
 /*
- * NAME:	expUnequal()
- * DESCRIPTION:	({ LPCExpression, "!=", LPCExpression })
+ * ({ LPCExpression, "!=", LPCExpression })
  */
 static mixed *expUnequal(mixed *parsed)
 {
@@ -892,8 +827,7 @@ static mixed *expUnequal(mixed *parsed)
 }
 
 /*
- * NAME:	expAnd()
- * DESCRIPTION:	({ LPCExpression, "&", LPCExpression })
+ * ({ LPCExpression, "&", LPCExpression })
  */
 static mixed *expAnd(mixed *parsed)
 {
@@ -901,8 +835,7 @@ static mixed *expAnd(mixed *parsed)
 }
 
 /*
- * NAME:	expXor()
- * DESCRIPTION:	({ LPCExpression, "^", LPCExpression })
+ * ({ LPCExpression, "^", LPCExpression })
  */
 static mixed *expXor(mixed *parsed)
 {
@@ -910,8 +843,7 @@ static mixed *expXor(mixed *parsed)
 }
 
 /*
- * NAME:	expOr()
- * DESCRIPTION:	({ LPCExpression, "|", LPCExpression })
+ * ({ LPCExpression, "|", LPCExpression })
  */
 static mixed *expOr(mixed *parsed)
 {
@@ -919,8 +851,7 @@ static mixed *expOr(mixed *parsed)
 }
 
 /*
- * NAME:	expLand()
- * DESCRIPTION:	({ LPCExpression, "&&", LPCExpression })
+ * ({ LPCExpression, "&&", LPCExpression })
  */
 static mixed *expLand(mixed *parsed)
 {
@@ -928,8 +859,7 @@ static mixed *expLand(mixed *parsed)
 }
 
 /*
- * NAME:	expLor()
- * DESCRIPTION:	({ LPCExpression, "||", LPCExpression })
+ * ({ LPCExpression, "||", LPCExpression })
  */
 static mixed *expLor(mixed *parsed)
 {
@@ -937,8 +867,7 @@ static mixed *expLor(mixed *parsed)
 }
 
 /*
- * NAME:	expQuest()
- * DESCRIPTION:	({ LPCExpression, "?", LPCExpression, ":", LPCExpression })
+ * ({ LPCExpression, "?", LPCExpression, ":", LPCExpression })
  */
 static mixed *expQuest(mixed *parsed)
 {
@@ -946,8 +875,7 @@ static mixed *expQuest(mixed *parsed)
 }
 
 /*
- * NAME:	expAssign()
- * DESCRIPTION:	({ LPCExpression, "=", LPCExpression })
+ * ({ LPCExpression, "=", LPCExpression })
  */
 static mixed *expAssign(mixed *parsed)
 {
@@ -955,8 +883,7 @@ static mixed *expAssign(mixed *parsed)
 }
 
 /*
- * NAME:	expAsgnAdd()
- * DESCRIPTION:	({ LPCExpression, "+=", LPCExpression })
+ * ({ LPCExpression, "+=", LPCExpression })
  */
 static mixed *expAsgnAdd(mixed *parsed)
 {
@@ -964,8 +891,7 @@ static mixed *expAsgnAdd(mixed *parsed)
 }
 
 /*
- * NAME:	expAsgnSub()
- * DESCRIPTION:	({ LPCExpression, "-=", LPCExpression })
+ * ({ LPCExpression, "-=", LPCExpression })
  */
 static mixed *expAsgnSub(mixed *parsed)
 {
@@ -973,8 +899,7 @@ static mixed *expAsgnSub(mixed *parsed)
 }
 
 /*
- * NAME:	expAsgnMult()
- * DESCRIPTION:	({ LPCExpression, "*=", LPCExpression })
+ * ({ LPCExpression, "*=", LPCExpression })
  */
 static mixed *expAsgnMult(mixed *parsed)
 {
@@ -982,8 +907,7 @@ static mixed *expAsgnMult(mixed *parsed)
 }
 
 /*
- * NAME:	expAsgnDiv()
- * DESCRIPTION:	({ LPCExpression, "/=", LPCExpression })
+ * ({ LPCExpression, "/=", LPCExpression })
  */
 static mixed *expAsgnDiv(mixed *parsed)
 {
@@ -991,8 +915,7 @@ static mixed *expAsgnDiv(mixed *parsed)
 }
 
 /*
- * NAME:	expAsgnMod()
- * DESCRIPTION:	({ LPCExpression, "%=", LPCExpression })
+ * ({ LPCExpression, "%=", LPCExpression })
  */
 static mixed *expAsgnMod(mixed *parsed)
 {
@@ -1000,8 +923,7 @@ static mixed *expAsgnMod(mixed *parsed)
 }
 
 /*
- * NAME:	expAsgnLShift()
- * DESCRIPTION:	({ LPCExpression, "<<=", LPCExpression })
+ * ({ LPCExpression, "<<=", LPCExpression })
  */
 static mixed *expAsgnLShift(mixed *parsed)
 {
@@ -1009,8 +931,7 @@ static mixed *expAsgnLShift(mixed *parsed)
 }
 
 /*
- * NAME:	expAsgnRShift()
- * DESCRIPTION:	({ LPCExpression, ">>=", LPCExpression })
+ * ({ LPCExpression, ">>=", LPCExpression })
  */
 static mixed *expAsgnRShift(mixed *parsed)
 {
@@ -1018,8 +939,7 @@ static mixed *expAsgnRShift(mixed *parsed)
 }
 
 /*
- * NAME:	expAsgnAnd()
- * DESCRIPTION:	({ LPCExpression, "&=", LPCExpression })
+ * ({ LPCExpression, "&=", LPCExpression })
  */
 static mixed *expAsgnAnd(mixed *parsed)
 {
@@ -1027,8 +947,7 @@ static mixed *expAsgnAnd(mixed *parsed)
 }
 
 /*
- * NAME:	expAsgnXor()
- * DESCRIPTION:	({ LPCExpression, "^=", LPCExpression })
+ * ({ LPCExpression, "^=", LPCExpression })
  */
 static mixed *expAsgnXor(mixed *parsed)
 {
@@ -1036,8 +955,7 @@ static mixed *expAsgnXor(mixed *parsed)
 }
 
 /*
- * NAME:	expAsgnOr()
- * DESCRIPTION:	({ LPCExpression, "|=", LPCExpression })
+ * ({ LPCExpression, "|=", LPCExpression })
  */
 static mixed *expAsgnOr(mixed *parsed)
 {
@@ -1045,8 +963,7 @@ static mixed *expAsgnOr(mixed *parsed)
 }
 
 /*
- * NAME:	expComma()
- * DESCRIPTION:	({ LPCExpression, ",", LPCExpression })
+ * ({ LPCExpression, ",", LPCExpression })
  */
 static mixed *expComma(mixed *parsed)
 {
@@ -1054,8 +971,7 @@ static mixed *expComma(mixed *parsed)
 }
 
 /*
- * NAME:	ifStmt()
- * DESCRIPTION:	({ "if", "(", LPCExpression, ")", LPCStatement, nil })
+ * ({ "if", "(", LPCExpression, ")", LPCStatement, nil })
  */
 static mixed *ifStmt(mixed *parsed)
 {
@@ -1063,8 +979,7 @@ static mixed *ifStmt(mixed *parsed)
 }
 
 /*
- * NAME:	doWhileStmt()
- * DESCRIPTION:	({ "do", LPCStatement, "while", "(", LPCExpression, ")", ";" })
+ * ({ "do", LPCStatement, "while", "(", LPCExpression, ")", ";" })
  */
 static mixed *doWhileStmt(mixed *parsed)
 {
@@ -1072,8 +987,7 @@ static mixed *doWhileStmt(mixed *parsed)
 }
 
 /*
- * NAME:	whileStmt()
- * DESCRIPTION:	({ "while", "(", LPCExpression, ")", LPCStatement })
+ * ({ "while", "(", LPCExpression, ")", LPCStatement })
  */
 static mixed *whileStmt(mixed *parsed)
 {
@@ -1081,9 +995,8 @@ static mixed *whileStmt(mixed *parsed)
 }
 
 /*
- * NAME:	forStmt()
- * DESCRIPTION:	({ "for", "(", LPCExpression, ";", LPCExpression, ";",
- *		   LPCExpression, LPCStatement })
+ * ({ "for", "(", LPCExpression, ";", LPCExpression, ";", LPCExpression,
+ *    LPCStatement })
  */
 static mixed *forStmt(mixed *parsed)
 {
@@ -1091,9 +1004,7 @@ static mixed *forStmt(mixed *parsed)
 }
 
 /*
- * NAME:	rlimitsStmt()
- * DESCRIPTION:	({ "rlimits", "(", LPCExpression, ";", LPCExpression, ")",
- *		   LPCStatement })
+ * ({ "rlimits", "(", LPCExpression, ";", LPCExpression, ")", LPCStatement })
  */
 static mixed *rlimitsStmt(mixed *parsed)
 {
@@ -1101,8 +1012,7 @@ static mixed *rlimitsStmt(mixed *parsed)
 }
 
 /*
- * NAME:	catchErrStmt()
- * DESCRIPTION:	({ "catch", LPCBlockStmt, ":", LPCStatement })
+ * ({ "catch", LPCBlockStmt, ":", LPCStatement })
  */
 static mixed *catchErrStmt(mixed *parsed)
 {
@@ -1110,8 +1020,7 @@ static mixed *catchErrStmt(mixed *parsed)
 }
 
 /*
- * NAME:	catchStmt()
- * DESCRIPTION:	({ "catch", LPCBlockStmt })
+ * ({ "catch", LPCBlockStmt })
  */
 static mixed *catchStmt(mixed *parsed)
 {
@@ -1119,8 +1028,7 @@ static mixed *catchStmt(mixed *parsed)
 }
 
 /*
- * NAME:	switchStmt()
- * DESCRIPTION:	({ "switch", "(", LPCExpression, ")", LPCBlockStmt })
+ * ({ "switch", "(", LPCExpression, ")", LPCBlockStmt })
  */
 static mixed *switchStmt(mixed *parsed)
 {
@@ -1128,8 +1036,7 @@ static mixed *switchStmt(mixed *parsed)
 }
 
 /*
- * NAME:	caseStmt()
- * DESCRIPTION:	({ "case", LPCExpression, ":", LPCStatement })
+ * ({ "case", LPCExpression, ":", LPCStatement })
  */
 static mixed *caseStmt(mixed *parsed)
 {
@@ -1137,9 +1044,7 @@ static mixed *caseStmt(mixed *parsed)
 }
 
 /*
- * NAME:	caseRangeStmt()
- * DESCRIPTION:	({ "case", LPCExpression, "..", LPCExpression, ":",
- *		   LPCStatement })
+ * ({ "case", LPCExpression, "..", LPCExpression, ":", LPCStatement })
  */
 static mixed *caseRangeStmt(mixed *parsed)
 {
@@ -1147,8 +1052,7 @@ static mixed *caseRangeStmt(mixed *parsed)
 }
 
 /*
- * NAME:	defaultStmt()
- * DESCRIPTION:	({ "default", ":", LPCStatement })
+ * ({ "default", ":", LPCStatement })
  */
 static mixed *defaultStmt(mixed *parsed)
 {
@@ -1156,8 +1060,7 @@ static mixed *defaultStmt(mixed *parsed)
 }
 
 /*
- * NAME:	labelStmt()
- * DESCRIPTION:	({ "label", ":", LPCStatement })
+ * ({ "label", ":", LPCStatement })
  */
 static mixed *labelStmt(mixed *parsed)
 {
@@ -1165,8 +1068,7 @@ static mixed *labelStmt(mixed *parsed)
 }
 
 /*
- * NAME:	gotoStmt()
- * DESCRIPTION:	({ "goto", "label", ";" })
+ * ({ "goto", "label", ";" })
  */
 static mixed *gotoStmt(mixed *parsed)
 {
@@ -1174,8 +1076,7 @@ static mixed *gotoStmt(mixed *parsed)
 }
 
 /*
- * NAME:	breakStmt()
- * DESCRIPTION:	({ "break", ";" })
+ * ({ "break", ";" })
  */
 static mixed *breakStmt(mixed *parsed)
 {
@@ -1183,8 +1084,7 @@ static mixed *breakStmt(mixed *parsed)
 }
 
 /*
- * NAME:	continueStmt()
- * DESCRIPTION:	({ "continue", ";" })
+ * ({ "continue", ";" })
  */
 static mixed *continueStmt(mixed *parsed)
 {
@@ -1192,8 +1092,7 @@ static mixed *continueStmt(mixed *parsed)
 }
 
 /*
- * NAME:	returnExpStmt()
- * DESCRIPTION:	({ "return", LPCExpression, ";" })
+ * ({ "return", LPCExpression, ";" })
  */
 static mixed *returnExpStmt(mixed *parsed)
 {
@@ -1201,8 +1100,7 @@ static mixed *returnExpStmt(mixed *parsed)
 }
 
 /*
- * NAME:	returnStmt()
- * DESCRIPTION:	({ "return", ";" })
+ * ({ "return", ";" })
  */
 static mixed *returnStmt(mixed *parsed)
 {

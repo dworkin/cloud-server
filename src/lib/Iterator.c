@@ -5,8 +5,7 @@ private mixed state;		/* iteration state */
 private mixed item;		/* current iterated element */
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize Iterator
+ * initialize Iterator
  */
 static void create(Iterable obj, mixed newState)
 {
@@ -16,8 +15,7 @@ static void create(Iterable obj, mixed newState)
 }
 
 /*
- * NAME:	reset()
- * DESCRIPTION:	reset Iterator to first element
+ * reset Iterator to first element
  */
 void reset()
 {
@@ -26,8 +24,7 @@ void reset()
 }
 
 /*
- * NAME:	current()
- * DESCRIPTION:	get current item from Iterator
+ * get current item from Iterator
  */
 mixed current()
 {
@@ -35,8 +32,7 @@ mixed current()
 }
 
 /*
- * NAME:	next()
- * DESCRIPTION:	get next item from Iterator
+ * get next item from Iterator
  */
 mixed next()
 {
@@ -45,8 +41,7 @@ mixed next()
 }
 
 /*
- * NAME:	end()
- * DESCRIPTION:	return TRUE if the end has been reached
+ * return TRUE if the end has been reached
  */
 int end()
 {

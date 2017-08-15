@@ -6,8 +6,7 @@ inherit LPCStatement;
 private string label;	/* goto label */
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize goto statement
+ * initialize goto statement
  */
 static void create(string str, varargs int line)
 {
@@ -16,8 +15,7 @@ static void create(string str, varargs int line)
 }
 
 /*
- * NAME:	code()
- * DESCRIPTION:	emit code for goto statement
+ * emit code for goto statement
  */
 void code()
 {

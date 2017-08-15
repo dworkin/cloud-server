@@ -7,8 +7,7 @@ private LPCExpression expression;	/* switch expression */
 private LPCStmtBlock statement;		/* switch code */
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize switch statement
+ * initialize switch statement
  */
 static void create(LPCExpression exp, LPCStmtBlock stmt, varargs int line)
 {
@@ -18,8 +17,7 @@ static void create(LPCExpression exp, LPCStmtBlock stmt, varargs int line)
 }
 
 /*
- * NAME:	code()
- * DESCRIPTION:	emit code for switch statement
+ * emit code for switch statement
  */
 void code()
 {

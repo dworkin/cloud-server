@@ -8,8 +8,7 @@
 private int lineNumber;		/* line number of this code fragment */
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize code fragment emitter
+ * initialize code fragment emitter
  */
 static void create(varargs int line)
 {
@@ -17,8 +16,7 @@ static void create(varargs int line)
 }
 
 /*
- * NAME:	start()
- * DESCRIPTION:	start emitting code
+ * start emitting code
  */
 void start()
 {
@@ -27,14 +25,12 @@ void start()
 }
 
 /*
- * NAME:	code()
- * DESCRIPTION:	emit code
+ * emit code
  */
 void code();
 
 /*
- * NAME:	end()
- * DESCRIPTION:	finish emitting code
+ * finish emitting code
  */
 StringBuffer end()
 {
@@ -46,8 +42,7 @@ StringBuffer end()
 }
 
 /*
- * NAME:	line()
- * DESCRIPTION:	return line number of this code fragment
+ * return line number of this code fragment
  */
 static int line()
 {
@@ -55,8 +50,7 @@ static int line()
 }
 
 /*
- * NAME:	emit()
- * DESCRIPTION:	emit a code fragment
+ * emit a code fragment
  */
 static void emit(string code, varargs int line)
 {
@@ -78,8 +72,7 @@ static void emit(string code, varargs int line)
 }
 
 /*
- * NAME:	emitFloat()
- * DESCRIPTION:	emit a floating point number, with full accuracy
+ * emit a floating point number, with full accuracy
  */
 static void emitFloat(float flt, varargs int line)
 {
@@ -129,8 +122,7 @@ static void emitFloat(float flt, varargs int line)
 }
 
 /*
- * NAME:	emitString()
- * DESCRIPTION:	emit a string constant
+ * emit a string constant
  */
 static void emitString(string str, varargs int line)
 {

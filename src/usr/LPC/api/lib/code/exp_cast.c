@@ -8,8 +8,7 @@ private LPCType cast;		/* type to cast to */
 private LPCExpression sub;	/* expression to cast */
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize cast expression
+ * initialize cast expression
  */
 static void create(LPCType type, LPCExpression exp, varargs int line)
 {
@@ -19,8 +18,7 @@ static void create(LPCType type, LPCExpression exp, varargs int line)
 }
 
 /*
- * NAME:	code()
- * DESCRIPTION:	emit code for cast expression
+ * emit code for cast expression
  */
 void code()
 {

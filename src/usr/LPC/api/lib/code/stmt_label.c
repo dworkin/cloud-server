@@ -7,8 +7,7 @@ private string label;		/* label */
 private LPCStatement statement;	/* code */
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize labelled statement
+ * initialize labelled statement
  */
 static void create(string str, LPCStatement stmt, varargs int line)
 {
@@ -18,8 +17,7 @@ static void create(string str, LPCStatement stmt, varargs int line)
 }
 
 /*
- * NAME:	code()
- * DESCRIPTION:	emit code for labelled statement
+ * emit code for labelled statement
  */
 void code()
 {

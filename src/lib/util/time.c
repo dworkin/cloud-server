@@ -5,8 +5,7 @@
  */
 
 /*
- * NAME:	timecmp()
- * DESCRIPTION:	compare two times as unsigned ints
+ * compare two times as unsigned ints
  */
 static int timecmp(int time1, int time2)
 {
@@ -48,8 +47,7 @@ static int timecmp(int time1, int time2)
 # define EPOCH_WEEKDAY	4	/* Thursday */
 
 /*
- * NAME:	gmctime()
- * DESCRIPTION:	GMT ctime()
+ * GMT ctime()
  */
 static string gmctime(int time)
 {
@@ -135,9 +133,8 @@ static string gmctime(int time)
 }
 
 /*
- * NAME:	gm2time()
- * DESCRIPTION:	convert a GMT ctime() string to POSIX time; perform only
- *		superficial checks to see if the input is correct
+ * convert a GMT ctime() string to POSIX time; perform only superficial
+ * checks to see if the input is correct
  */
 static int gm2time(string gmtime)
 {

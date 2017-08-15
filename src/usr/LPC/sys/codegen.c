@@ -3,8 +3,7 @@
 
 
 /*
- * NAME:	codegen()
- * DESCRIPTION:	generate LPC source from code
+ * generate LPC source from code
  */
 StringBuffer *codegen(LPCCode program)
 {

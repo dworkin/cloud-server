@@ -8,8 +8,7 @@ private int ellipsis;			/* function ellipsis */
 private LPCStmtBlock body;		/* function body */
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize function declaration
+ * initialize function declaration
  */
 static void create(LPCType type, string name, LPCDeclaration *decls, int flag,
 		   LPCStmtBlock stmt, varargs int line)
@@ -21,8 +20,7 @@ static void create(LPCType type, string name, LPCDeclaration *decls, int flag,
 }
 
 /*
- * NAME:	code()
- * DESCRIPTION:	emit code for function declaration
+ * emit code for function declaration
  */
 void code()
 {

@@ -4,8 +4,7 @@ inherit LPCStatement;
 
 
 /*
- * NAME:	code()
- * DESCRIPTION:	emit code for break statement
+ * emit code for break statement
  */
 void code()
 {

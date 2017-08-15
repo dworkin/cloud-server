@@ -9,8 +9,7 @@ private LPCExpression *args;	/* arguments */
 private int spread;		/* argument spread */
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize function call
+ * initialize function call
  */
 static void create(string str, LPCExpression *list, int flag, varargs int line)
 {
@@ -21,8 +20,7 @@ static void create(string str, LPCExpression *list, int flag, varargs int line)
 }
 
 /*
- * NAME:	code()
- * DESCRIPTION:	emit code for function call
+ * emit code for function call
  */
 void code()
 {

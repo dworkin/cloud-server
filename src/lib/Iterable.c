@@ -5,8 +5,7 @@ mixed *iteratorNext(mixed state);
 int iteratorEnd(mixed state);
 
 /*
- * NAME:	iterator()
- * DESCRIPTION:	default implementation of iterator creation
+ * default implementation of iterator creation
  */
 Iterator iterator()
 {

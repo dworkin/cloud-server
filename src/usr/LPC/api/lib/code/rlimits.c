@@ -7,8 +7,7 @@ private LPCExpression stack, ticks;	/* resource limits */
 private LPCStmtBlock statement;		/* limited code */
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize rlimits statement
+ * initialize rlimits statement
  */
 static void create(LPCExpression exp1, LPCExpression exp2, LPCStmtBlock stmt,
 		   varargs int line)
@@ -20,8 +19,7 @@ static void create(LPCExpression exp1, LPCExpression exp2, LPCStmtBlock stmt,
 }
 
 /*
- * NAME:	code()
- * DESCRIPTION:	emit code for rlimits statement
+ * emit code for rlimits statement
  */
 void code()
 {

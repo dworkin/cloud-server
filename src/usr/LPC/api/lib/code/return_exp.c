@@ -6,8 +6,7 @@ inherit LPCStatement;
 private LPCExpression value;	/* value to return */
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize return statement
+ * initialize return statement
  */
 static void create(LPCExpression exp, varargs int line)
 {
@@ -16,8 +15,7 @@ static void create(LPCExpression exp, varargs int line)
 }
 
 /*
- * NAME:	code()
- * DESCRIPTION:	emit code for return statement
+ * emit code for return statement
  */
 void code()
 {

@@ -7,8 +7,7 @@ inherit LPCExpression;
 private LPCExpression *elements;	/* mapping aggregate elements */
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize mapping aggrgate
+ * initialize mapping aggrgate
  */
 static void create(LPCExpression *arr, varargs int line)
 {
@@ -17,8 +16,7 @@ static void create(LPCExpression *arr, varargs int line)
 }
 
 /*
- * NAME:	code()
- * DESCRIPTION:	emit code for mapping aggregate
+ * emit code for mapping aggregate
  */
 void code()
 {

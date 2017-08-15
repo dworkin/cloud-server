@@ -8,8 +8,7 @@ private LPCExpression objType;	/* object type */
 private int indirection;	/* *** */
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize declaration
+ * initialize declaration
  */
 static void create(string typeStr, LPCExpression typeName, int ind,
 		   varargs int line)
@@ -21,8 +20,7 @@ static void create(string typeStr, LPCExpression typeName, int ind,
 }
 
 /*
- * NAME:	code()
- * DESCRIPTION:	emit code for declaration
+ * emit code for declaration
  */
 void code()
 {

@@ -7,8 +7,7 @@ inherit LPCExpression;
 private LPCExpression sub1, sub2;	/* sub expressions */
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize binary expression
+ * initialize binary expression
  */
 static void create(int operand, LPCExpression exp1, LPCExpression exp2,
 		   varargs int line)
@@ -19,8 +18,7 @@ static void create(int operand, LPCExpression exp1, LPCExpression exp2,
 }
 
 /*
- * NAME:	code()
- * DESCRIPTION:	emit code for binary expression
+ * emit code for binary expression
  */
 void code()
 {

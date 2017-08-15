@@ -1,6 +1,5 @@
 /*
- * NAME:	parse()
- * DESCRIPTION:	parse an LPC string with escaped content
+ * parse an LPC string with escaped content
  */
 string parse(string str)
 {
@@ -20,8 +19,7 @@ Characters: escaped					? escaped",
 }
 
 /*
- * NAME:	octalInt()
- * DESCRIPTION:	convert octal string to integer
+ * convert octal string to integer
  */
 int octalInt(string str)
 {
@@ -35,8 +33,7 @@ int octalInt(string str)
 }
 
 /*
- * NAME:	hexadecimalInt()
- * DESCRIPTION:	convert hexadecimal string to integer
+ * convert hexadecimal string to integer
  */
 int hexadecimalInt(string str)
 {
@@ -55,8 +52,7 @@ int hexadecimalInt(string str)
 }
 
 /*
- * NAME:	octal()
- * DESCRIPTION:	convert escaped octal to character
+ * convert escaped octal to character
  */
 static mixed *octal(mixed *parsed)
 {
@@ -68,8 +64,7 @@ static mixed *octal(mixed *parsed)
 }
 
 /*
- * NAME:	hexadecimal()
- * DESCRIPTION:	convert escaped hexadecimal to character
+ * convert escaped hexadecimal to character
  */
 static mixed *hexadecimal(mixed *parsed)
 {
@@ -81,8 +76,7 @@ static mixed *hexadecimal(mixed *parsed)
 }
 
 /*
- * NAME:	escaped()
- * DESCRIPTION:	convert escape sequence to character
+ * convert escape sequence to character
  */
 static mixed *escaped(mixed *parsed)
 {

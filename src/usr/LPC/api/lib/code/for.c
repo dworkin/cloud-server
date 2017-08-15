@@ -7,8 +7,7 @@ private LPCExpression initial, condition, increment;	/* expressions */
 private LPCStatement statement;				/* statement */
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize for loop
+ * initialize for loop
  */
 static void create(LPCExpression exp1, LPCExpression exp2, LPCExpression exp3,
 		   LPCStatement stmt, varargs int line)
@@ -21,8 +20,7 @@ static void create(LPCExpression exp1, LPCExpression exp2, LPCExpression exp3,
 }
 
 /*
- * NAME:	code()
- * DESCRIPTION:	emit code for for loop
+ * emit code for for loop
  */
 void code()
 {

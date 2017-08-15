@@ -8,8 +8,7 @@ private string label;		/* inherit label */
 private LPCExpression class;	/* string constant */
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize inherit statement
+ * initialize inherit statement
  */
 static void create(int flag, string l, LPCExpression exp, varargs int line)
 {
@@ -20,8 +19,7 @@ static void create(int flag, string l, LPCExpression exp, varargs int line)
 }
 
 /*
- * NAME:	code()
- * DESCRIPTION:	emit code for inherit statement
+ * emit code for inherit statement
  */
 void code()
 {

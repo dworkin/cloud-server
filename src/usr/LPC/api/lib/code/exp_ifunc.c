@@ -7,8 +7,7 @@ inherit LPCExpFuncall;
 private string label;	/* inherit label */
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize inherited function call
+ * initialize inherited function call
  */
 static void create(string str, string name, LPCExpression *list,
 		   varargs int line)
@@ -18,8 +17,7 @@ static void create(string str, string name, LPCExpression *list,
 }
 
 /*
- * NAME:	code()
- * DESCRIPTION:	emit code for inherited function call
+ * emit code for inherited function call
  */
 void code()
 {

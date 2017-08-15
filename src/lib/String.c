@@ -17,8 +17,7 @@ private mixed *bytes;	/* ({ ({ "text", " " }), 5, "23", 8 }) */
 private mixed *chars;	/* ({ '1', 6, ({ '4', '5' }), 10 }) */
 
 /*
- * NAME:	strLength()
- * DESCRIPTION:	return the length of a string or array of integers
+ * return the length of a string or array of integers
  */
 private int strLength(mixed str)
 {
@@ -26,9 +25,8 @@ private int strLength(mixed str)
 }
 
 /*
- * NAME:	append()
- * DESCRIPTION:	append a string (which can be an array of integers) to a
- *		buffer, which is either a string or an array of strings
+ * append a string (which can be an array of integers) to a buffer, which is
+ * either a string or an array of strings
  */
 private mixed *append(mixed *buffer, int index, mixed str, int bufMax,
 		      int strMax)
@@ -80,8 +78,7 @@ private mixed *append(mixed *buffer, int index, mixed str, int bufMax,
 }
 
 /*
- * NAME:	appendChars()
- * DESCRIPTION:	append a string as an array of chars
+ * append a string as an array of chars
  */
 private int appendChars(string str, int index, int charOffset, int bufMax)
 {
@@ -114,8 +111,7 @@ private int appendChars(string str, int index, int charOffset, int bufMax)
 }
 
 /*
- * NAME:	appendBytes()
- * DESCRIPTION:	add string to bytes
+ * add string to bytes
  */
 private int *appendBytes(string str, int index, int byteOffset, int charOffset,
 			 int bufMax, int strMax)
@@ -179,8 +175,7 @@ private int *appendBytes(string str, int index, int byteOffset, int charOffset,
 }
 
 /*
- * NAME:	appendSequence()
- * DESCRIPTION:	append sequence to bytes and chars
+ * append sequence to bytes and chars
  */
 private int *appendSequence(mixed *data, int index, int byteOffset,
 			    int charOffset, int bufMax, int strMax)
@@ -208,8 +203,7 @@ private int *appendSequence(mixed *data, int index, int byteOffset,
 }
 
 /*
- * NAME:	appendUTF8()
- * DESCRIPTION:	append a UTF8-encoded string
+ * append a UTF8-encoded string
  */
 private mixed *appendUTF8(object decoder, string remainder, string str,
 			  int index, int byteOffset, int charOffset, int bufMax,
@@ -250,8 +244,7 @@ private mixed *appendUTF8(object decoder, string remainder, string str,
 }
 
 /*
- * NAME:	processChars()
- * DESCRIPTION:	process wide characters
+ * process wide characters
  */
 private mixed *processChars(int *characters)
 {
@@ -314,8 +307,7 @@ private mixed *processChars(int *characters)
 }
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize a string
+ * initialize a string
  */
 static void create(mixed data, varargs string utf8)
 {
@@ -422,8 +414,7 @@ static void create(mixed data, varargs string utf8)
 }
 
 /*
- * NAME:	length()
- * DESCRIPTION:	return the length of the string
+ * return the length of the string
  */
 int length()
 {
@@ -431,8 +422,7 @@ int length()
 }
 
 /*
- * NAME:	isBytes()
- * DESCRIPTION:	return TRUE if the string contains bytes only
+ * return TRUE if the string contains bytes only
  */
 int isBytes()
 {
@@ -440,8 +430,7 @@ int isBytes()
 }
 
 /*
- * NAME:	index
- * DESCRIPTION:	index a string
+ * index a string
  */
 private mixed *index(int index)
 {
@@ -492,8 +481,7 @@ private mixed *index(int index)
 }
 
 /*
- * NAME:	streamStart()
- * DESCRIPTION:	start stream
+ * start stream
  */
 private mixed *streamStart()
 {
@@ -504,8 +492,7 @@ private mixed *streamStart()
 }
 
 /*
- * NAME:	streamChunk()
- * DESCRIPTION:	return chunk from stream
+ * return chunk from stream
  */
 private mixed *streamChunk(mixed *buffer, int bufIndex, int offset)
 {
@@ -546,8 +533,7 @@ private mixed *streamChunk(mixed *buffer, int bufIndex, int offset)
 }
 
 /*
- * NAME:	[]
- * DESCRIPTION:	index a string
+ * index a string
  */
 static int operator[] (int index)
 {
@@ -564,8 +550,7 @@ static int operator[] (int index)
 }
 
 /*
- * NAME:	[]=
- * DESCRIPTION:	assign to string index not permitted
+ * assignment to string index not permitted
  */
 static void operator[]= (int index, int value)
 {
@@ -573,8 +558,7 @@ static void operator[]= (int index, int value)
 }
 
 /*
- * NAME:	encodeUTF8String()
- * DESCRIPTION:	encode a string as UTF8
+ * encode a string as UTF8
  */
 private void encodeUTF8String(StringBuffer buffer, string chunk, object encoder,
 			      int max)
@@ -587,8 +571,7 @@ private void encodeUTF8String(StringBuffer buffer, string chunk, object encoder,
 }
 
 /*
- * NAME:	encodeUTF8Chars()
- * DESCRIPTION:	encode characters as UTF8
+ * encode characters as UTF8
  */
 private void encodeUTF8Chars(StringBuffer buffer, int *chunk)
 {
@@ -626,8 +609,7 @@ private void encodeUTF8Chars(StringBuffer buffer, int *chunk)
 }
 
 /*
- * NAME:	buffer()
- * DESCRIPTION:	create a StringBuffer for this String
+ * create a StringBuffer for this String
  */
 StringBuffer buffer(varargs string utf8)
 {
@@ -683,8 +665,7 @@ StringBuffer buffer(varargs string utf8)
 }
 
 /*
- * NAME:	bufferRange()
- * DESCRIPTION:	return a StringBuffer for a subrange
+ * return a StringBuffer for a subrange
  */
 StringBuffer bufferRange(varargs mixed from, mixed to)
 {
@@ -748,8 +729,7 @@ StringBuffer bufferRange(varargs mixed from, mixed to)
 }
 
 /*
- * NAME:	[..]
- * DESCRIPTION:	String subrange
+ * String subrange
  */
 static String operator[..] (mixed from, mixed to)
 {
@@ -757,8 +737,7 @@ static String operator[..] (mixed from, mixed to)
 }
 
 /*
- * NAME:	+
- * DESCRIPTION:	add String and something else
+ * append something to a String
  */
 static String operator+ (mixed str)
 {
@@ -787,8 +766,7 @@ static String operator+ (mixed str)
 
 
 /*
- * NAME:	iteratorStart()
- * DESCRIPTION:	reset an iterator
+ * reset an iterator
  */
 mixed iteratorStart(mixed state)
 {
@@ -801,8 +779,7 @@ mixed iteratorStart(mixed state)
 }
 
 /*
- * NAME:	iteratorNext()
- * DESCRIPTION:	return the next state for an iterator
+ * return the next state for an iterator
  */
 mixed *iteratorNext(mixed state)
 {
@@ -825,8 +802,7 @@ mixed *iteratorNext(mixed state)
 }
 
 /*
- * NAME:	iteratorEnd()
- * DESCRIPTION:	check if an iterator is at its end
+ * check if an iterator is at its end
  */
 int iteratorEnd(mixed state)
 {
@@ -835,8 +811,7 @@ int iteratorEnd(mixed state)
 
 
 /*
- * NAME:	capitalize()
- * DESCRIPTION:	return String with first character converted to upper case
+ * return String with first character converted to upper case
  */
 String capitalize()
 {
@@ -869,8 +844,7 @@ String capitalize()
 }
 
 /*
- * NAME:	upperCase()
- * DESCRIPTION:	return String converted to upper case
+ * return String converted to upper case
  */
 String upperCase()
 {
@@ -905,8 +879,7 @@ String upperCase()
 }
 
 /*
- * NAME:	lowerCase()
- * DESCRIPTION:	return String converted to lower case
+ * return String converted to lower case
  */
 String lowerCase()
 {

@@ -7,8 +7,7 @@ inherit LPCExpression;
 private string name;	/* variable name */
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize variable reference
+ * initialize variable reference
  */
 static void create(string str, varargs int line)
 {
@@ -17,8 +16,7 @@ static void create(string str, varargs int line)
 }
 
 /*
- * NAME:	code()
- * DESCRIPTION:	emit code for variable reference
+ * emit code for variable reference
  */
 void code()
 {

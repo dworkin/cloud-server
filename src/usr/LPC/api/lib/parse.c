@@ -1,6 +1,5 @@
 /*
- * NAME:	empty()
- * DESCRIPTION:	return empty array
+ * return empty array
  */
 static mixed *empty(mixed *parsed)
 {
@@ -8,8 +7,7 @@ static mixed *empty(mixed *parsed)
 }
 
 /*
- * NAME:	list()
- * DESCRIPTION:	return array of parsed elements
+ * return array of parsed elements
  */
 static mixed *list(mixed *parsed)
 {
@@ -17,8 +15,7 @@ static mixed *list(mixed *parsed)
 }
 
 /*
- * NAME:	true()
- * DESCRIPTION:	TRUE
+ * TRUE
  */
 static mixed *true(mixed *parsed)
 {
@@ -26,8 +23,7 @@ static mixed *true(mixed *parsed)
 }
 
 /*
- * NAME:	fals()
- * DESCRIPTION:	FALSE
+ * FALSE
  */
 static mixed *false(mixed *parsed)
 {
@@ -35,8 +31,7 @@ static mixed *false(mixed *parsed)
 }
 
 /*
- * NAME:	opt()
- * DESCRIPTION:	missing optional element
+ * missing optional element
  */
 static mixed *opt(mixed *parsed)
 {
@@ -44,8 +39,7 @@ static mixed *opt(mixed *parsed)
 }
 
 /*
- * NAME:	count()
- * DESCRIPTION:	number of elements
+ * number of elements
  */
 static mixed *count(mixed *parsed)
 {
@@ -53,8 +47,7 @@ static mixed *count(mixed *parsed)
 }
 
 /*
- * NAME:	concat()
- * DESCRIPTION:	concatenate elements
+ * concatenate elements
  */
 static mixed *concat(mixed *parsed)
 {
@@ -62,8 +55,7 @@ static mixed *concat(mixed *parsed)
 }
 
 /*
- * NAME:	parsed_1_()
- * DESCRIPTION:	element[1]
+ * element[1]
  */
 static mixed *parsed_1_(mixed *parsed)
 {
@@ -71,8 +63,7 @@ static mixed *parsed_1_(mixed *parsed)
 }
 
 /*
- * NAME:	parsed_0_2_()
- * DESCRIPTION:	element[0], element[2]
+ * element[0], element[2]
  */
 static mixed *parsed_0_2_(mixed *parsed)
 {

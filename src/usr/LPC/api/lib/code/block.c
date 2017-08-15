@@ -7,8 +7,7 @@ private LPCDeclaration *locals;	/* local declarations */
 private LPCStatement sub;	/* linked list of statements inside the block */
 
 /*
- * NAME:	create()
- * DESCRITION:	initialize statement block
+ * initialize statement block
  */
 static void create(LPCDeclaration *decls, LPCStatement stmt, varargs int line)
 {
@@ -18,8 +17,7 @@ static void create(LPCDeclaration *decls, LPCStatement stmt, varargs int line)
 }
 
 /*
- * NAME:	code()
- * DESCRIPTION:	emit code for block
+ * emit code for block
  */
 void code()
 {

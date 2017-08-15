@@ -7,8 +7,7 @@ inherit LPCExpression;
 private LPCExpression sub;	/* sub-expression */
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize monadic expression
+ * initialize monadic expression
  */
 static void create(int operand, LPCExpression exp, varargs int line)
 {
@@ -17,8 +16,7 @@ static void create(int operand, LPCExpression exp, varargs int line)
 }
 
 /*
- * NAME:	code()
- * DESCRIPTION:	emit code for monadic expression
+ * emit code for monadic expression
  */
 void code()
 {

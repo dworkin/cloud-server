@@ -8,8 +8,7 @@ private LPCStatement ifStatement;	/* if conditional is true */
 private LPCStatement elseStatement;	/* if conditional is false */
 
 /*
- * NAME:	create()
- * DESCRIPTION:	iniitialize if statement
+ * iniitialize if statement
  */
 static void create(LPCExpression exp, LPCStatement stmt1, LPCStatement stmt2,
 		   varargs int line)
@@ -21,8 +20,7 @@ static void create(LPCExpression exp, LPCStatement stmt1, LPCStatement stmt2,
 }
 
 /*
- * NAME:	code()
- * DESCRIPTION:	emit if statement
+ * emit if statement
  */
 void code()
 {

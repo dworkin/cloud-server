@@ -7,8 +7,7 @@ private LPCInherit *inherits;		/* inherit statements */
 private LPCDeclaration *globals;	/* function and variable declarations */
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize program
+ * initialize program
  */
 static void create(LPCInherit *inh, LPCDeclaration *decl)
 {
@@ -18,8 +17,7 @@ static void create(LPCInherit *inh, LPCDeclaration *decl)
 }
 
 /*
- * NAME:	code()
- * DESCRIPTION:	emit code for program
+ * emit code for program
  */
 void code()
 {

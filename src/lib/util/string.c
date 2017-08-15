@@ -1,6 +1,5 @@
 /*
- * NAME:        spaces()
- * DESCRIPTION: returns the number of spaces requested
+ * returns the number of spaces requested
  */
 static string spaces(int width)
 {
@@ -15,8 +14,7 @@ static string spaces(int width)
 }
 
 /*
- * NAME:	pad_left()
- * DESCRIPTION:	pad with spaces to the left
+ * pad with spaces to the left
  */
 static string pad_left(mixed str, int width)
 {
@@ -29,8 +27,7 @@ static string pad_left(mixed str, int width)
 }
 
 /*
- * NAME:	pad_right()
- * DESCRIPTION:	pad with spaces to the right
+ * pad with spaces to the right
  */
 static string pad_right(mixed str, int width)
 {
@@ -42,8 +39,7 @@ static string pad_right(mixed str, int width)
 }
 
 /*
- * NAME:        break_line()
- * DESCRIPTION: break up a string into separate lines
+ * break up a string into separate lines
  */
 private string *break_line(string str, int width)
 {
@@ -73,8 +69,7 @@ private string *break_line(string str, int width)
 }
 
 /*
- * NAME:        break_string()
- * DESCRIPTION: distribute words in a string over several lines
+ * distribute words in a string over several lines
  */
 static string break_string(string str, varargs int width, int indent)
 {
@@ -95,8 +90,7 @@ static string break_string(string str, varargs int width, int indent)
 }
 
 /*
- * NAME:        indent_string()
- * DESCRIPTION: given a prefix, indent a string enough spaces to the right
+ * given a prefix, indent a string enough spaces to the right
  */
 static string indent_string(string prefix, string str, varargs int width)
 {
@@ -108,8 +102,7 @@ static string indent_string(string prefix, string str, varargs int width)
 
 
 /*
- * NAME:        capitalize()
- * DESCRIPTION: capitalize a string (ISO 8859-2)
+ * capitalize a string (ISO 8859-2)
  */
 static string capitalize(string str)
 {
@@ -125,8 +118,7 @@ static string capitalize(string str)
 }
 
 /*
- * NAME:        lower_case()
- * DESCRIPTION: convert a string to lower case (ISO 8859-2)
+ * convert a string to lower case (ISO 8859-2)
  */
 static string lower_case(string str)
 {
@@ -142,8 +134,7 @@ static string lower_case(string str)
 }
 
 /*
- * NAME:        upper_case()
- * DESCRIPTION: convert a string to upper case (ISO 8859-2)
+ * convert a string to upper case (ISO 8859-2)
  */
 static string upper_case(string str)
 {
@@ -159,8 +150,7 @@ static string upper_case(string str)
 }
 
 /*
- * NAME:	tabulate()
- * DESCRIPTION:	show elements of arrays in different columns
+ * show elements of arrays in different columns
  */
 static string tabulate(mixed *columns...)
 {

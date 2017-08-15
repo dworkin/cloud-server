@@ -7,8 +7,7 @@ private LPCType type;	/* class + type + *** */
 private string name; 	/* name */
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize declaration
+ * initialize declaration
  */
 static void create(LPCType t, string str, varargs int line)
 {
@@ -18,8 +17,7 @@ static void create(LPCType t, string str, varargs int line)
 }
 
 /*
- * NAME:	code()
- * DESCRIPTION:	emit code for declaration
+ * emit code for declaration
  */
 void code()
 {

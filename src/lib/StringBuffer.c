@@ -21,8 +21,7 @@ private int chunkSize;		/* size of unfull (last) chunks array */
 private int chunkIndex;		/* index in (first) chunks array */
 
 /*
- * NAME:	consolidateString()
- * DESCRIPTION:	gather string fragments
+ * gather string fragments
  */
 private int consolidateString(string *chunks)
 {
@@ -64,8 +63,7 @@ private int consolidateString(string *chunks)
 }
 
 /*
- * NAME:	consolidateChars()
- * DESCRIPTION:	gather character array fragments
+ * gather character array fragments
  */
 private int consolidateChars(int **chunks)
 {
@@ -115,8 +113,7 @@ private int consolidateChars(int **chunks)
 }
 
 /*
- * NAME:	prepareType()
- * DESCRIPTION:	prepare to append data of a given type
+ * prepare to append data of a given type
  */
 private void prepareType(int type)
 {
@@ -153,8 +150,7 @@ private void prepareType(int type)
 }
 
 /*
- * NAME:	appendString()
- * DESCRIPTION:	append a string to the StringBuffer
+ * append a string to the StringBuffer
  */
 private void appendString(string str)
 {
@@ -191,8 +187,7 @@ private void appendString(string str)
 }
 
 /*
- * NAME:	appendChars()
- * DESCRIPTION:	append an array of characters to the StringBuffer
+ * append an array of characters to the StringBuffer
  */
 private void appendChars(int *chars)
 {
@@ -229,8 +224,7 @@ private void appendChars(int *chars)
 }
 
 /*
- * NAME:	append()
- * DESCRIPTION:	append to the StringBuffer
+ * append to the StringBuffer
  */
 void append(mixed str)
 {
@@ -275,8 +269,7 @@ void append(mixed str)
 }
 
 /*
- * NAME:	chunk()
- * DESCRIPTION:	return a chunk of the maximum appropriate length
+ * return a chunk of the maximum appropriate length
  */
 mixed chunk()
 {
@@ -312,8 +305,7 @@ mixed chunk()
 }
 
 /*
- * NAME:	length()
- * DESCRIPTION:	return the length of the String in the buffer
+ * return the length of the String in the buffer
  */
 int length()
 {
@@ -321,8 +313,7 @@ int length()
 }
 
 /*
- * NAME:	create()
- * DESCRIPTION:	create StringBuffer
+ * create StringBuffer
  */
 static void create(varargs mixed str)
 {

@@ -7,8 +7,7 @@ private LPCStmtBlock caught;	/* block inside catch */
 private LPCStatement onError;	/* code executed on error */
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize catch statement
+ * initialize catch statement
  */
 static void create(LPCStmtBlock stmt1, LPCStatement stmt2, varargs int line)
 {
@@ -18,8 +17,7 @@ static void create(LPCStmtBlock stmt1, LPCStatement stmt2, varargs int line)
 }
 
 /*
- * NAME:	code()
- * DESCRIPTION:	emit code for catch statement
+ * emit code for catch statement
  */
 void code()
 {

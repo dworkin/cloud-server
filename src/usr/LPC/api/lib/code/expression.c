@@ -8,8 +8,7 @@ inherit LPCCode;
 private mixed value;	/* expression value */
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize expression
+ * initialize expression
  */
 static void create(mixed exp, varargs int line)
 {
@@ -18,8 +17,7 @@ static void create(mixed exp, varargs int line)
 }
 
 /*
- * NAME:	value()
- * DESCRIPTION:	return value of this expression
+ * return value of this expression
  */
 mixed value()
 {
@@ -27,8 +25,7 @@ mixed value()
 }
 
 /*
- * NAME:	code()
- * DESCRIPTION:	emit code for expression
+ * emit code for expression
  */
 void code()
 {

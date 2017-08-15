@@ -7,8 +7,7 @@ private LPCExpression caseFrom, caseTo;	/* case labels */
 private LPCStatement statement;		/* case code */
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize case statement
+ * initialize case statement
  */
 static void create(LPCExpression exp1, LPCExpression exp2, LPCStatement stmt,
 		   varargs int line)
@@ -20,8 +19,7 @@ static void create(LPCExpression exp1, LPCExpression exp2, LPCStatement stmt,
 }
 
 /*
- * NAME:	code()
- * DESCRIPTION:	emit code for case expression
+ * emit code for case expression
  */
 void code()
 {

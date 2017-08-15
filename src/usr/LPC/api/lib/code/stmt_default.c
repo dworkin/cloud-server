@@ -6,8 +6,7 @@ inherit LPCStatement;
 private LPCStatement statement;	/* code */
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize default statement
+ * initialize default statement
  */
 static void create(LPCStatement stmt, varargs int line)
 {
@@ -16,8 +15,7 @@ static void create(LPCStatement stmt, varargs int line)
 }
 
 /*
- * NAME:	code()
- * DESCRIPTION:	emit code for default statement
+ * emit code for default statement
  */
 void code()
 {

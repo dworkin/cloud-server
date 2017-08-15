@@ -7,8 +7,7 @@ inherit LPCExpression;
 private LPCExpression sub1, sub2, sub3;	/* sub expressions */
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize ternary expression
+ * initialize ternary expression
  */
 static void create(int operand, LPCExpression exp1, LPCExpression exp2,
 		   LPCExpression exp3, varargs int line)
@@ -20,8 +19,7 @@ static void create(int operand, LPCExpression exp1, LPCExpression exp2,
 }
 
 /*
- * NAME:	code()
- * DESCRIPTION:	emit code for ternary expression
+ * emit code for ternary expression
  */
 void code()
 {

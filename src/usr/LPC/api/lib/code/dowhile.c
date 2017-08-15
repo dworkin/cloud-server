@@ -7,8 +7,7 @@ private LPCStatement statement;		/* statement in loop */
 private LPCExpression loopCondition;	/* loop condition */
 
 /*
- * NAME:	create()
- * DESCRIPTION:	initialize do-while statement
+ * initialize do-while statement
  */
 static void create(LPCStatement stmt, LPCExpression exp, varargs int line)
 {
@@ -18,8 +17,7 @@ static void create(LPCStatement stmt, LPCExpression exp, varargs int line)
 }
 
 /*
- * NAME:	code()
- * DESCRIPTION:	emit code for do-while statement
+ * emit code for do-while statement
  */
 void code()
 {
