@@ -1,6 +1,5 @@
 /*
- * NAME:	encode()
- * DESCRIPTION:	encode a binary string as UTF8
+ * encode a binary string as UTF8
  */
 string encode(string str)
 {
@@ -22,8 +21,7 @@ Upper: upper2str		? upper2str", str), "");
 }
 
 /*
- * NAME:	upper1char()
- * DESCRIPTION:	encode single \x80-\xbf character
+ * encode single \x80-\xbf character
  */
 static mixed *upper1char(mixed *parsed)
 {
@@ -35,8 +33,7 @@ static mixed *upper1char(mixed *parsed)
 }
 
 /*
- * NAME:	upper2char()
- * DESCRIPTION:	encode single \xc0-\xff character
+ * encode single \xc0-\xff character
  */
 static mixed *upper2char(mixed *parsed)
 {
@@ -48,8 +45,7 @@ static mixed *upper2char(mixed *parsed)
 }
 
 /*
- * NAME:	upper1str()
- * DESCRIPTION:	encode \x80-\xbf sequence
+ * encode \x80-\xbf sequence
  */
 static mixed *upper1str(mixed *parsed)
 {
@@ -57,8 +53,7 @@ static mixed *upper1str(mixed *parsed)
 }
 
 /*
- * NAME:	upper2str()
- * DESCRIPTION:	encode \xc0-\xff sequence
+ * encode \xc0-\xff sequence
  */
 static mixed *upper2str(mixed *parsed)
 {

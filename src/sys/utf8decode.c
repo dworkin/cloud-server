@@ -1,6 +1,5 @@
 /*
- * NAME:	decode()
- * DESCRIPTION:	decode UTF8 string
+ * decode UTF8 string
  */
 mixed *decode(string str)
 {
@@ -54,8 +53,7 @@ HighChar: char4				? char4", str);
 }
 
 /*
- * NAME:	full()
- * DESCRIPTION:	UTF8 string without remainders
+ * UTF8 string without remainders
  */
 static mixed *full(mixed *parsed)
 {
@@ -63,8 +61,7 @@ static mixed *full(mixed *parsed)
 }
 
 /*
- * NAME:	partial()
- * DESCRIPTION:	UTF8 string with remaining partial sequence
+ * UTF8 string with remaining partial sequence
  */
 static mixed *partial(mixed *parsed)
 {
@@ -75,8 +72,7 @@ static mixed *partial(mixed *parsed)
 }
 
 /*
- * NAME:	collect()
- * DESCRIPTION:	collect high sequence in sub-array
+ * collect high sequence in sub-array
  */
 static mixed *collect(mixed *parsed)
 {
@@ -84,8 +80,7 @@ static mixed *collect(mixed *parsed)
 }
 
 /*
- * NAME:	merge()
- * DESCRIPTION:	merge low sequence in binary string
+ * merge low sequence in binary string
  */
 static mixed *merge(mixed *parsed)
 {
@@ -93,8 +88,7 @@ static mixed *merge(mixed *parsed)
 }
 
 /*
- * NAME:	upper()
- * DESCRIPTION:	character in range 0x80-0xff
+ * character in range 0x80-0xff
  */
 static mixed *upper(mixed *parsed)
 {
@@ -106,8 +100,7 @@ static mixed *upper(mixed *parsed)
 }
 
 /*
- * NAME:	char2()
- * DESCRIPTION:	character in range 0x100 - 0x7ff
+ * character in range 0x100 - 0x7ff
  */
 static mixed *char2(mixed *parsed)
 {
@@ -115,8 +108,7 @@ static mixed *char2(mixed *parsed)
 }
 
 /*
- * NAME:	char3()
- * DESCRIPTION:	character in range 0x800 - 0xffff
+ * character in range 0x800 - 0xffff
  */
 static mixed *char3(mixed *parsed)
 {
@@ -129,8 +121,7 @@ static mixed *char3(mixed *parsed)
 }
 
 /*
- * NAME:	char4()
- * DESCRIPTION:	character in range 0x10000 - 0x10ffff
+ * character in range 0x10000 - 0x10ffff
  */
 static mixed *char4(mixed *parsed)
 {
