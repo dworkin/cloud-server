@@ -123,6 +123,23 @@ private int dir_size(string file)
     return size;
 }
 
+# define EG "token = /[\\*\\?\\[\\\\]?[^\\*\\?\\[\\\\]*/ path: path: path token"
+
+/*
+ * NAME:	escape_path()
+ * DESCRIPTION:	escape get_dir special characters in a path
+ */
+string escape_path(string file)
+{
+    string *files;
+    int sz;
+
+    files = explode("/" + file + "/", "/");
+    sz = sizeof(files);
+    files[sz - 1] = implode(parse_string(EG, "/" + files[sz - 1]), "\\")[1 ..];
+    return implode(files, "/");
+}
+
 /*
  * NAME:	file_size()
  * DESCRIPTION:	get the size of a file in K, or 0 if the file doesn't exist

@@ -930,43 +930,26 @@ static mixed **get_dir(string path)
  */
 static mixed *file_info(string path)
 {
-    string name, *files;
+    object obj;
     mixed *info;
     int i, sz;
-    object obj;
 
     CHECKARG(path, 1, "file_info");
     if (!this_object()) {
 	error("Permission denied");
     }
 
-    path = ::find_object(DRIVER)->normalize_path(path, nil, creator);
+    obj = ::find_object(DRIVER);
+    path = obj->normalize_path(path, nil, creator);
     if (creator != "System" &&
 	!::find_object(ACCESSD)->access(object_name(this_object()), path,
 					READ_ACCESS)) {
 	error("Access denied");
     }
 
-    info = ::get_dir(path);
-    if (path == "/") {
-	name = ".";
-    } else {
-	files = explode(path, "/");
-	name = files[sizeof(files) - 1];
-    }
-    files = info[0];
-    sz = sizeof(files);
-    if (sz <= 1) {
-	if (sz == 0 || files[0] != name) {
-	    return nil;	/* file does not exist */
-	}
-    } else {
-	/* name is a pattern: find in file list */
-	for (i = 0; name != files[i]; ) {
-	    if (++i == sz) {
-		return nil;	/* file does not exist */
-	    }
-	}
+    info = ::get_dir(obj->escape_path(path));
+    if (sizeof(info[0]) == 0) {
+	return nil;	/* file does not exist */
     }
     info = ({ info[1][i], info[2][i], nil });
     if ((sz=strlen(path)) >= 2 && path[sz - 2 ..] == ".c" &&
