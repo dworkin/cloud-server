@@ -194,6 +194,5 @@ nomask int _F_touch()
 /*
  * Disabled functions.
  */
-static void save_object(string file)		{ return; }
 static string query_ip_number(object obj)	{ return nil; }
 static string query_ip_name(object obj)		{ return nil; }
