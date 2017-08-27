@@ -220,12 +220,12 @@ static mixed *rsrc_get(string owner, string name)
  * DESCRIPTION:	increment or decrement a resource, returning TRUE if succeeded,
  *		FALSE if failed
  */
-static void rsrc_incr(string rowner, string name, int incr, varargs int force)
+static void rsrc_incr(string rowner, string name, int incr)
 {
     if (!access(owner, "/", FULL_ACCESS)) {
 	message("Permission denied.\n");
     } else {
-	::rsrc_incr(rowner, name, incr, force);
+	::rsrc_incr(rowner, name, incr);
     }
 }
 
