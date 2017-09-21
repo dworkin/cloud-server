@@ -811,6 +811,200 @@ int iteratorEnd(mixed state)
 
 
 /*
+ * compare two character arrays
+ */
+private int compareChars(int *chunk, int *chars, int len)
+{
+    int i;
+
+    for (i = 0; i < len; i++) {
+	if (chunk[i] != chars[i]) {
+	    return chunk[i] - chars[i];
+	}
+    }
+    return 0;
+}
+
+/*
+ * compare two chunks
+ */
+private mixed *compareChunk(mixed *buf, int bufIndex, int offset, mixed str)
+{
+    int len, slen, comp;
+    mixed chunk;
+
+    ({ buf, bufIndex, offset, chunk }) = streamChunk(buf, bufIndex, offset);
+    switch (typeof(chunk)) {
+    case T_NIL:
+	switch (typeof(str)) {
+	case T_NIL:
+	    /* equal */
+	    return ({ 0, nil, 0, 0 });
+
+	case T_STRING:
+	    /* equal if strlen is 0 */
+	    return ({ -strlen(str), nil, 0, 0 });
+	    break;
+
+	case T_ARRAY:
+	    /* "" < array */
+	    return ({ -1, nil, 0, 0 });
+	}
+
+    case T_STRING:
+	switch (typeof(str)) {
+	case T_STRING:
+	    slen = strlen(str);
+	    if (slen != 0) {
+		break;
+	    }
+	    /* fall through */
+	case T_NIL:
+	    /* string > "" */
+	    return ({ 1, nil, 0, 0 });
+
+	case T_ARRAY:
+	    /* string < array */
+	    return ({ -1, nil, 0, 0 });
+	}
+
+	len = strlen(chunk);
+	if (len <= slen) {
+	    if (len == slen) {
+		if (chunk == str) {
+		    return ({ 0, buf, bufIndex, offset });
+		}
+	    } else {
+		str = str[.. len - 1];
+		if (chunk == str) {
+		    return ({ -1, nil, 0, 0 });
+		}
+	    }
+	} else {
+	    chunk = chunk[.. slen - 1];
+	    if (chunk == str) {
+		return ({ 1, nil, 0, 0 });
+	    }
+	}
+	return ({ (chunk < str) ? -1 : 1, nil, 0, 0 });
+
+    case T_ARRAY:
+	switch (typeof(str)) {
+	case T_NIL:
+	case T_STRING:
+	    /* array > string */
+	    return ({ 1, nil, 0, 0 });
+
+	case T_ARRAY:
+	    slen = sizeof(str);
+	    break;
+	}
+
+	len = sizeof(chunk);
+	if (len <= slen) {
+	    comp = compareChars(chunk, str, len);
+	    if (len < slen && comp == 0) {
+		return ({ -1, nil, 0, 0 });
+	    }
+	} else {
+	    comp = compareChars(chunk, str, slen);
+	    if (comp == 0) {
+		return ({ 1, nil, 0, 0 });
+	    }
+	}
+	return ({ comp, buf, bufIndex, offset });
+    }
+}
+
+/*
+ * compare with other string
+ */
+int compare(mixed str)
+{
+    int bufIndex, offset, comp;
+    mixed *buf, chunk;
+
+    switch (typeof(str)) {
+    case T_STRING:
+	/* compare to one chunk */
+	if (length() == 0) {
+	    return -strlen(str);
+	}
+	({ buf, bufIndex, offset }) = streamStart();
+	({ comp, buf, bufIndex, offset }) =
+				    compareChunk(buf, bufIndex, offset, str);
+	if (comp != 0) {
+	    return comp;
+	}
+	if (!buf) {
+	    return 0;
+	}
+	({ buf, bufIndex, offset, chunk }) = streamChunk(buf, bufIndex, offset);
+	return !!chunk;
+
+    case T_OBJECT:
+	/* stream both Strings, compare chunk by chunk */
+	str = ((String) str)->buffer();
+	if (length() == 0) {
+	    return -str->length();
+	}
+	({ buf, bufIndex, offset }) = streamStart();
+	do {
+	    ({ comp, buf, bufIndex, offset }) =
+			    compareChunk(buf, bufIndex, offset, str->chunk());
+	    if (comp != 0) {
+		return comp;
+	    }
+	} while (buf);
+	return 0;
+
+    default:
+	error("Can only compare to String or string");
+    }
+}
+
+/*
+ * this == str
+ */
+int equals(mixed str)
+{
+    return (compare(str) == 0);
+}
+
+/*
+ * this < str
+ */
+static int operator< (mixed str)
+{
+    return (compare(str) < 0);
+}
+
+/*
+ * this <= str
+ */
+static int operator<= (mixed str)
+{
+    return (compare(str) <= 0);
+}
+
+/*
+ * this > str
+ */
+static int operator> (mixed str)
+{
+    return (compare(str) > 0);
+}
+
+/*
+ * this >= str
+ */
+static int operator>= (mixed str)
+{
+    return (compare(str) >= 0);
+}
+
+
+/*
  * return String with first character converted to upper case
  */
 String capitalize()
