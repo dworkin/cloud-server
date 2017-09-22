@@ -16,6 +16,7 @@
 # define LPCExpFuncall		object "/usr/LPC/api/lib/code/exp_func"
 # define LPCExpInhFuncall	object "/usr/LPC/api/lib/code/exp_ifunc"
 # define LPCExpVar		object "/usr/LPC/api/lib/code/exp_var"
+# define LPCExpGlobalVar	object "/usr/LPC/api/lib/code/exp_global"
 
 /* statements */
 # define LPCStatement		object "/usr/LPC/api/lib/code/statement"

@@ -18,7 +18,7 @@ static void create(varargs int line)
 /*
  * start emitting code
  */
-void start()
+static void start()
 {
     tls_set(LINE, 1);
     tls_set(EMIT, new StringBuffer);
@@ -32,7 +32,7 @@ void code();
 /*
  * finish emitting code
  */
-StringBuffer end()
+static StringBuffer end()
 {
     StringBuffer buffer;
 

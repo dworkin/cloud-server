@@ -1,4 +1,5 @@
 # include "code.h"
+# include <String.h>
 
 inherit LPCCode;
 
@@ -29,4 +30,14 @@ void code()
     for (i = 0, sz = sizeof(globals); i < sz; i++) {
 	globals[i]->code();
     }
+}
+
+/*
+ * return program code in a StringBuffer
+ */
+StringBuffer codegen()
+{
+    start();
+    code();
+    return end();
 }

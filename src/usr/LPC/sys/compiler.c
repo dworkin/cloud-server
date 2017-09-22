@@ -40,7 +40,7 @@ Program: Inherits TopLevelDecls				? program	\
 Inherits: InheritList					? list		\
 InheritList:								\
 InheritList: InheritList Inherit					\
-Inherit: OptPrivate 'inherit' OptLabel OptObject Exp ';'		\
+Inherit: OptPrivate 'inherit' OptLabel OptObject StringExp ';'		\
 							? inh		\
 OptPrivate:						? false		\
 OptPrivate: 'private'					? true		\
@@ -154,7 +154,11 @@ FunctionCall: FunctionName						\
 FunctionCall: '::' FunctionName						\
 FunctionCall: ident '::' FunctionName					\
 String: simple_string					? simpleString	\
-String:	complex_string					? complexString " +
+String:	complex_string					? complexString	\
+CompositeString: StringExp						\
+CompositeString: CompositeString '+' StringExp		? stringExp	\
+StringExp : String							\
+StringExp: '(' CompositeString ')'			? parsed_1_	" +
 "\
 Exp1: decimal						? expIntDec	\
 Exp1: octal						? expIntOct	\
@@ -167,17 +171,14 @@ Exp1: String								\
 Exp1: '(' '{' OptArgListComma '}' ')'			? expArray	\
 Exp1: '(' '[' OptAssocListComma ']' ')'			? expMapping	\
 Exp1: ident						? expVar	\
+Exp1: '::' ident					? expGlobalVar	\
 Exp1: '(' ListExp ')'					? parsed_1_	\
 Exp1: FunctionCall '(' OptArgList ')'			? expFuncall	\
 Exp1: 'catch' '(' ListExp ')'				? expCatch	\
-Exp1: 'new' OptObject String				? expNew1	\
-Exp1: 'new' OptObject '(' ListExp ')'			? expNew2	\
-Exp1: 'new' OptObject String '(' OptArgList ')'		? expNew3	\
-Exp1: 'new' OptObject '(' ListExp ')' '(' OptArgList ')'		\
-							? expNew4	\
+Exp1: 'new' OptObject StringExp				? expNew1	\
+Exp1: 'new' OptObject StringExp '(' OptArgList ')'	? expNew2	\
 Exp1: Exp2 '->' ident '(' OptArgList ')'		? expCallOther	\
-Exp1: Exp2 '<-' String					? expInstance1	\
-Exp1: Exp2 '<-' '(' ListExp ')'				? expInstance2	" +
+Exp1: Exp2 '<-' StringExp				? expInstance	" +
 "\
 Exp2: Exp1								\
 Exp2: Exp2 '[' ListExp ']'				? expIndex	\
@@ -492,6 +493,14 @@ static mixed *complexString(mixed *parsed)
 }
 
 /*
+ * ({ CompositeString, "+", StringExp })
+ */
+static mixed *stringExp(mixed *parsed)
+{
+    return ({ new LPCExpression(parsed[0]->value() + parsed[2]->value()) });
+}
+
+/*
  * ({ "'a'" })
  */
 static mixed *simpleChar(mixed *parsed)
@@ -544,6 +553,14 @@ static mixed *expVar(mixed *parsed)
 }
 
 /*
+ * ({ "::", "a" })
+ */
+static mixed *expGlobalVar(mixed *parsed)
+{
+    return ({ new LPCExpGlobalVar(parsed[1]) });
+}
+
+/*
  * ({ "func", "(", ({ }), FALSE, ")" })
  */
 static mixed *expFuncall(mixed *parsed)
@@ -581,29 +598,12 @@ static mixed *expNew1(mixed *parsed)
 }
 
 /*
- * ({ "new", "(", LPCExpression, ")" })
+ * ({ "new", LPCExpression, "(", ({ }), FALSE, ")" })
  */
 static mixed *expNew2(mixed *parsed)
 {
-    return ({ new LPCExpFuncall("new_object", ({ parsed[2] }), FALSE) });
-}
-
-/*
- * ({ "new", LPCExpression, "(", ({ }), FALSE, ")" })
- */
-static mixed *expNew3(mixed *parsed)
-{
     return ({ new LPCExpFuncall("new_object", ({ parsed[1] }) + parsed[3],
 			 parsed[4]) });
-}
-
-/*
- * ({ "new", "(", LPCExpression, ")", "(", ({ }), FALSE, ")" })
- */
-static mixed *expNew4(mixed *parsed)
-{
-    return ({ new LPCExpFuncall("new_object", ({ parsed[2] }) + parsed[5],
-			     parsed[6]) });
 }
 
 /*
@@ -620,17 +620,9 @@ static mixed *expCallOther(mixed *parsed)
 /*
  * ({ LPCExpression, "<-", LPCExpression })
  */
-static mixed *expInstance1(mixed *parsed)
+static mixed *expInstance(mixed *parsed)
 {
     return ({ new LPCExp2(LPC_EXP_INSTANCEOF, parsed[0], parsed[2]) });
-}
-
-/*
- * ({ LPCExpression, "<-", "(", LPCExpression, ")", })
- */
-static mixed *expInstance2(mixed *parsed)
-{
-    return ({ new LPCExp2(LPC_EXP_INSTANCEOF, parsed[0], parsed[3]) });
 }
 
 /*

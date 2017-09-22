@@ -53,3 +53,4 @@
 # define LPC_EXP_MAPPING	145
 # define LPC_EXP_FUNCALL	146
 # define LPC_EXP_VAR		147
+# define LPC_EXP_GLOBAL_VAR	148
