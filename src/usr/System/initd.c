@@ -65,7 +65,9 @@ static void create()
 	    add_owner(domain);
 	    rsrc_incr(domain, "fileblocks",
 		      DRIVER->file_size("/usr/" + domain, TRUE));
-	    load("/usr/" + domain + "/initd");
+	    rlimits (100; 1000000) {
+		load("/usr/" + domain + "/initd");
+	    }
 	}
     }
 }
