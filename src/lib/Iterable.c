@@ -1,13 +1,13 @@
 # include <Iterator.h>
 
-mixed iteratorStart(mixed state);
+mixed iteratorStart(mixed from, mixed to);
 mixed *iteratorNext(mixed state);
 int iteratorEnd(mixed state);
 
 /*
  * default implementation of iterator creation
  */
-Iterator iterator()
+Iterator iterator(varargs mixed from, mixed to)
 {
-    return new Iterator(this_object(), iteratorStart(nil));
+    return new Iterator(this_object(), from, to);
 }

@@ -1,26 +1,28 @@
 # include <Iterator.h>
 
 private Iterable iterated;	/* object iterated over */
+private mixed from, to;		/* iteration range */
 private mixed state;		/* iteration state */
 private mixed item;		/* current iterated element */
-
-/*
- * initialize Iterator
- */
-static void create(Iterable obj, mixed newState)
-{
-    iterated = obj;
-    state = newState;
-    item = nil;
-}
 
 /*
  * reset Iterator to first element
  */
 void reset()
 {
-    state = iterated->iteratorStart(state);
+    state = iterated->iteratorStart(from, to);
     item = nil;
+}
+
+/*
+ * initialize Iterator
+ */
+static void create(Iterable obj, mixed from, mixed to)
+{
+    iterated = obj;
+    ::from = from;
+    ::to = to;
+    reset();
 }
 
 /*

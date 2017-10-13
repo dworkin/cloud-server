@@ -768,12 +768,12 @@ static String operator+ (mixed str)
 /*
  * reset an iterator
  */
-mixed iteratorStart(mixed state)
+mixed iteratorStart(mixed from, mixed to)
 {
     StringBuffer buffer;
     mixed chunk;
 
-    buffer = buffer();
+    buffer = bufferRange(from, to);
     chunk = buffer->chunk();
     return ({ buffer, chunk, 0 });
 }
