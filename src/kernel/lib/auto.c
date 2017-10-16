@@ -70,14 +70,14 @@ nomask void _F_create()
 	    if (!creator) {
 		creator = "";
 	    }
+	}
 
 # ifdef CREATOR
-	    /* call System-level creator function */
-	    if (CREATOR()) {
-		return;
-	    }
-# endif
+	/* call System-level creator function */
+	if (CREATOR()) {
+	    return;
 	}
+# endif
 	create();
     }
 }
