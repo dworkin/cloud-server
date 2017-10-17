@@ -348,8 +348,8 @@ private void _initialize(mapping tls)
     load(RSRCOBJ);
 
     /* initialize some resources */
-    rsrcd->set_rsrc("stack",	        50, 0, 0);
-    rsrcd->set_rsrc("ticks",	    250000, 0, 0);
+    rsrcd->set_rsrc("stack",     100, 0, 0);
+    rsrcd->set_rsrc("ticks", 5000000, 0, 0);
 
     /* create initial resource owners */
     rsrcd->add_owner("System");
