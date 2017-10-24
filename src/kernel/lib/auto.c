@@ -621,7 +621,7 @@ static int call_touch(object obj)
  * NAME:	_F_call_limited()
  * DESCRIPTION:	call a function with limited stack depth and ticks
  */
-private mixed _F_call_limited(mixed arg1, mixed *args)
+private mixed _F_call_limited(mixed arg1, string oowner, mixed *args)
 {
     object rsrcd;
     int stack, ticks;
@@ -638,7 +638,7 @@ private mixed _F_call_limited(mixed arg1, mixed *args)
 	    tls = arg1 = ([ ]);
 	}
 	limits = TLSVAR(tls, TLS_LIMIT) =
-		 rsrcd->call_limits(TLSVAR(tls, TLS_LIMIT), owner, stack,
+		 rsrcd->call_limits(TLSVAR(tls, TLS_LIMIT), oowner, stack,
 				    ticks);
     }
 
@@ -668,7 +668,7 @@ static mixed call_limited(string func, mixed args...)
     CHECKARG(function_object(func, this_object()) != AUTO || func == "create",
 	     1, "call_limited");
 
-    return _F_call_limited(func, args);
+    return _F_call_limited(func, owner, args);
 }
 
 /*
@@ -700,17 +700,57 @@ static int call_out(string func, mixed delay, mixed args...)
 	/* direct callouts for kernel objects */
 	return ::call_out(func, delay, args...);
     }
-    return ::call_out("_F_callout", delay, func, args);
+    return ::call_out("_F_callout", delay, func, owner, args);
 }
 
 /*
  * NAME:	_F_callout()
  * DESCRIPTION:	callout gate
  */
-nomask void _F_callout(string func, mixed *args)
+nomask void _F_callout(string func, string oowner, mixed *args)
 {
     if (!previous_program()) {
-	_F_call_limited(func, args);
+	_F_call_limited(func, oowner, args);
+    }
+}
+
+/*
+ * NAME:	call_out_other()
+ * DESCRIPTION:	start a callout in another object
+ */
+static int call_out_other(object obj, string func, mixed args...)
+{
+    string oname;
+
+    CHECKARG(obj, 1, "call_out_other");
+    CHECKARG(func, 2, "call_out_other");
+    if (!this_object()) {
+	return 0;
+    }
+    oname = function_object(func, obj);
+    CHECKARG(oname != AUTO || func == "create", 2, "call_out_other");
+    if (!oname) {
+	func = "???";
+    }
+    oname = object_name(obj);
+    if (sscanf(oname, "%*s#-1") != 0) {
+	error("Callout in non-persistent object");
+    }
+
+    /*
+     * add callout
+     */
+    return obj->_F_callout_other(func, owner, args);
+}
+
+/*
+ * NAME:	_F_callout_other()
+ * DESCRIPTION:	callout_other gate
+ */
+nomask int _F_callout_other(string func, string oowner, mixed *args)
+{
+    if (previous_program() == AUTO) {
+	return ::call_out("_F_callout", 0, func, oowner, args);
     }
 }
 
