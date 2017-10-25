@@ -290,7 +290,10 @@ private void continued(mixed *ref)
 
     case T_OBJECT:
 	/* iterator */
-	call_other(this_object(), func, objs->next(), args...);
+	val = objs->next();
+	if (val != nil) {
+	    call_other(this_object(), func, val, args...);
+	}
 	break;
 
     case T_ARRAY:

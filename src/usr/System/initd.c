@@ -50,7 +50,7 @@ static void create()
     /* global objects */
     compile_object("/sys/utf8encode");
     compile_object("/sys/utf8decode");
-    compile_object("/lib/Iterator");
+    compile_object("/lib/IntIterator");
     compile_object("/lib/String");
     compile_object("/lib/StringBuffer");
     compile_object("/lib/ChainedContinuation");
