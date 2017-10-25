@@ -1,11 +1,15 @@
 # include <kernel/kernel.h>
 # include <status.h>
+# include <type.h>
 # include "tls.h"
 
-# define SYSTEMAUTO	"/usr/System/lib/auto"
-# define OBJECTSERVER	"/usr/System/sys/objectd"
-# define UPGRADESERVER	"/usr/System/sys/upgraded"
+# define SYSTEM_AUTO		"/usr/System/lib/auto"
+# define OBJECT_SERVER		"/usr/System/sys/objectd"
+# define UPGRADE_SERVER		"/usr/System/sys/upgraded"
+# define CONTINUATION		"/lib/Continuation"
 
+
+private mapping storage;	/* uninitialized until used */
 
 /*
  * NAME:	_F_init()
@@ -49,7 +53,7 @@ static object clone_object(string path, mixed args...)
  */
 nomask void _F_copy()
 {
-    if (previous_program() == SYSTEMAUTO) {
+    if (previous_program() == SYSTEM_AUTO) {
 	this_object()->copy();
     }
 }
@@ -67,7 +71,7 @@ static object new_object(string path, mixed args...)
 	}
 	if (sscanf(path, "%*s/lib/") != 0 && status(path, O_INDEX) != nil) {
 	    /* let upgrade server generate a leaf object */
-	    path = UPGRADESERVER->generate_leaf(path);
+	    path = UPGRADE_SERVER->generate_leaf(path);
 	}
     }
     ::tls_set(TLS_ARGUMENTS, args);
@@ -184,10 +188,250 @@ static mixed tls_get(string index)
  */
 nomask int _F_touch()
 {
-    if (previous_program() == OBJECTSERVER) {
+    if (previous_program() == OBJECT_SERVER) {
 	this_object()->patch();
     }
     return FALSE;
+}
+
+
+# define TLS_CONT	"cont::"
+
+# define REF_CONT	0	/* continuation */
+# define REF_ORIGIN	1	/* originating object */
+# define REF_COUNT	2	/* callback countdown */
+# define REF_TIMEOUT	3	/* timeout handle */
+
+# define CONT_VAL	0	/* previous return value */
+# define CONT_OBJS	1	/* object array, object, or chained flag */
+# define CONT_TIMEOUT	2	/* timeout */
+# define CONT_FUNC	3	/* function to call */
+# define CONT_ARGS	4	/* arguments */
+# define CONT_SIZE	5	/* size of continuation */
+
+/*
+ * NAME:	startContinuation()
+ * DESCRIPTION:	runNext a continuation, start first callout if none running yet
+ */
+static void startContinuation(object origin, mixed *continuations)
+{
+    if (previous_program() == CONTINUATION) {
+	mixed *ref, *continued, *continuation, objs;
+	int sz, i, ssz, j;
+	string func;
+
+	ref = ::tls_get(TLS_CONT);
+	if (!ref) {
+	    /*
+	     * schedule first continuation
+	     */
+	    ref = ({ ({ }), origin, 0, 0 });
+	    ::tls_set(TLS_CONT, ref);
+	    call_out_other(origin, "_F_continued", ref);
+	} else if (origin != ref[REF_ORIGIN]) {
+	    /*
+	     * should use a distributed continuation
+	     */
+	    error("Continuation not in same object");
+	}
+	continued = ({ });
+
+	for (sz = sizeof(continuations), i = 0; i < sz; i++) {
+	    continuation = continuations[i];
+	    objs = continuation[CONT_OBJS];
+	    if (typeof(objs) == T_ARRAY) {
+		/*
+		 * disallow calling external static functions via continuations
+		 */
+		func = continuation[CONT_FUNC];
+		for (ssz = sizeof(objs), j = 0; j < sz; j++) {
+		    if (!function_object(func, objs[j])) {
+			error("Uncallable external function in continuation");
+		    }
+		}
+	    }
+
+	    continued += ({ nil }) + continuation;
+	}
+
+	/*
+	 * run these continuations before all others
+	 */
+	ref[REF_CONT] = continued + ref[REF_CONT];
+    }
+}
+
+/*
+ * NAME:	continued()
+ * DESCRIPTION:	run a continuation
+ */
+private void continued(mixed *ref)
+{
+    mixed *continued;
+    int type, token, sz, i;
+    mixed val, objs, timeout, args;
+    string func;
+
+    ::tls_set(TLS_CONT, ref);
+    continued = ref[REF_CONT];
+    ({ val, objs, timeout, func, args }) = continued[.. CONT_SIZE - 1];
+
+    switch (typeof(objs)) {
+    case T_INT:
+	ref[REF_CONT] = continued[CONT_SIZE ..];
+	if (objs) {
+	    /* chained */
+	    val = call_other(this_object(), func, val, args...);
+	} else {
+	    /* standard */
+	    val = call_other(this_object(), func, args...);
+	}
+	break;
+
+    case T_OBJECT:
+	/* iterator */
+	call_other(this_object(), func, objs->next(), args...);
+	break;
+
+    case T_ARRAY:
+	/*
+	 * distributed continuation
+	 */
+	sz = sizeof(objs);
+	ref[REF_CONT] = continued = continued[CONT_SIZE ..];
+	if (!storage) {
+	    token = 0;
+	    storage = ([ "token" : 0, 0 : ref ]);
+	} else {
+	    for (token = storage["token"]; storage[++token]; ) ;
+	    storage["token"] = token;
+	    storage[token] = ref;
+	}
+	ref[REF_COUNT] = sz;
+	ref[REF_TIMEOUT] = ::call_out("_F_timeoutContinuation", timeout, token);
+
+	if (sizeof(continued) != 0 && typeof(continued[CONT_OBJS]) == T_INT &&
+	    continued[CONT_OBJS]) {
+	    /* return values from distributed continuations */
+	    continued[CONT_VAL] = allocate(sz);
+	}
+	for (i = 0; i < sz; i++) {
+	    call_out_other(objs[i], "_F_continued", ({
+		({
+		    nil, 0, 0, func, args,			/* extern */
+		    nil, this_object(), 0, nil, ({ token, i })	/* callback */
+		}),
+		objs[i],
+		0,
+		0
+	    }));
+	}
+	return;
+    }
+
+    continued = ref[REF_CONT];
+    while (sizeof(continued) != 0) {
+	objs = continued[CONT_OBJS];
+	switch (typeof(objs)) {
+	case T_NIL:
+	    /* callback to destructed object */
+	    return;
+
+	case T_INT:
+	    if (objs) {
+		/* return value needed by next step */
+		continued[CONT_VAL] = val;
+	    }
+	    break;
+
+	case T_OBJECT:
+	    if (continued[CONT_FUNC]) {
+		/* iterator */
+		if (objs->end()) {
+		    ref[REF_CONT] = continued = continued[CONT_SIZE ..];
+		    continue;
+		}
+	    } else {
+		/* callback */
+		call_out_other(objs, "_F_doneContinuation", val,
+			       continued[CONT_ARGS]...);
+		return;
+	    }
+	    break;
+	}
+	::call_out("_F_continued", 0, ref);
+	break;
+    }
+}
+
+/*
+ * NAME:	_F_continued()
+ * DESCRIPTION	run continuation from callout
+ */
+nomask void _F_continued(mixed *ref)
+{
+    if (previous_program() == AUTO) {
+	continued(ref);
+    }
+}
+
+/*
+ * NAME:	_F_doneContinuation()
+ * DESCRIPTION:	finished performing a distributed continuation
+ */
+nomask void _F_doneContinuation(mixed result, int token, int index)
+{
+    if (previous_program() == AUTO && storage) {
+	mixed *ref, *continued;
+
+	ref = storage[token];
+	if (ref) {
+	    continued = ref[REF_CONT];
+	    if (typeof(continued[CONT_VAL]) == T_ARRAY) {
+		continued[CONT_VAL][index] = result;
+	    }
+	    if (--ref[REF_COUNT] == 0) {
+		storage[token] = nil;
+		if (map_sizeof(storage) == 0) {
+		    storage = nil;
+		}
+		::remove_call_out(ref[REF_TIMEOUT]);
+		continued(ref);
+	    }
+	}
+    }
+}
+
+/*
+ * NAME:	_F_timeoutContinuation()
+ * DESCRIPTION:	a distributed continuation timed out
+ */
+nomask void _F_timeoutContinuation(int token)
+{
+    if (previous_program() == AUTO && storage) {
+	mixed *ref;
+
+	ref = storage[token];
+	if (ref) {
+	    storage[token] = nil;
+	    if (map_sizeof(storage) == 0) {
+		storage = nil;
+	    }
+	    continued(ref);
+	}
+    }
+}
+
+/*
+ * NAME:	call_out()
+ * DESCRIPTION: prevent System auto functions from being called by callout
+ */
+static int call_out(string func, mixed delay, mixed args...)
+{
+    if (function_object(func, this_object()) == SYSTEM_AUTO) {
+	error("Illegal callout");
+    }
+    return ::call_out(func, delay, args...);
 }
 
 
