@@ -5,9 +5,6 @@
 inherit "~/lib/user";
 inherit "~/lib/protocol";
 
-private inherit "/lib/util/string";
-private inherit "/lib/util/time";
-
 
 int response_code;
 

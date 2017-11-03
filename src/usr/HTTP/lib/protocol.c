@@ -2,10 +2,10 @@
 # include <version.h>
 # include <status.h>
 # include <type.h>
+# include <Time.h>
 # include "~/api/include/http.h"
 
 private inherit "/lib/util/string";
-private inherit "/lib/util/time";
 
 /*
  * HTTP protocol class
@@ -159,7 +159,7 @@ private string time2date(int time)
     string str, weekday, month;
     int day, year;
 
-    str = gmctime(time);
+    str = new Time(time)->gmctime();
     sscanf(str, "%s %s %d %s %d", weekday, month, day, str, year);
     return weekday + ", " + ((day >= 10) ? (string) day : "0" + day) + " " +
 	   month + " " + year + " " + str + " GMT";
@@ -187,7 +187,7 @@ private int date2time(mixed *date)
 	    str += date[i][1] + " ";
 	}
 	catch {
-	    return gm2time(str);
+	    return new GMTime(str)->time();
 	} : {
 	    return 0;
 	}
@@ -220,11 +220,12 @@ private int date2time(mixed *date)
 	if (sscanf(str, "%d-%s-%d %s GMT", day, month, year, str) != 4) {
 	    return 0;
 	}
-	year += (year < 70) ? 2000 : 1900;	/* hopefully obsolete in 2100 */
+	year += (year < 70) ? 2000 : 1900;	/* hopefully obsolete in 2070 */
     }
 
     catch {
-	return gm2time("Someday " + month + " " + day + " " + str + " " + year);
+	return new GMTime("Someday " + month + " " + day + " " + str + " " +
+			  year)->time();
     } : {
 	return 0;
     }

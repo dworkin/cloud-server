@@ -1,10 +1,10 @@
 # include <kernel/kernel.h>
+# include <Time.h>
 # include "~HTTP/api/include/http.h"
 
 inherit "~HTTP/api/lib/http";
 
 private inherit "/lib/util/string";
-private inherit "/lib/util/time";
 
 
 # define CHUNK_SIZE	65535
@@ -230,7 +230,7 @@ static object http_message(int code, object entity)
 	switch (query_method()) {
 	case "GET":
 	    modified = query_if_modified_since();
-	    if (modified != 0 && timecmp(modified, info[1]) >= 0) {
+	    if (modified != 0 && new Time(modified) >= new Time(info[1])) {
 		return response(HTTP_NOT_MODIFIED, nil);
 	    }
 	    mesg = response(HTTP_OK, nil, info[2], info[0], info[1]);
@@ -262,7 +262,7 @@ static object http_message(int code, object entity)
 	switch (query_method()) {
 	case "GET":
 	    modified = query_if_modified_since();
-	    if (modified != 0 && timecmp(modified, info[1]) >= 0) {
+	    if (modified != 0 && new Time(modified) >= new Time(info[1])) {
 		return response(HTTP_NOT_MODIFIED, nil);
 	    }
 	    if (info[0] == -2) {
