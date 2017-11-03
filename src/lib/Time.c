@@ -156,7 +156,7 @@ string gmctime()
     case JUL1 .. AUG1 - 1:
 	month = "Jul"; days -= JUL1 - 1; break;
     case AUG1 .. SEP1 - 1:
-    	month = "Aug"; days -= AUG1 - 1; break;
+	month = "Aug"; days -= AUG1 - 1; break;
     case SEP1 .. OCT1 - 1:
 	month = "Sep"; days -= SEP1 - 1; break;
     case OCT1 .. NOV1 - 1:

@@ -443,7 +443,7 @@ private mixed **process_callouts(object obj, mixed **callouts)
 		co = callouts[i];
 		callouts[i] = ({ co[CO_HANDLE], co[CO_FIRSTXARG],
 				 co[CO_DELAY] }) +
-			      co[CO_FIRSTXARG + 1];
+			      co[CO_FIRSTXARG + 2];
 	    } while (i != 0);
 	}
     }
