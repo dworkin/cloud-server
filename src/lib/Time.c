@@ -22,28 +22,18 @@ float mtime()	{ return mtime; }
 private int compare(Time t)
 {
     int time2;
-    float mtime2;
 
     time2 = t->time();
     if ((time ^ time2) >= 0) {
 	/* same sign */
-	if (time <= time2) {
-	    if (time == time2) {
-		mtime2 = t->mtime();
-		if (mtime >= mtime2) {
-		    return (mtime == mtime2) ? 0 : 1;
-		}
-	    }
-	    return -1;
+	if (time == time2) {
+	    return (int) ((mtime - t->mtime()) * 1000.0);
 	} else {
-	    return 1;
+	    return time - time2;
 	}
-    } else if (time < 0) {
-	/* time < 0, time2 >= 0 */
-	return 1;
     } else {
-	/* time >= 0, time2 < 0 */
-	return -1;
+	/* unsigned comparison */
+	return (time < 0) ? 1 : -1;
     }
 }
 
