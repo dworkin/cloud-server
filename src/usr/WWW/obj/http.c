@@ -11,11 +11,12 @@ private inherit "/lib/util/string";
 
 string httphost;
 string ftphost;
+string ftphost2;
 
 static void create()
 {
     ::create();
-    ({ httphost, ftphost }) = "~WWW/sys/server"->query_host();
+    ({ httphost, ftphost, ftphost2 }) = "~WWW/sys/server"->query_host();
     call_out("disconnect", 300);
 }
 
@@ -289,6 +290,8 @@ static object http_message(int code, object entity)
 	default:
 	    return not_implemented();
 	}
+    } else if (host == ftphost2) {
+	return response(HTTP_MOVED_PERMANENTLY, "http://" + ftphost);
     } else {
 	return not_found();
     }

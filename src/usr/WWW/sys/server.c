@@ -8,7 +8,7 @@ inherit "~System/lib/user";
 
 object userd;		/* user daemon */
 string httphost;
-string ftphost;
+string ftphost, ftphost2;
 mapping urlmap;
 string errormessage;	/* message returned in case of a login error */
 
@@ -18,6 +18,7 @@ static void create()
     SYS_INITD->set_connection_manager("binary", 0, this_object());
     httphost = "localhost:8080";
     ftphost = "ftphost:8080";
+    ftphost2 = "ftphost2:8080";
     urlmap = ([ "" : "~/obj/http" ]);
     errormessage = "<HTML>\n" +
 		   "<HEAD><TITLE>400 Bad Request</TITLE></HEAD>\n" +
@@ -25,7 +26,7 @@ static void create()
 		   "</HTML>\n";
 }
 
-string *query_host() { return ({ httphost, ftphost }); }
+string *query_host() { return ({ httphost, ftphost, ftphost2 }); }
 
 static object request(string str)
 {
