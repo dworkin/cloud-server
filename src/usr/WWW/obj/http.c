@@ -291,7 +291,7 @@ static object http_message(int code, object entity)
 	    return not_implemented();
 	}
     } else if (host == ftphost2) {
-	return response(HTTP_MOVED_PERMANENTLY, "http://" + ftphost);
+	return response(HTTP_MOVED_PERMANENTLY, "http://" + ftphost + file);
     } else {
 	return not_found();
     }
