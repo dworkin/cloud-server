@@ -728,10 +728,8 @@ static int call_out_other(object obj, string func, mixed args...)
 	return 0;
     }
     oname = function_object(func, obj);
-    CHECKARG(oname != AUTO || func == "create", 2, "call_out_other");
-    if (!oname) {
-	func = "???";
-    }
+    CHECKARG(oname && (sscanf(oname, "/kernel/%*s") == 0 || func == "create"),
+	     2, "call_out_other");
     oname = object_name(obj);
     if (sscanf(oname, "%*s#-1") != 0) {
 	error("Callout in non-persistent object");
