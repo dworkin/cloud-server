@@ -227,7 +227,7 @@ static void startContinuation(object origin, mixed *continuations)
 	     */
 	    ref = ({ ({ }), origin, 0, 0 });
 	    ::tls_set(TLS_CONT, ref);
-	    call_out_other(origin, "_F_continued", ref);
+	    ::call_out_other(origin, "_F_continued", ref);
 	} else if (origin != ref[REF_ORIGIN]) {
 	    /*
 	     * should use a distributed continuation
@@ -244,7 +244,7 @@ static void startContinuation(object origin, mixed *continuations)
 		 * disallow calling external static functions via continuations
 		 */
 		func = continuation[CONT_FUNC];
-		for (ssz = sizeof(objs), j = 0; j < sz; j++) {
+		for (ssz = sizeof(objs), j = 0; j < ssz; j++) {
 		    if (!function_object(func, objs[j])) {
 			error("Uncallable external function in continuation");
 		    }
@@ -319,7 +319,7 @@ private void continued(mixed *ref)
 	    continued[CONT_VAL] = allocate(sz);
 	}
 	for (i = 0; i < sz; i++) {
-	    call_out_other(objs[i], "_F_continued", ({
+	    ::call_out_other(objs[i], "_F_continued", ({
 		({
 		    nil, 0, 0, func, args,			/* extern */
 		    nil, this_object(), 0, nil, ({ token, i })	/* callback */
@@ -356,8 +356,8 @@ private void continued(mixed *ref)
 		}
 	    } else {
 		/* callback */
-		call_out_other(objs, "_F_doneContinuation", val,
-			       continued[CONT_ARGS]...);
+		::call_out_other(objs, "_F_doneContinuation", val,
+				 continued[CONT_ARGS]...);
 		return;
 	    }
 	    break;
@@ -437,6 +437,17 @@ static int call_out(string func, mixed delay, mixed args...)
     return ::call_out(func, delay, args...);
 }
 
+/*
+ * NAME:	call_out_other()
+ * DESCRIPTION:	prevent System auto functions from being called by callout
+ */
+static int call_out_other(object obj, string func, mixed args...)
+{
+    if (function_object(func, obj) == SYSTEM_AUTO) {
+	error("Illegal callout");
+    }
+    return ::call_out_other(obj, func, args...);
+}
 
 /*
  * Disabled functions.
