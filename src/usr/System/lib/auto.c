@@ -390,16 +390,16 @@ nomask void _F_doneContinuation(mixed result, int token, int index)
 	ref = storage[token];
 	if (ref) {
 	    continued = ref[REF_CONT];
-	    if (typeof(continued[CONT_VAL]) == T_ARRAY) {
+	    if (sizeof(continued) != 0 &&
+		typeof(continued[CONT_VAL]) == T_ARRAY) {
 		continued[CONT_VAL][index] = result;
 	    }
 	    if (--ref[REF_COUNT] == 0) {
 		storage[token] = nil;
-		if (map_sizeof(storage) == 0) {
-		    storage = nil;
-		}
 		::remove_call_out(ref[REF_TIMEOUT]);
-		continued(ref);
+		if (sizeof(continued) != 0) {
+		    continued(ref);
+		}
 	    }
 	}
     }
@@ -417,10 +417,9 @@ nomask void _F_timeoutContinuation(int token)
 	ref = storage[token];
 	if (ref) {
 	    storage[token] = nil;
-	    if (map_sizeof(storage) == 0) {
-		storage = nil;
+	    if (sizeof(ref[REF_CONT]) != 0) {
+		continued(ref);
 	    }
-	    continued(ref);
 	}
     }
 }
