@@ -14,13 +14,13 @@ static void create(object *objs, mixed timeout, string func, mixed args...)
     }
     switch (typeof(timeout)) {
     case T_INT:
-	if (timeout < 0) {
+	if (timeout <= 0) {
 	    error("Invalid timeout");
 	}
 	break;
 
     case T_FLOAT:
-	if (timeout < 0.0) {
+	if (timeout <= 0.0) {
 	    error("Invalid timeout");
 	}
 	break;
