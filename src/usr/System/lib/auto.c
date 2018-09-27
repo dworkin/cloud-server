@@ -213,20 +213,21 @@ nomask int _F_touch()
  * NAME:	startContinuation()
  * DESCRIPTION:	runNext a continuation, start first callout if none running yet
  */
-static void startContinuation(object origin, mixed *continuations)
+static void startContinuation(object origin, mixed *continuations, int parallel)
 {
     if (previous_program() == CONTINUATION) {
 	mixed *ref, *continued, *continuation, objs;
 	int sz, i, ssz, j;
 	string func;
 
-	ref = ::tls_get(TLS_CONT);
-	if (!ref) {
+	if (parallel || !(ref=::tls_get(TLS_CONT))) {
 	    /*
 	     * schedule first continuation
 	     */
 	    ref = ({ ({ }), origin, 0, 0 });
-	    ::tls_set(TLS_CONT, ref);
+	    if (!parallel) {
+		::tls_set(TLS_CONT, ref);
+	    }
 	    ::call_out_other(origin, "_F_continued", ref);
 	} else if (origin != ref[REF_ORIGIN]) {
 	    /*

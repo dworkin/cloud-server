@@ -156,7 +156,23 @@ atomic void runNext()
 	error("No environment for Continuation");
     }
 
-    ::startContinuation(origin, continued);
+    ::startContinuation(origin, continued, FALSE);
+    started = TRUE;
+}
+
+/*
+ * start the continuation concurrently
+ */
+atomic void runParallel()
+{
+    if (started) {
+	error("Continuation already started");
+    }
+    if (!origin) {
+	error("No environment for Continuation");
+    }
+
+    ::startContinuation(origin, continued, TRUE);
     started = TRUE;
 }
 
