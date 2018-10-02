@@ -1,4 +1,4 @@
-# include "Time.h"
+# include <Time.h>
 
 inherit Time;
 

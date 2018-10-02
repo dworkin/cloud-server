@@ -1,5 +1,5 @@
 # include <type.h>
-# include "Continuation.h"
+# include <Continuation.h>
 
 
 private mixed *continued;	/* list of continuations */

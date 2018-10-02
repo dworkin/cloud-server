@@ -3,7 +3,7 @@
 # include <status.h>
 # include <type.h>
 # include <Time.h>
-# include "~/api/include/http.h"
+# include "http.h"
 
 private inherit "/lib/util/string";
 
