@@ -55,6 +55,7 @@ static void create()
     compile_object("/lib/StringBuffer");
     compile_object("/lib/GMTime");
     compile_object("/lib/ChainedContinuation");
+    compile_object("/lib/DelayedContinuation");
     compile_object("/lib/IterativeContinuation");
     compile_object("/lib/DistContinuation");
 

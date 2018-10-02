@@ -39,23 +39,8 @@ static void create(string func, mixed args...)
  */
 private void addCont(Continuation cont)
 {
-    if (started || cont->started()) {
-	error("Continuation already started");
-    }
-    if (origin != cont->origin()) {
-	error("Continuations in different objects");
-    }
-
-    continued += cont->continued();
-}
-
-/*
- * chain a continuation to the current one
- */
-private void chainCont(Continuation cont)
-{
-    mixed *continuation;
-    int size;
+    mixed *continuation, *params;
+    int i;
 
     if (started || cont->started()) {
 	error("Continuation already started");
@@ -65,7 +50,27 @@ private void chainCont(Continuation cont)
     }
 
     continuation = cont->continued();
-    switch (typeof(continuation[0][0])) {
+    params = continuation[0];
+    if (params[CONT_DELAY] != 0 && params[CONT_OBJS] == TRUE &&
+	params[CONT_FUNC] == "_F_return" &&
+	continued[i=sizeof(continued) - 1][CONT_DELAY] == 0) {
+	/*
+	 * merge delayed continuation with preceding
+	 */
+	continued[i][CONT_DELAY] = params[CONT_DELAY];
+	continuation = continuation[1 ..];
+    }
+    continued += continuation;
+}
+
+/*
+ * chain a continuation to the current one
+ */
+private void chainCont(Continuation cont)
+{
+    int size;
+
+    switch (typeof(cont->continued()[0][CONT_OBJS])) {
     case T_OBJECT:
 	error("Cannot chain iterative continuation");
 
@@ -74,8 +79,8 @@ private void chainCont(Continuation cont)
     }
 
     size = sizeof(continued);
-    continued += continuation;
-    continued[size][0] = TRUE;
+    addCont(cont);
+    continued[size][CONT_OBJS] = TRUE;
 }
 
 /*

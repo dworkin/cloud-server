@@ -1,6 +1,7 @@
 # include <kernel/kernel.h>
 # include <status.h>
 # include <type.h>
+# include <Continuation.h>
 # include "tls.h"
 
 # define SYSTEM_AUTO		"/usr/System/lib/auto"
@@ -202,11 +203,7 @@ nomask int _F_touch()
 # define REF_COUNT	2	/* callback countdown */
 # define REF_TIMEOUT	3	/* timeout handle */
 
-# define CONT_VAL	0	/* previous return value */
-# define CONT_OBJS	1	/* object array, object, or chained flag */
-# define CONT_TIMEOUT	2	/* timeout */
-# define CONT_FUNC	3	/* function to call */
-# define CONT_ARGS	4	/* arguments */
+# define CONT_VAL	4	/* previous return value */
 # define CONT_SIZE	5	/* size of continuation */
 
 /*
@@ -252,7 +249,7 @@ static void startContinuation(object origin, mixed *continuations, int parallel)
 		}
 	    }
 
-	    continued += ({ nil }) + continuation;
+	    continued += continuation + ({ nil });
 	}
 
 	/*
@@ -270,12 +267,12 @@ private void continued(mixed *ref)
 {
     mixed *continued;
     int type, token, sz, i;
-    mixed val, objs, timeout, args;
+    mixed val, objs, delay, args;
     string func;
 
     ::tls_set(TLS_CONT, ref);
     continued = ref[REF_CONT];
-    ({ val, objs, timeout, func, args }) = continued[.. CONT_SIZE - 1];
+    ({ objs, delay, func, args, val }) = continued[.. CONT_SIZE - 1];
 
     switch (typeof(objs)) {
     case T_INT:
@@ -312,7 +309,7 @@ private void continued(mixed *ref)
 	    storage[token] = ref;
 	}
 	ref[REF_COUNT] = sz;
-	ref[REF_TIMEOUT] = ::call_out("_F_timeoutContinuation", timeout, token);
+	ref[REF_TIMEOUT] = ::call_out("_F_timeoutContinuation", delay, token);
 
 	if (sizeof(continued) != 0 && typeof(continued[CONT_OBJS]) == T_INT &&
 	    continued[CONT_OBJS]) {
@@ -363,9 +360,18 @@ private void continued(mixed *ref)
 	    }
 	    break;
 	}
-	::call_out("_F_continued", 0, ref);
+	::call_out("_F_continued", delay, ref);
 	break;
     }
+}
+
+/*
+ * NAME:	_F_return()
+ * DESCRIPTION:	return argument
+ */
+nomask mixed _F_return(mixed arg)
+{
+    return arg;
 }
 
 /*
