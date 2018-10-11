@@ -8,6 +8,7 @@
 # define OBJECT_SERVER		"/usr/System/sys/objectd"
 # define UPGRADE_SERVER		"/usr/System/sys/upgraded"
 # define CONTINUATION		"/lib/Continuation"
+# define CONTINUATION_TOKEN	"/lib/ContinuationToken"
 
 
 private mapping storage;	/* uninitialized until used */
@@ -260,6 +261,26 @@ static void startContinuation(object origin, mixed *continuations, int parallel)
 }
 
 /*
+ * NAME:	suspendContinuation()
+ * DESCRIPTION:	suspend continuation in current object
+ */
+static object suspendContinuation()
+{
+    mixed *ref, *continued;
+    object token;
+
+    ref = ::tls_get(TLS_CONT);
+    if (!ref || sizeof(continued=ref[REF_CONT]) == 0 || !ref[REF_ORIGIN]) {
+	error("No continuation");
+    }
+    ref[REF_CONT] = ({ });
+
+    token = new ContinuationToken;
+    token->saveContinuation(continued, ref[REF_ORIGIN]);
+    return token;
+}
+
+/*
  * NAME:	continued()
  * DESCRIPTION:	run a continuation
  */
@@ -382,6 +403,18 @@ nomask void _F_continued(mixed *ref)
 {
     if (previous_program() == AUTO) {
 	continued(ref);
+    }
+}
+
+/*
+ * NAME:	_F_wake()
+ * DESCRIPTION:	wake up a suspended continuation
+ */
+nomask void _F_wake(mixed *continued, mixed arg)
+{
+    if (previous_program() == CONTINUATION_TOKEN) {
+	continued[CONT_VAL] = arg;
+	::call_out("_F_continued", 0, ({ continued, this_object(), 0, 0 }));
     }
 }
 
