@@ -3,7 +3,6 @@
 
 inherit LIB_CONN;	/* basic connection object */
 
-# define TLS(tls, n)	tls[-1 - n]
 
 object driver;		/* driver object */
 

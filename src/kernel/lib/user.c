@@ -25,6 +25,17 @@ static void disconnect()
 }
 
 /*
+ * NAME:	connect()
+ * DESCRIPTION:	initiate an outbound connection
+ */
+static atomic void connect(string address, int port)
+{
+    disconnect();
+    connection = clone_object(BINARY_CONN);
+    connection->connect(this_object(), address, port);
+}
+
+/*
  * NAME:	connection()
  * DESCRIPTION:	establish connection
  */

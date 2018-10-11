@@ -6,10 +6,9 @@
 # include <type.h>
 # include <trace.h>
 
-
 # define TLS()			::call_trace()[1][TRACE_FIRSTARG]
-# define TLSVAR(tls, n)		tls[-1 - n]
 # define CHECKARG(arg, n, func)	if (!(arg)) badarg((n), (func))
+
 
 /*
  * NAME:	badarg()
@@ -556,7 +555,7 @@ static object *users()
  */
 static void connect(string address, int port)
 {
-    if (!(this_object() <- LIB_CONN)) {
+    if (previous_program() != BINARY_CONN) {
 	error("Permission denied");
     }
     ::connect(address, port);
