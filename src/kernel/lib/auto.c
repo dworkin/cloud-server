@@ -562,6 +562,18 @@ static void connect(string address, int port)
 }
 
 /*
+ * NAME:	connect_datagram()
+ * DESCRIPTION:	establish an outbound datagram connection
+ */
+static void connect_datagram(int dgram, string address, int port)
+{
+    if (previous_program() != DATAGRAM_CONN) {
+	error("Permission denied");
+    }
+    ::connect_datagram(dgram, address, port);
+}
+
+/*
  * NAME:	swapout()
  * DESCRIPTION:	swap out all objects
  */
