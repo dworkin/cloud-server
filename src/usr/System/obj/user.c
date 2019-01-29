@@ -30,6 +30,7 @@ string password;		/* user password */
 static string newpasswd;	/* new password */
 static string paste_buffer;	/* buffer holding text being pasted */
 static int nconn;		/* # of connections */
+static object local_wiztool;
 
 /*
  * NAME:	create()
@@ -454,6 +455,30 @@ static void cmd_hotboot(object user, string cmd, string str)
     }
 }
 
+private void fetch_local_wiztool() {
+    string err_str, obj_str;
+
+    obj_str = USR_DIR + "/" + name + "/obj/wiztool";
+    if (file_info(obj_str + ".c")) {
+        if (local_wiztool) {
+            destruct_object(local_wiztool);
+        }
+
+        err_str = catch(compile_object(obj_str));
+        if (err_str) {
+            message("Failed to compile your local wiztool:\n\t" + err_str + "\n");
+            return;
+        }
+
+        local_wiztool = clone_object(obj_str);
+        message("Fetched your local wiztool.\n");
+    }
+}
+
+static void cmd_wiztool(object user, string cmd, string str) {
+    fetch_local_wiztool();
+}
+
 /*
  * NAME:	command()
  * DESCRIPTION:	process user input
@@ -501,6 +526,7 @@ static int command(string str)
     case "mkdir":
     case "rmdir":
     case "ed":
+    case "wiztool":
 
     case "access":
     case "grant":
@@ -522,8 +548,12 @@ static int command(string str)
 	break;
 
     default:
-	message("No command: " + str + "\n");
-	break;
+        if (local_wiztool && function_object("cmd_" + str, local_wiztool)) {
+            call_other(local_wiztool, "cmd_" + str, this_object(), str, arg);
+            break;
+        }
+        message("No command: " + str + "\n");
+        break;
     }
 
     return TRUE;
@@ -569,6 +599,12 @@ int login(string str)
 	    Name[0] -= 'a' - 'A';
 	}
 
+        if (name == "admin") {
+            restore_object(DEFAULT_USER_DIR + "/admin.pwd");
+        } else {
+            restore_object(USR_DIR + "/System/data/" + name + ".pwd");
+        }
+
 	if (password) {
 	    /* check password */
 	    previous_object()->message("Password:");
@@ -577,8 +613,12 @@ int login(string str)
 	    /* no password; login immediately */
 	    connection(previous_object());
 	    tell_audience(Name + " logs in.\n");
-	    if (str != "admin" && sizeof(query_users() & ({ str })) == 0) {
-		message("> ");
+	    if (str != "admin") {
+	        if (sizeof(query_users() & ({ str })) == 0) {
+	            message("> ");
+	        } else {
+	            fetch_local_wiztool();
+	        }
 		state[previous_object()] = STATE_NORMAL;
 		return MODE_ECHO;
 	    }
@@ -603,6 +643,10 @@ void logout(int quit)
 		tell_audience(Name + " disconnected.\n");
 	    }
 	}
+        if (local_wiztool) {
+            destruct_object(local_wiztool);
+            message("Destroyed your local wiztool.\n");
+        }
 	::logout(name);
     }
 }
@@ -735,6 +779,7 @@ int receive_message(string str)
 	    }
 	    connection(previous_object());
 	    message("\n");
+	    fetch_local_wiztool();
 	    tell_audience(Name + " logs in.\n");
 	    break;
 
@@ -756,6 +801,11 @@ int receive_message(string str)
 	case STATE_NEWPASSWD2:
 	    if (newpasswd == str) {
 		password = hash_string("crypt", str);
+                if (name == "admin") {
+                    save_object(DEFAULT_USER_DIR + "/admin.pwd");
+                } else {
+                    save_object(USR_DIR + "/System/data/" + name + ".pwd");
+                }
 		message("\nPassword changed.\n");
 	    } else {
 		message("\nMismatch; password not changed.\n");
@@ -779,12 +829,16 @@ int receive_message(string str)
 	    break;
 	}
 
-	str = query_editor(this_object());
-	if (str) {
-	    message((str == "insert") ? "*\b" : ":");
-	} else {
-	    message("> ");
-	}
+        str = query_editor(this_object());
+        if (str) {
+            message((str == "insert") ? "*\b" : ":");
+        } else {
+            if (local_wiztool && function_object("getPrompt", local_wiztool)) {
+                message(local_wiztool->getPrompt(this_object()));
+            } else {
+                message(name + "> ");
+            }
+        }
 	state[previous_object()] = STATE_NORMAL;
 	return MODE_ECHO;
     }
