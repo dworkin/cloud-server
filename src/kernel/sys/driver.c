@@ -348,7 +348,7 @@ private void _initialize(mapping tls)
 
     /* initialize some resources */
     rsrcd->set_rsrc("stack",     100, 0, 0);
-    rsrcd->set_rsrc("ticks", 5000000, 0, 0);
+    rsrcd->set_rsrc("ticks", 500000000, 0, 0);
 
     /* create initial resource owners */
     rsrcd->add_owner("System");
@@ -571,8 +571,8 @@ static object inherit_program(string from, string path, int priv)
     path = normalize_path(path, from + "/..", creator = creator(from));
     if (sscanf(path, "%*s/lib/") == 0 ||
 	(sscanf(path, "/kernel/%*s") != 0 && creator != "System") ||
-	!accessd->access(from, path, READ_ACCESS)) {
-	return nil;
+	!accessd->access(creator, path, READ_ACCESS)) {
+        return nil;
     }
 
     if (objectd) {
