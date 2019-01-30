@@ -2,6 +2,7 @@
 # include <kernel/access.h>
 # include <kernel/user.h>
 # include <kernel/rsrc.h>
+# include <NKlib.h>
 
 inherit access API_ACCESS;
 inherit rsrc API_RSRC;
@@ -59,6 +60,36 @@ static void create()
     compile_object("/lib/IterativeContinuation");
     compile_object("/lib/DistContinuation");
     compile_object("/lib/ContinuationToken");
+    compile_object(ARRAY_LIB);
+    compile_object(ARRAY_ARITHMETIC_REDUCER);
+    compile_object(ARRAY_TO_BOX_REDUCER);
+    compile_object(ARRAY_TO_LIST_REDUCER);
+    compile_object(ARRAY_TO_MARKED_LIST_REDUCER);
+    compile_object(ARRAY_TABULATE_REDUCER);
+    compile_object(BOXIFY_STRING_FUNCTION);
+    compile_object(CORRELATION_FUNCTION);
+    compile_object(COVARIANCE_FUNCTION);
+    compile_object(DATA_VISITOR_FUNCTION);
+    compile_object(DICE_DATA_GENERATOR);
+    compile_object(DICE_LIB);
+    compile_object(DICE_ROLLER_LIB);
+    compile_object(DICE_PROBABILITY_LIB);
+    compile_object(EXPONENTIAL_PROBABILITY_DENSITY_FUNCTION);
+    compile_object(GEOMETRIC_MEAN_FUNCTION);
+    compile_object(JSON_PARSER_LIB);
+    compile_object(LONGEST_STRING_FUNCTION);
+    compile_object(MEDIAN_FUNCTION);
+    compile_object(NUMBER_LIB);
+    compile_object(POLYNOMIAL_DERIVATIVE_ITERATOR);
+    compile_object(POLYNOMIAL_STRING_REDUCER);
+    compile_object(POLYNOMIAL_PROBABILITY_REDUCER);
+    compile_object(RATIONAL_LIB);
+    compile_object(SEARCH_LIB);
+    compile_object(SIMPSONS_RULE_INTEGRATOR_LIB);
+    compile_object(STANDARD_DEVIATION_FUNCTION);
+    compile_object(STRINGIFY_FUNCTION);
+    compile_object(TRIM_STRING_FUNCTION);
+    compile_object(VARIANCE_FUNCTION);
 
     /* Domain stuff */
     rsrc_incr(nil, "fileblocks",

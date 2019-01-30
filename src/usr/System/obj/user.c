@@ -475,8 +475,8 @@ private void fetch_local_wiztool() {
     }
 }
 
-static void cmd_wiztool(object user, string cmd, string str) {
-    fetch_local_wiztool();
+void showPrompt(void) {
+    message(local_wiztool->getPrompt(this_object()));
 }
 
 /*
@@ -526,7 +526,6 @@ static int command(string str)
     case "mkdir":
     case "rmdir":
     case "ed":
-    case "wiztool":
 
     case "access":
     case "grant":
@@ -710,6 +709,7 @@ int receive_message(string str)
 			message("Usage: say <text>\n");
 		    } else {
 			tell_audience(Name + " says: " + str + "\n");
+			message("You say: " + str + "\n");
 		    }
 		    str = nil;
 		    break;
@@ -719,6 +719,7 @@ int receive_message(string str)
 			message("Usage: emote <text>\n");
 		    } else {
 			tell_audience(Name + " " + str + "\n");
+			message("You emote: " + Name + " " + str + "\n");
 		    }
 		    str = nil;
 		    break;
@@ -729,6 +730,7 @@ int receive_message(string str)
 			message("Usage: tell <user> <text>\n");
 		    } else {
 			user->message(Name + " tells you: " + str + "\n");
+			message("You tell: " + str + "\n");
 		    }
 		    str = nil;
 		    break;

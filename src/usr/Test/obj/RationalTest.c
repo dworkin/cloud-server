@@ -1,4 +1,4 @@
-#include <NKlib.h>
+#include <Test.h>
 
 inherit Test;
 

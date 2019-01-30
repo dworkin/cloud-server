@@ -1,1 +1,2 @@
-inherit "~nik/lib/wiztool";
+inherit "~olya/lib/wiztool";
+

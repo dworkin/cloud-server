@@ -1,11 +1,11 @@
-#include <NKlib.h>
+#include <Test.h>
 
 inherit Test;
 
-Stringify stringify;
-LongestString longestString;
-TrimString trimString;
-BoxifyString boxifyString;
+private Stringify stringify;
+private LongestString longestString;
+private TrimString trimString;
+private BoxifyString boxifyString;
 
 private void longestStringShouldFindLongestString(void) {
     string *x;
@@ -44,7 +44,7 @@ private void stringifyShouldStringifyObject(void) {
 
     x = new Random();
 
-    expectEqual(TEST_LINE, "</usr/NK/@@@/statistics/Random#-1>", stringify->evaluate(x));
+    expectEqual(TEST_LINE, "</@@@/statistics/Random#-1>", stringify->evaluate(x));
 }
 
 private void stringifyShouldStringifyInteger(void) {

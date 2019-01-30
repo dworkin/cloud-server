@@ -1,4 +1,4 @@
-#include <NKlib.h>
+#include <Test.h>
 
 inherit NK_KFUN;
 
@@ -60,6 +60,7 @@ static void reportDone(void) {
     }
 
     reportTo->message("\nDone.\n");
+    reportTo->showPrompt();
 }
 
 static void afterTests(string *str) {
