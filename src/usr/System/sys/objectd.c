@@ -196,6 +196,7 @@ private string *preregister_includes(string path)
 	    "/include/kernel/kernel.h",
 	    "/include/kernel/rsrc.h",
 	    "/include/kernel/user.h",
+	    "/include/kfun.h",
 	    "/include/status.h",
 	    "/include/trace.h",
 	    "/include/type.h"
