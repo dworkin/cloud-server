@@ -4,6 +4,7 @@
 #include <Continuation.h>
 #include <Iterator.h>
 #include <String.h>
+#include <Time.h>
 #include <float.h>
 #include <kfun.h>
 #include <limits.h>

@@ -1,20 +1,50 @@
 # include <Time.h>
+# include <type.h>
 
 private int time;
 private float mtime;
+private float millis;
 
 /*
  * initialize Time
  */
-static void create(int time, varargs float mtime)
+static void create(mixed time, varargs float mtime)
 {
-    ::time = time;
-    ::mtime = mtime;
+    millis = 0.;
+
+    if (!time && !mtime) {
+        ({ ::time, ::mtime }) = millitime();
+    } else if (typeof(time) == T_FLOAT) {
+        millis = time;
+        ::time = (int) floor(time / 1000.);
+        ::mtime = (time / 1000.) - (float) ::time;
+    } else if (typeof(time) == T_INT && !mtime) {
+        millis = (float) time * 1000.;
+        ::time = time;
+    } else {
+        ::time = time;
+        ::mtime = mtime;
+    }
+
+    if (::time < 0) {
+        error("Time: time must not be negative");
+    }
+
+    if (::mtime < 0.) {
+        error("Time: mtime must not be negative");
+    }
+
+    if (millis == 0.) {
+        millis = 1000. * ((float) ::time + ::mtime);
+    }
 }
 
 int time()	{ return time; }
 float mtime()	{ return mtime; }
 
+float millis(void) {
+    return millis;
+}
 
 /*
  * compare with another Time object
@@ -75,6 +105,14 @@ static int operator>= (Time t)
 static int operator> (Time t)
 {
     return (compare(t) > 0);
+}
+
+static Time operator+ (Time t) {
+    return new Time(millis + t->millis());
+}
+
+static Time operator- (Time t) {
+    return new Time(millis - t->millis());
 }
 
 /*
@@ -162,4 +200,30 @@ string gmctime()
 	   ((hours >= 10) ? (string) hours : "0" + hours) + ":" +
 	   ((minutes >= 10) ? (string) minutes : "0" + minutes) + ":" +
 	   ((seconds >= 10) ? (string) seconds : "0" + seconds) + " " + year;
+}
+
+string ctime(void) {
+    return ::ctime(time);
+}
+
+private string padNr(int nr) {
+    return (nr < 10 ? "0" : "") +  nr;
+}
+
+mixed *asDuration(void) {
+    mixed *parts;
+    string str;
+
+    if (time == 0) {
+        return ({ 0, 0, 0, 0, "00:00:00" });
+    }
+
+    parts = allocate(5);
+    parts[0] = time % 60;
+    parts[1] = time / 60 % 60;
+    parts[2] = time / 3600 % 24;
+    parts[3] = millis / 8.64e7;
+    parts[4] = "" + padNr(parts[2]) + ":" + padNr(parts[1]) + ":" + padNr(parts[0]);
+
+    return parts;
 }

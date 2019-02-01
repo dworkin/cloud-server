@@ -186,7 +186,7 @@ private void displayRationalFromFloat(void) {
     expectEqual(TEST_LINE, "130/41", new Rational(130./41.)->toString());
 }
 
-private toFloatGivesExpectedValues(void) {
+private void toFloatGivesExpectedValues(void) {
     expectEqual(TEST_LINE, 0.8, new Rational(0.8)->toFloat());
     expectEqual(TEST_LINE, 0.83, new Rational(0.83)->toFloat());
     expectEqual(TEST_LINE, 0.833, new Rational(0.833)->toFloat());
@@ -207,6 +207,34 @@ private toFloatGivesExpectedValues(void) {
     expectEqual(TEST_LINE, 0.8, new Rational(4, 5)->toFloat());
     expectEqual(TEST_LINE, 0.83333333, new Rational(5, 6)->toFloat());
     expectEqual(TEST_LINE, 0.833333333, new Rational(5, 6)->toFloat());
+}
+
+private void createGivesExpectedResults(void) {
+    expectEqual(TEST_LINE, "Rational: invalid parameters.", catch(new Rational()));
+    expectEqual(TEST_LINE, "Rational: invalid parameters.", catch(new Rational("string")));
+    expectEqual(TEST_LINE, "Rational: invalid parameters.", catch(new Rational(({ "string" }))));
+    expectEqual(TEST_LINE, "Rational: invalid parameters.", catch(new Rational(({ 42., 42. }))));
+    expectEqual(TEST_LINE, "Rational: invalid parameters.", catch(new Rational(({ 42, 42. }))));
+    expectEqual(TEST_LINE, "Rational: invalid parameters.", catch(new Rational(1, 2, 3)));
+    expectEqual(TEST_LINE, "Rational: invalid parameters.", catch(new Rational(({ 1, 2, 3 }))));
+    expectEqual(TEST_LINE, "Rational: the denominator must be different from zero.", catch(new Rational(1, 0)));
+}
+
+private void powerErrorsAsExpected(void) {
+    expectEqual(TEST_LINE, "Rational: invalid power.", catch(p ^ "str"));
+    expectEqual(TEST_LINE, "Rational: invalid power.", catch(p ^ new String("")));
+    expectEqual(TEST_LINE, "Rational: invalid power.", catch(p ^ ({ 1 })));
+}
+
+private void reciprocalWorksAsExpected(void) {
+    Rational r;
+
+    expectEqual(TEST_LINE, "Rational: the operation would result in a denominator of zero.",
+            catch(new Rational(0, 2)->reciprocal()));
+
+    r = new Rational(3, 9);
+    r->reciprocal();
+    expectTrue(TEST_LINE, r->equals(new Rational(9, 3)));
 }
 
 void runBeforeTests(void) {
@@ -231,4 +259,7 @@ void runTests(void) {
     displayRationalFromRatio();
     displayRationalFromFloat();
     toFloatGivesExpectedValues();
+    createGivesExpectedResults();
+    powerErrorsAsExpected();
+    reciprocalWorksAsExpected();
 }

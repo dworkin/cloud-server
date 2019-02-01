@@ -3,6 +3,7 @@
 # include <kernel/user.h>
 # include <status.h>
 # include <type.h>
+# include <NKlib.h>
 
 inherit auto	"~/lib/auto";
 inherit user	LIB_USER;
@@ -31,6 +32,7 @@ static string newpasswd;	/* new password */
 static string paste_buffer;	/* buffer holding text being pasted */
 static int nconn;		/* # of connections */
 static object local_wiztool;
+static mixed *idle;
 
 /*
  * NAME:	create()
@@ -455,7 +457,7 @@ static void cmd_hotboot(object user, string cmd, string str)
     }
 }
 
-private void fetch_local_wiztool() {
+private void fetch_local_wiztool(void) {
     string err_str, obj_str;
 
     obj_str = USR_DIR + "/" + name + "/obj/wiztool";
@@ -476,7 +478,11 @@ private void fetch_local_wiztool() {
 }
 
 void showPrompt(void) {
-    message(local_wiztool->getPrompt(this_object()));
+    if (local_wiztool && function_object("getPrompt", local_wiztool)) {
+        message(local_wiztool->getPrompt(this_object()));
+    } else {
+        message("> ");
+    }
 }
 
 /*
@@ -532,6 +538,10 @@ static int command(string str)
     case "ungrant":
     case "quota":
     case "rsrc":
+
+    case "poly":
+    case "rational":
+    case "time":
 
     case "people":
     case "status":
@@ -613,11 +623,7 @@ int login(string str)
 	    connection(previous_object());
 	    tell_audience(Name + " logs in.\n");
 	    if (str != "admin") {
-	        if (sizeof(query_users() & ({ str })) == 0) {
-	            message("> ");
-	        } else {
-	            fetch_local_wiztool();
-	        }
+	        showPrompt();
 		state[previous_object()] = STATE_NORMAL;
 		return MODE_ECHO;
 	    }
@@ -669,6 +675,8 @@ int receive_message(string str)
 	string cmd;
 	object user, *users;
 	int i, sz;
+
+	idle = millitime();
 
 	switch (state[previous_object()]) {
 	case STATE_NORMAL:
@@ -835,13 +843,37 @@ int receive_message(string str)
         if (str) {
             message((str == "insert") ? "*\b" : ":");
         } else {
-            if (local_wiztool && function_object("getPrompt", local_wiztool)) {
-                message(local_wiztool->getPrompt(this_object()));
-            } else {
-                message(name + "> ");
-            }
+            showPrompt();
         }
 	state[previous_object()] = STATE_NORMAL;
 	return MODE_ECHO;
     }
+}
+
+mixed *queryIdle(void) {
+    return idle;
+}
+
+void cmd_poly(object user, string cmd, string arg) {
+    user->message("poly eval|integrate polynomial at/from...to\n");
+}
+
+void cmd_rational(object user, string cmd, string arg) {
+    Rational rational;
+    int n, d;
+    float f;
+
+    if (sscanf(arg, "%d/%d", n, d) == 2) {
+        rational = new Rational(n, d);
+        user->message(rational->toString() + " = " + rational->toFloat() + "\n");
+    } else if (sscanf(arg, "%f", f) == 1) {
+        rational = new Rational(f);
+        user->message(rational->toString() + "\n");
+    } else {
+        user->message("Usage: rational number\n");
+    }
+}
+
+void cmd_time(object user, string cmd, string arg) {
+    user->message(ctime(time()) + "\n");
 }

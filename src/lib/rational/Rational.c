@@ -35,7 +35,9 @@ void fromRatio(int numerator, int denominator) {
         error("Rational: the denominator must be different from zero.");
     }
     fixSign();
-    toCanonical();
+    if (numerator != 0) {
+        toCanonical();
+    }
 }
 
 void fromFloat(float f) {
