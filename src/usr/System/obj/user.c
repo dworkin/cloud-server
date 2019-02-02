@@ -33,6 +33,7 @@ static string paste_buffer;	/* buffer holding text being pasted */
 static int nconn;		/* # of connections */
 static object local_wiztool;
 static mixed *idle;
+static object avatar;
 
 /*
  * NAME:	create()
@@ -548,6 +549,8 @@ static int command(string str)
     case "time":
     case "cls":
     case "test":
+    case "avatar":
+    case "unavatar":
 
     case "who":
     case "status":
@@ -563,6 +566,11 @@ static int command(string str)
 	break;
 
     default:
+        if (avatar && function_object("cmd_" + str, avatar)) {
+            if (call_other(avatar, "cmd_" + str, this_object(), str, arg)) {
+                return TRUE;
+            }
+        }
         if (local_wiztool && function_object("cmd_" + str, local_wiztool)) {
             call_other(local_wiztool, "cmd_" + str, this_object(), str, arg);
             break;
@@ -997,4 +1005,24 @@ void cmd_who(object user, string cmd, string arg) {
 
     command = new Continuation("userCommandWho", user, arg);
     command->runNext();
+}
+
+void cmd_avatar(object user, string cmd, string arg) {
+    if (avatar) {
+        user->println("You already have an avatar.");
+        return;
+    }
+    avatar = UNIVERSE_MASTER->addAvatar(name);
+    user->println("Fetched you an avatar.");
+    tell_audience(user->query_name() + " fetches an avatar.\n");
+}
+
+void cmd_unavatar(object user, string cmd, string arg) {
+    if (!avatar) {
+        user->println("You don't have an avatar to ditch.");
+        return;
+    }
+    avatar = UNIVERSE_MASTER->removeAvatar(name);
+    user->println("You ditch your avatar.");
+    tell_audience(user->query_name() + " ditches the avatar.\n");
 }

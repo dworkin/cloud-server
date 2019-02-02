@@ -39,6 +39,7 @@
 #define TERM_ESC "\033["
 
 #define TEST_RUNNER "/usr/Test/sys/TestRunner"
+#define UNIVERSE_MASTER "~Universe/sys/master"
 
 
 #define ARRAY_LIB "/lib/array/Array"
