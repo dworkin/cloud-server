@@ -5,8 +5,6 @@
 
 #define TEST_LINE testLine(call_trace())
 
-#define TEST_RUNNER "/usr/Test/sys/TestRunner"
-
 #define TEST_OBJ_PATH "/usr/Test/obj"
 #define TEST_SPEC_PATH "/*Test.c"
 
