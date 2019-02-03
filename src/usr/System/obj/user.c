@@ -10,7 +10,7 @@ inherit user	LIB_USER;
 inherit wiztool	LIB_WIZTOOL;
 
 private inherit	"/lib/util/string";
-
+private inherit "/lib/util/version";
 
 # define USER			"/usr/System/obj/user"
 # define USERSERVER		"/usr/System/sys/userd"
@@ -33,6 +33,7 @@ static string paste_buffer;	/* buffer holding text being pasted */
 static int nconn;		/* # of connections */
 static object local_wiztool;
 static mixed *idle;
+static object avatar;
 
 /*
  * NAME:	create()
@@ -42,6 +43,10 @@ static create()
 {
     wiztool::create(200);
     state = ([ ]);
+}
+
+void println(string str) {
+    message(str + "\n");
 }
 
 /*
@@ -542,8 +547,12 @@ static int command(string str)
     case "poly":
     case "rational":
     case "time":
+    case "cls":
+    case "test":
+    case "avatar":
+    case "unavatar":
 
-    case "people":
+    case "who":
     case "status":
     case "swapout":
     case "snapshot":
@@ -557,6 +566,11 @@ static int command(string str)
 	break;
 
     default:
+        if (avatar && function_object("cmd_" + str, avatar)) {
+            if (call_other(avatar, "cmd_" + str, this_object(), str, arg)) {
+                return TRUE;
+            }
+        }
         if (local_wiztool && function_object("cmd_" + str, local_wiztool)) {
             call_other(local_wiztool, "cmd_" + str, this_object(), str, arg);
             break;
@@ -584,6 +598,7 @@ private void tell_audience(string str)
 	if (user != this_object() &&
 	    sscanf(object_name(user), USER + "#%*d") != 0) {
 	    user->message(str);
+	    user->showPrompt();
 	}
     }
 }
@@ -743,19 +758,6 @@ int receive_message(string str)
 		    str = nil;
 		    break;
 
-		case "users":
-		    users = users();
-		    str = "Logged on:";
-		    for (i = 0, sz = sizeof(users); i < sz; i++) {
-			cmd = users[i]->query_name();
-			if (cmd) {
-			    str += " " + cmd;
-			}
-		    }
-		    message(str + "\n");
-		    str = nil;
-		    break;
-
 		case "password":
 		    if (password) {
 			message("Old password:");
@@ -770,6 +772,11 @@ int receive_message(string str)
 		    ::message("End your pasting with a single period.\n\"\b");
 		    state[previous_object()] = STATE_PASTING;
 		    paste_buffer = "";
+		    return MODE_ECHO;
+
+		case "version":
+		    println(version());
+		    showPrompt();
 		    return MODE_ECHO;
 
 		case "quit":
@@ -854,26 +861,168 @@ mixed *queryIdle(void) {
     return idle;
 }
 
-void cmd_poly(object user, string cmd, string arg) {
-    user->message("poly eval|integrate polynomial at/from...to\n");
+private string idleTime(object user) {
+    Time now;
+    mixed *idle;
+
+    now = new Time(time());
+    idle = user->queryIdle();
+
+    return (now - new Time(idle[0], idle[1]))->asDuration()[4];
 }
 
-void cmd_rational(object user, string cmd, string arg) {
+private float *buildCoefficients(string arg) {
+    string *str;
+    int sz;
+    float *coefficients;
+    Iterator i;
+
+    str = explode(arg, ",");
+    sz = sizeof(str);
+    if (!sz) {
+        return nil;
+    }
+    coefficients = allocate_float(sz);
+    i = new IntIterator(0, sz - 1);
+    while (!i->end()) {
+        coefficients[i->next()] = (float) str[i->current()];
+    }
+
+    return coefficients;
+}
+
+static void userCommandPolynomial(object user, string arg) {
+    float at, from, to;
+    float *coefficients;
+
+    if (!arg || arg == "") {
+        user->println("Usage: poly eval 0,1,2,3,4 5");
+        user->println("Usage: poly integrate 0,1,2,3,4 1..3");
+        user->showPrompt();
+        return;
+    }
+
+    if (sscanf(arg, "eval %s %f", arg, at) == 2) {
+        coefficients = buildCoefficients(arg);
+        if (coefficients == nil) {
+            user->println("Usage: poly eval 0,1,2,3,4 5");
+            user->showPrompt();
+            return;
+        }
+        user->println("" + new Polynomial(coefficients)->evaluate(at));
+    } else if (sscanf(arg, "integrate %s %f %f", arg, from, to) == 3) {
+        coefficients = buildCoefficients(arg);
+        if (coefficients == nil) {
+            user->println("Usage: poly integrate 0,1,2,3,4 1..3");
+            user->showPrompt();
+            return;
+        }
+        user->println("" + new Polynomial(coefficients)->integrate(from, to));
+    }
+
+    user->showPrompt();
+}
+
+static void userCommandRational(object user, string arg) {
     Rational rational;
     int n, d;
     float f;
 
     if (sscanf(arg, "%d/%d", n, d) == 2) {
         rational = new Rational(n, d);
-        user->message(rational->toString() + " = " + rational->toFloat() + "\n");
+        user->println(rational->toString() + " = " + rational->toFloat());
     } else if (sscanf(arg, "%f", f) == 1) {
         rational = new Rational(f);
-        user->message(rational->toString() + "\n");
+        user->println(rational->toString());
     } else {
-        user->message("Usage: rational number\n");
+        user->println("Usage: rational number");
     }
+    user->showPrompt();
+}
+
+static void userCommandWho(object user, string arg) {
+    object *users;
+    string *list;
+    int sz;
+    Iterator i;
+
+    users = users() - ({ user });
+    sz = sizeof(users);
+    if (sz == 0) {
+        user->println("One is the loneliest number.");
+        user->showPrompt();
+        return;
+    }
+    list = allocate(sz);
+    i = new IntIterator(0, sz - 1);
+    while (!i->end()) {
+        list[i->next()] = users[i->current()]->query_name() + " " + idleTime(users[i->current()]);
+    }
+    arg = "Users logged in:\n" +
+          new Array(list)->reduce(new ArrayToListReducer(), 0, sz - 1, 1);
+
+    user->message(arg);
+    user->showPrompt();
+}
+
+void cmd_cls(object user, string cmd, string arg) {
+    if (previous_object() != user) {
+        return;
+    }
+
+    user->message(new Terminal()->clear());
+}
+
+void cmd_poly(object user, string cmd, string arg) {
+    Continuation command;
+
+    command = new Continuation("userCommandPolynomial", user, arg);
+    command->runNext();
+}
+
+void cmd_rational(object user, string cmd, string arg) {
+    Continuation command;
+
+    command = new Continuation("userCommandRational", user, arg);
+    command->runNext();
 }
 
 void cmd_time(object user, string cmd, string arg) {
-    user->message(ctime(time()) + "\n");
+    user->println(ctime(time()));
+}
+
+void cmd_test(object user, string cmd, string arg) {
+    if (!access(query_owner(), "/", WRITE_ACCESS)) {
+        user->println("Access denied.");
+        return;
+    }
+
+    TEST_RUNNER->runTests(user, arg);
+}
+
+void cmd_who(object user, string cmd, string arg) {
+    Continuation command;
+
+    command = new Continuation("userCommandWho", user, arg);
+    command->runNext();
+}
+
+void cmd_avatar(object user, string cmd, string arg) {
+    if (avatar) {
+        user->println("You already have an avatar.");
+        return;
+    }
+    avatar = UNIVERSE_MASTER->addAvatar(name);
+    user->println("Fetched you an avatar.");
+    tell_audience(user->query_name() + " fetches an avatar.\n");
+}
+
+void cmd_unavatar(object user, string cmd, string arg) {
+    if (!avatar) {
+        user->println("You don't have an avatar to ditch.");
+        return;
+    }
+    avatar = UNIVERSE_MASTER->removeAvatar(name);
+    user->println("You ditch your avatar.");
+    tell_audience(user->query_name() + " ditches the avatar.\n");
 }

@@ -12,8 +12,6 @@
 #include <type.h>
 
 #define NK_KFUN "/lib/util/nk_kfun"
-#define NK_DATA_DIR "/usr/NK/data"
-#define NK_ETC_DIR "/usr/NK/etc"
 
 #define DICE_EXPR_COUNT 10000
 
@@ -40,6 +38,9 @@
 
 #define TERM_ESC "\033["
 
+#define TEST_RUNNER "/usr/Test/sys/TestRunner"
+#define UNIVERSE_MASTER "~Universe/sys/master"
+
 
 #define ARRAY_LIB "/lib/array/Array"
 #define Array object ARRAY_LIB
@@ -58,6 +59,9 @@
 
 #define ARRAY_TO_BOX_REDUCER "/lib/array/ToBoxReducer"
 #define ToBoxReducer object ARRAY_TO_BOX_REDUCER
+
+
+#define LIB_COMMANDS "~System/lib/commands"
 
 
 #define DICE_LIB "/lib/dice/Dice"

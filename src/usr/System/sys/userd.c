@@ -1,6 +1,7 @@
 # include <kernel/kernel.h>
 # include <kernel/access.h>
 # include <kernel/user.h>
+# include <version.h>
 
 inherit kernel AUTO;
 inherit "~/lib/auto";
@@ -8,7 +9,7 @@ inherit "~/lib/user";
 inherit access API_ACCESS;
 
 private inherit "/lib/util/string";
-
+private inherit "/lib/util/version";
 
 # define USER		"/usr/System/obj/user"
 
@@ -27,7 +28,7 @@ static void create()
     userd->set_telnet_manager(0, this_object());
     users = ([ ]);
     banner = "\n" +
-	     "Welcome to the Cloud Server.\n" +
+	     "Welcome to " + version() + ".\n" +
 	     "\n" +
 	     "After login, the following commands are available:\n" +
 	     " - users                see who is logged on\n" +
