@@ -92,6 +92,9 @@
 #define SimpsonsRuleIntegrator object SIMPSONS_RULE_INTEGRATOR_LIB
 
 
+#define JSON_ENCODER_LIB "/lib/JsonEncoder"
+#define JsonEncoder object JSON_ENCODER_LIB
+
 #define JSON_PARSER_LIB "/lib/JsonParser"
 #define JsonParser object JSON_PARSER_LIB
 

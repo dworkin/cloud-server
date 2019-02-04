@@ -478,7 +478,7 @@ private void fetch_local_wiztool(void) {
         }
 
         local_wiztool = clone_object(obj_str);
-        message("Fetched your local wiztool.\n");
+        /* message("Fetched your local wiztool.\n"); */
     }
 }
 

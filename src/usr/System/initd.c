@@ -76,6 +76,7 @@ static void create()
     compile_object(DICE_PROBABILITY_LIB);
     compile_object(EXPONENTIAL_PROBABILITY_DENSITY_FUNCTION);
     compile_object(GEOMETRIC_MEAN_FUNCTION);
+    compile_object(JSON_ENCODER_LIB);
     compile_object(JSON_PARSER_LIB);
     compile_object(LONGEST_STRING_FUNCTION);
     compile_object(MEDIAN_FUNCTION);

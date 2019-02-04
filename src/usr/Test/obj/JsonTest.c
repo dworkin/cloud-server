@@ -2,7 +2,21 @@
 
 inherit Test;
 
+private JsonEncoder jsonEncoder;
 private JsonParser jsonParser;
+
+private void itShouldEncodeJson(void) {
+    mapping json;
+
+    json = ([ ]);
+    json["string"] = "a string";
+    json["integer"] = 42;
+    json["float"] = 42.42;
+    json["nil"] = nil;
+
+    expectEqual(TEST_LINE, "{ \"float\":42.42, \"integer\":42, \"string\":\"a string\" }",
+            jsonEncoder->encode(json, ([ ])));
+}
 
 private void itShouldParseJson(void) {
     mapping json;
@@ -19,9 +33,11 @@ private void itShouldParseJson(void) {
 }
 
 void runBeforeTests(void) {
+    jsonEncoder = new JsonEncoder();
     jsonParser = new JsonParser();
 }
 
 void runTests(void) {
+    itShouldEncodeJson();
     itShouldParseJson();
 }
