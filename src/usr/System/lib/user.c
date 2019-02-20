@@ -26,7 +26,7 @@ static void login(string str)
  * NAME:	logout()
  * DESCRIPTION:	logout this user
  */
-static void logout()
+static void logout(void)
 {
 }
 
@@ -34,7 +34,7 @@ static void logout()
  * NAME:	address()
  * DESCRIPTION:	return the address this object is connected to
  */
-static string address()
+static string address(void)
 {
     object obj;
 

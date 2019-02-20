@@ -416,7 +416,7 @@ static void create(mixed data, varargs string utf8)
 /*
  * return the length of the string
  */
-int length()
+int length(void)
 {
     return chars[sizeof(chars) - 1];
 }
@@ -424,7 +424,7 @@ int length()
 /*
  * return TRUE if the string contains bytes only
  */
-int isBytes()
+int isBytes(void)
 {
     return (chars[0] == nil);
 }
@@ -483,7 +483,7 @@ private mixed *index(int index)
 /*
  * start stream
  */
-private mixed *streamStart()
+private mixed *streamStart(void)
 {
     mixed *buf;
 
@@ -1007,7 +1007,7 @@ static int operator>= (mixed str)
 /*
  * return String with first character converted to upper case
  */
-String capitalize()
+String capitalize(void)
 {
     StringBuffer buffer;
     mixed *buf, chunk;
@@ -1040,7 +1040,7 @@ String capitalize()
 /*
  * return String converted to upper case
  */
-String upperCase()
+String upperCase(void)
 {
     StringBuffer buffer;
     mixed *buf, chunk;
@@ -1075,7 +1075,7 @@ String upperCase()
 /*
  * return String converted to lower case
  */
-String lowerCase()
+String lowerCase(void)
 {
     StringBuffer buffer;
     mixed *buf, chunk;

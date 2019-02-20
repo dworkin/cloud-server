@@ -11,6 +11,7 @@
 #include <trace.h>
 #include <type.h>
 
+#define DATA_DIR "/data"
 #define NK_KFUN "/lib/util/nk_kfun"
 
 #define DICE_EXPR_COUNT 10000

@@ -10,7 +10,7 @@ private object user;		/* associated user object */
  * NAME:	create()
  * DESCRIPTION:	initialize object
  */
-static void create()
+static void create(void)
 {
     ::create(200);
     user = this_user();

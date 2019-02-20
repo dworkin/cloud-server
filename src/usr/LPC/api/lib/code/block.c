@@ -19,7 +19,7 @@ static void create(LPCDeclaration *decls, LPCStatement stmt, varargs int line)
 /*
  * emit code for block
  */
-void code()
+void code(void)
 {
     int i, sz;
     LPCStatement stmt;

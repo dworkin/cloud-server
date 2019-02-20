@@ -14,7 +14,7 @@ mapping editors;			/* editor : TRUE */
  * NAME:	create()
  * DESCRIPTION:	initialize object
  */
-static void create()
+static void create(void)
 {
     /* load essential objects */
     compile_object(TELNET_CONN);
@@ -288,7 +288,7 @@ void logout(object user, string name)
  * NAME:	query_users()
  * DESCRIPTION:	return the current telnet and binary users
  */
-object *query_users()
+object *query_users(void)
 {
     if (previous_program() == AUTO) {
 	object *usr;
@@ -310,7 +310,7 @@ object *query_users()
  * NAME:	query_connections()
  * DESCRIPTION:	return the current connections
  */
-object *query_connections()
+object *query_connections(void)
 {
     if (previous_program() == API_USER) {
 	return users();
@@ -354,7 +354,7 @@ void remove_editor(object obj)
  * NAME:	query_editors()
  * DESCRIPTION:	return the current editor objects
  */
-object *query_editors()
+object *query_editors(void)
 {
     if (SYSTEM()) {
 	return map_indices(editors);
@@ -366,7 +366,7 @@ object *query_editors()
  * NAME:	prepare_reboot()
  * DESCRIPTION:	prepare for a reboot
  */
-void prepare_reboot()
+void prepare_reboot(void)
 {
     if (previous_program() == DRIVER) {
 	editors = ([ ]);
@@ -380,7 +380,7 @@ void prepare_reboot()
  * NAME:	reboot()
  * DESCRIPTION:	handle a reboot
  */
-void reboot()
+void reboot(void)
 {
     if (previous_program() == DRIVER) {
 	int i;

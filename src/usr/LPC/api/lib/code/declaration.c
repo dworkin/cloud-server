@@ -19,7 +19,7 @@ static void create(LPCType t, string str, varargs int line)
 /*
  * emit code for declaration
  */
-void code()
+void code(void)
 {
     type->code();
     emit(name, line());

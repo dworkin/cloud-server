@@ -22,7 +22,7 @@ private void preregister_objects();
  * NAME:	create()
  * DESCRIPTION:	initialize
  */
-static void create()
+static void create(void)
 {
     driver = find_object(DRIVER);
     factor = status(ST_ARRAYSIZE);
@@ -352,7 +352,7 @@ private string *preregister_inherits(string path)
  * NAME:	preregister_objects()
  * DESCRIPTION:	register objects that were created before this one
  */
-private void preregister_objects()
+private void preregister_objects(void)
 {
     mixed *list;
     int i, sz;

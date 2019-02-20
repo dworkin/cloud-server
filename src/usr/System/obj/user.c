@@ -39,7 +39,7 @@ static object avatar;
  * NAME:	create()
  * DESCRIPTION:	initialize object
  */
-static create()
+static create(void)
 {
     wiztool::create(200);
     state = ([ ]);
@@ -675,7 +675,7 @@ void logout(int quit)
  * NAME:	query_name()
  * DESCRIPTION:	return this user's name
  */
-string query_name()
+string query_name(void)
 {
     return name;
 }

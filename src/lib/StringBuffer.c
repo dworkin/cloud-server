@@ -271,7 +271,7 @@ void append(mixed str)
 /*
  * return a chunk of the maximum appropriate length
  */
-mixed chunk()
+mixed chunk(void)
 {
     mixed chunks, chunk;
 
@@ -307,7 +307,7 @@ mixed chunk()
 /*
  * return the length of the String in the buffer
  */
-int length()
+int length(void)
 {
     return length;
 }

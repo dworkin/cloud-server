@@ -18,7 +18,7 @@ static void create(string str, varargs int line)
 /*
  * emit code for variable reference
  */
-void code()
+void code(void)
 {
     emit("::" + name, line());
 }

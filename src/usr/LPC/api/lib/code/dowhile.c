@@ -19,7 +19,7 @@ static void create(LPCStatement stmt, LPCExpression exp, varargs int line)
 /*
  * emit code for do-while statement
  */
-void code()
+void code(void)
 {
     emit("do ");
     statement->code();

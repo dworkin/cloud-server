@@ -20,7 +20,7 @@ static void create(LPCInherit *inh, LPCDeclaration *decl)
 /*
  * emit code for program
  */
-void code()
+void code(void)
 {
     int i, sz;
 
@@ -35,7 +35,7 @@ void code()
 /*
  * return program code in a StringBuffer
  */
-StringBuffer codegen()
+StringBuffer codegen(void)
 {
     start();
     code();

@@ -43,7 +43,7 @@ static void create(int size)
  * NAME:	query_directory()
  * DESCRIPTION:	return the current directory
  */
-string query_directory()
+string query_directory(void)
 {
     return directory;
 }
@@ -52,7 +52,7 @@ string query_directory()
  * NAME:	query_history()
  * DESCRIPTION:	return the current value history
  */
-static mixed *query_history()
+static mixed *query_history(void)
 {
     return history[..];
 }
@@ -97,7 +97,7 @@ static void remove_user(string user)
  * NAME:	save_access()
  * DESCRIPTION:	save the state of the access server to file
  */
-static void save_access()
+static void save_access(void)
 {
     if (!access(owner, "/", FULL_ACCESS)) {
 	message("Insufficient access granting privileges.\n");
@@ -526,7 +526,7 @@ nomask string path_write(string path)
  * NAME:	swapout()
  * DESCRIPTION:	swap out all objects
  */
-static void swapout()
+static void swapout(void)
 {
     if (!access(owner, "/", FULL_ACCESS)) {
 	message("Permission denied.\n");

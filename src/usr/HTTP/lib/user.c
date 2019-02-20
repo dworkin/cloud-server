@@ -15,7 +15,7 @@ private int length;	/* length of entity to receive */
  * NAME:	internal_error()
  * DESCRIPTION:	output an internal error message
  */
-private int internal_error()
+private int internal_error(void)
 {
     ::message("<HTML>\n<HEAD><TITLE>" + HTTP_INTERNAL_ERROR +
 	      " Internal Error</TITLE></HEAD>\n<BODY><H1>" +
@@ -45,7 +45,7 @@ static object message(object mesg)
  * NAME:	message_done()
  * DESCRIPTION:	output remainer of message, close connection if done
  */
-nomask int message_done()
+nomask int message_done(void)
 {
     if (previous_program() == LIB_CONN) {
 	mesg = call_limited("message", mesg);
@@ -180,8 +180,8 @@ nomask int receive_message(string str)
 /*
  * disabled functions
  */
-void connection() { }
-void redirect() { }
+void connection(void) { }
+void redirect(void) { }
 void datagram_challenge(string str) { }
 int datagram(string str) { return 0; }
 int receive_datagram(string str) { return 0; }

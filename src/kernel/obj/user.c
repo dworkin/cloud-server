@@ -25,7 +25,7 @@ static int nconn;		/* # of connections */
  * NAME:	create()
  * DESCRIPTION:	initialize user object
  */
-static void create()
+static void create(void)
 {
     user::create();
     access::create();
@@ -121,7 +121,7 @@ void logout(int quit)
  * NAME:	query_name()
  * DESCRIPTION:	return this user's name
  */
-string query_name()
+string query_name(void)
 {
     return name;
 }

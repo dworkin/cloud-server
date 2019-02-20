@@ -21,7 +21,7 @@ string banner;		/* login message */
  * NAME:	create()
  * DESCRIPTION:	initialize this object
  */
-static void create()
+static void create(void)
 {
     access::create();
     userd = find_object(USERD);

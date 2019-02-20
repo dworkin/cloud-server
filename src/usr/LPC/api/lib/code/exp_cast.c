@@ -20,7 +20,7 @@ static void create(LPCType type, LPCExpression exp, varargs int line)
 /*
  * emit code for cast expression
  */
-void code()
+void code(void)
 {
     emit("((");
     cast->code();

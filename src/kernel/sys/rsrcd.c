@@ -12,7 +12,7 @@ int downtime;		/* shutdown time */
  * NAME:	create()
  * DESCRIPTION:	initialize resource mappings
  */
-static void create()
+static void create(void)
 {
     /* initial resources */
     resources = ([
@@ -83,7 +83,7 @@ void remove_owner(string owner)
  * NAME:	query_owners()
  * DESCRIPTION:	return a list of resource owners
  */
-string *query_owners()
+string *query_owners(void)
 {
     if (previous_program() == API_RSRC) {
 	return map_indices(owners);
@@ -174,7 +174,7 @@ mixed *query_rsrc(string name)
  * NAME:	query_resources()
  * DESCRIPTION:	return a list of resources
  */
-string *query_resources()
+string *query_resources(void)
 {
     if (previous_program() == API_RSRC) {
 	return map_indices(resources);
@@ -329,7 +329,7 @@ int update_ticks(mixed *limits, int ticks)
  * NAME:	initd()
  * DESCRIPTION:	perform local system initialization
  */
-object initd()
+object initd(void)
 {
     if (previous_program() == DRIVER) {
 	return compile_object("/usr/System/initd");
@@ -340,7 +340,7 @@ object initd()
  * NAME:	prepare_reboot()
  * DESCRIPTION:	prepare for a reboot
  */
-void prepare_reboot()
+void prepare_reboot(void)
 {
     if (previous_program() == DRIVER) {
 	downtime = time();
@@ -351,7 +351,7 @@ void prepare_reboot()
  * NAME:	reboot()
  * DESCRIPTION:	recover from a reboot
  */
-void reboot()
+void reboot(void)
 {
     if (previous_program() == DRIVER) {
 	object *objects;

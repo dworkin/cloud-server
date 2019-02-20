@@ -19,7 +19,7 @@ static void create(string str, LPCStatement stmt, varargs int line)
 /*
  * emit code for labelled statement
  */
-void code()
+void code(void)
 {
     emit(label + ":", line());
     statement->code();

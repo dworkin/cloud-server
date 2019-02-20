@@ -21,7 +21,7 @@ static void create(int flag, string l, LPCExpression exp, varargs int line)
 /*
  * emit code for inherit statement
  */
-void code()
+void code(void)
 {
     if (priv) {
 	emit("private ", line());

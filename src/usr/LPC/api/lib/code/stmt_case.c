@@ -19,7 +19,7 @@ static void create(LPCExpression exp, LPCStatement stmt, varargs int line)
 /*
  * emit code for case statement
  */
-void code()
+void code(void)
 {
     emit("case ");
     caseExpression->code();

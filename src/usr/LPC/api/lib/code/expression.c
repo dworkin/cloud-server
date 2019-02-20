@@ -19,7 +19,7 @@ static void create(mixed exp, varargs int line)
 /*
  * return value of this expression
  */
-mixed value()
+mixed value(void)
 {
     return value;
 }
@@ -27,7 +27,7 @@ mixed value()
 /*
  * emit code for expression
  */
-void code()
+void code(void)
 {
     switch (typeof(value)) {
     case T_NIL:

@@ -27,22 +27,22 @@ private string creator, owner;	/* creator and owner of this object */
  * NAME:	query_owner()
  * DESCRIPTION:	query the owner of an object
  */
-nomask string query_owner()
+nomask string query_owner(void)
 {
     return owner;
 }
 
-void create() { }		/* default high-level create function */
+void create(void) { }		/* default high-level create function */
 
 # ifdef CREATOR
-int CREATOR() { return FALSE; }	/* default System-level creator function */
+int CREATOR(void) { return FALSE; }	/* default System-level creator function */
 # endif
 
 /*
  * NAME:	_F_create()
  * DESCRIPTION:	kernel creator function
  */
-nomask void _F_create()
+nomask void _F_create(void)
 {
     if (!creator) {
 	string oname;
@@ -211,7 +211,7 @@ static object compile_object(string path, string source...)
 					 ((lib || !uid) &&
 					  sizeof(source) == 0 && !kernel) ?
 					  READ_ACCESS : WRITE_ACCESS))) {
-	error("Access denied");
+	error("Access denied 2");
     }
 
     /*
@@ -271,7 +271,7 @@ static object clone_object(string path, varargs string uid)
 	 * kernel objects can only be cloned by kernel objects, and cloning
 	 * in general requires read access
 	 */
-	error("Access denied");
+	error("Access denied 3");
     }
 
     /*
@@ -346,7 +346,7 @@ static object new_object(mixed obj, varargs string uid)
 	    (creator != "System" &&
 	     !::find_object(ACCESSD)->access(object_name(this_object()), str,
 					     READ_ACCESS))) {
-	    error("Access denied");
+	    error("Access denied 4");
 	}
 
 	/*
@@ -520,7 +520,7 @@ static mixed status(varargs mixed obj, mixed index)
  * NAME:	this_user()
  * DESCRIPTION:	return the user object and not a connection object
  */
-static object this_user()
+static object this_user(void)
 {
     object user;
 
@@ -538,7 +538,7 @@ static object this_user()
  * NAME:	users()
  * DESCRIPTION:	return an array with the current user objects
  */
-static object *users()
+static object *users(void)
 {
     if (!this_object()) {
 	return nil;
@@ -582,7 +582,7 @@ static void connect_datagram(int dgram, string address, int port)
  * NAME:	swapout()
  * DESCRIPTION:	swap out all objects
  */
-static void swapout()
+static void swapout(void)
 {
     if (creator != "System") {
 	error("Permission denied");
@@ -784,7 +784,7 @@ static string read_file(string path, varargs int offset, int size)
     if (creator != "System" &&
 	!::find_object(ACCESSD)->access(object_name(this_object()), path,
 					READ_ACCESS)) {
-	error("Access denied");
+	error("Access denied 5");
     }
 
     return ::read_file(path, offset, size);
@@ -813,7 +813,7 @@ static int write_file(string path, string str, varargs int offset)
 	(creator != "System" &&
 	 !::find_object(ACCESSD)->access(object_name(this_object()), path,
 					 WRITE_ACCESS))) {
-	error("Access denied");
+	error("Access denied 6");
     }
 
     fcreator = driver->creator(path);
@@ -858,7 +858,7 @@ static int remove_file(string path)
 	(creator != "System" &&
 	 !::find_object(ACCESSD)->access(object_name(this_object()), path,
 					 WRITE_ACCESS))) {
-	error("Access denied");
+	error("Access denied 7");
     }
 
     size = driver->file_size(path);
@@ -902,7 +902,7 @@ static int rename_file(string from, string to)
 	(creator != "System" &&
 	 (!accessd->access(oname, from, WRITE_ACCESS) ||
 	  !accessd->access(oname, to, WRITE_ACCESS)))) {
-	error("Access denied");
+	error("Access denied 8");
     }
 
     fcreator = driver->creator(from);
@@ -946,7 +946,7 @@ static mixed **get_dir(string path)
     if (creator != "System" &&
 	!::find_object(ACCESSD)->access(object_name(this_object()), path,
 					READ_ACCESS)) {
-	error("Access denied");
+	error("Access denied 9");
     }
 
     list = ::get_dir(path);
@@ -998,7 +998,7 @@ static mixed *file_info(string path)
     if (creator != "System" &&
 	!::find_object(ACCESSD)->access(object_name(this_object()), path,
 					READ_ACCESS)) {
-	error("Access denied");
+	error("Access denied 10");
     }
 
     info = ::get_dir(obj->escape_path(path));
@@ -1035,7 +1035,7 @@ static int make_dir(string path)
 	(creator != "System" &&
 	 !::find_object(ACCESSD)->access(object_name(this_object()), path,
 					 WRITE_ACCESS))) {
-	error("Access denied");
+	error("Access denied 11");
     }
 
     fcreator = driver->creator(path + "/");
@@ -1078,7 +1078,7 @@ static int remove_dir(string path)
 	(creator != "System" &&
 	 !::find_object(ACCESSD)->access(object_name(this_object()), path,
 					 WRITE_ACCESS))) {
-	error("Access denied");
+	error("Access denied 12");
     }
 
     catch {
@@ -1099,16 +1099,16 @@ static int remove_dir(string path)
  */
 static int restore_object(string path)
 {
+    string oname;
     CHECKARG(path, 1, "restore_object");
     if (!this_object()) {
 	error("Permission denied");
     }
 
     path = ::find_object(DRIVER)->normalize_path(path, nil, creator);
-    if (creator != "System" &&
-	!::find_object(ACCESSD)->access(object_name(this_object()), path,
-					READ_ACCESS)) {
-	error("Access denied");
+    oname = object_name(this_object());
+    if (creator != "System" && !::find_object(ACCESSD)->access(oname, path, READ_ACCESS)) {
+        error("Access denied 13: " + oname + ", " + path + ", " + creator);
     }
 
     return ::restore_object(path);
@@ -1137,7 +1137,7 @@ static void save_object(string path)
 	sscanf(path, "/include/kernel/%*s") != 0 ||
 	(creator != "System" &&
 	 !::find_object(ACCESSD)->access(oname, path, WRITE_ACCESS))) {
-	error("Access denied");
+	error("Access denied 14: " + creator + ", " + oname + ", " + path);
     }
 
     fcreator = driver->creator(path);
@@ -1251,7 +1251,7 @@ static void send_atomic_message(string str)
  * NAME:	retrieve_atomic_messages()
  * DESCRIPTION:	retrieve messages after an atomic error
  */
-static string *retrieve_atomic_messages()
+static string *retrieve_atomic_messages(void)
 {
     mapping tls;
     string *messages;

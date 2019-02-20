@@ -8,7 +8,7 @@ inherit "~/lib/protocol";
 
 int response_code;
 
-static int query_code() { return response_code; }
+static int query_code(void) { return response_code; }
 
 static object response(int code, string str, varargs string type, int length,
 		       int modtime, string body)
@@ -21,7 +21,7 @@ static object response(int code, string str, varargs string type, int length,
 			    body);
 }
 
-static object bad_request()
+static object bad_request(void)
 {
     string str;
 
@@ -32,7 +32,7 @@ static object bad_request()
     return response(HTTP_BAD_REQUEST, nil, "text/html", strlen(str), 0, str);
 }
 
-static object not_implemented()
+static object not_implemented(void)
 {
     string str;
 
@@ -44,7 +44,7 @@ static object not_implemented()
 		    str);
 }
 
-static object not_found()
+static object not_found(void)
 {
     string str;
 

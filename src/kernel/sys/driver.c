@@ -293,7 +293,7 @@ void destruct(string path, string owner)
  * NAME:	query_owner()
  * DESCRIPTION:	return owner of driver object
  */
-string query_owner()
+string query_owner(void)
 {
     return "System";
 }
@@ -386,7 +386,7 @@ private void _initialize(mapping tls)
  * NAME:	initialize()
  * DESCRIPTION:	first function called at system startup
  */
-static void initialize()
+static void initialize(void)
 {
     catch {
 	_initialize(([ ]));
@@ -401,7 +401,7 @@ static void initialize()
  * NAME:	prepare_reboot()
  * DESCRIPTION:	prepare for a snapshot
  */
-void prepare_reboot()
+void prepare_reboot(void)
 {
     if (KERNEL()) {
 	if (initd) {
@@ -758,7 +758,7 @@ private void _interrupt(mapping tls)
  * NAME:	interrupt()
  * DESCRIPTION:	called when a kill signal is sent to the server
  */
-static void interrupt()
+static void interrupt(void)
 {
     _interrupt(([ ]));
 }

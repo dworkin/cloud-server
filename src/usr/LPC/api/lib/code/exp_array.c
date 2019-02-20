@@ -18,7 +18,7 @@ static void create(LPCExpression *arr, varargs int line)
 /*
  * emit code for array aggregate
  */
-void code()
+void code(void)
 {
     int i, sz;
 

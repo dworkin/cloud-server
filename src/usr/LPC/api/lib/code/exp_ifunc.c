@@ -19,7 +19,7 @@ static void create(string str, string name, LPCExpression *list,
 /*
  * emit code for inherited function call
  */
-void code()
+void code(void)
 {
     if (label) {
 	emit(label, line());

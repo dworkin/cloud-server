@@ -10,7 +10,7 @@ mapping gaccess;		/* read access under /usr for everyone */
  * NAME:	create()
  * DESCRIPTION:	initialize the access daemon
  */
-static void create()
+static void create(void)
 {
     uaccess = ([ ]);
     gaccess = ([ ]);
@@ -162,7 +162,7 @@ void remove_user(string user)
  * NAME:	query_users()
  * DESCRIPTION:	return list of users
  */
-string *query_users()
+string *query_users(void)
 {
     if (KERNEL()) {
 	return map_indices(uaccess);
@@ -173,7 +173,7 @@ string *query_users()
  * NAME:	save()
  * DESCRIPTION:	save the state of this object to file
  */
-void save()
+void save(void)
 {
     if (previous_program() == API_ACCESS) {
 	save_object(ACCESSDATA);
@@ -300,7 +300,7 @@ void set_global_access(string dir, int flag)
  * DESCRIPTION:	return the directories under /usr where everyone has read
  *		access
  */
-string *query_global_access()
+string *query_global_access(void)
 {
     if (previous_program() == API_ACCESS) {
 	return map_indices(gaccess);

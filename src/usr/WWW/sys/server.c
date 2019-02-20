@@ -12,7 +12,7 @@ string ftphost, ftphost2;
 mapping urlmap;
 string errormessage;	/* message returned in case of a login error */
 
-static void create()
+static void create(void)
 {
     userd = find_object(USERD);
     SYS_INITD->set_connection_manager("binary", 0, this_object());
@@ -26,7 +26,7 @@ static void create()
 		   "</HTML>\n";
 }
 
-string *query_host() { return ({ httphost, ftphost, ftphost2 }); }
+string *query_host(void) { return ({ httphost, ftphost, ftphost2 }); }
 
 static object request(string str)
 {

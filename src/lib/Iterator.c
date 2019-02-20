@@ -8,7 +8,7 @@ private mixed item;		/* current iterated element */
 /*
  * reset Iterator to first element
  */
-void reset()
+void reset(void)
 {
     state = iterated->iteratorStart(from, to);
     item = nil;
@@ -28,7 +28,7 @@ static void create(Iterable obj, mixed from, mixed to)
 /*
  * get current item from Iterator
  */
-mixed current()
+mixed current(void)
 {
     return item;
 }
@@ -36,7 +36,7 @@ mixed current()
 /*
  * get next item from Iterator
  */
-mixed next()
+mixed next(void)
 {
     ({ state, item }) = iterated->iteratorNext(state);
     return item;
@@ -45,7 +45,7 @@ mixed next()
 /*
  * return TRUE if the end has been reached
  */
-int end()
+int end(void)
 {
     return iterated->iteratorEnd(state);
 }

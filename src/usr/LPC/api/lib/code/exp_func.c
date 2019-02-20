@@ -22,7 +22,7 @@ static void create(string str, LPCExpression *list, int flag, varargs int line)
 /*
  * emit code for function call
  */
-void code()
+void code(void)
 {
     int i, sz;
 

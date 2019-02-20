@@ -22,7 +22,7 @@ static void create(LPCExpression exp1, LPCExpression exp2, LPCExpression exp3,
 /*
  * emit code for for loop
  */
-void code()
+void code(void)
 {
     emit("for(");
     if (initial) {

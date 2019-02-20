@@ -35,7 +35,7 @@ private string content_type;	/* entity type */
  * NAME:	create()
  * DESCRIPTION:	initialize HTTP protocol object
  */
-static void create()
+static void create(void)
 {
     httpreq = find_object(HTTPRequest);
     httphdr = find_object(HTTPHeader);

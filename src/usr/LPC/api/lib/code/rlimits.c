@@ -21,7 +21,7 @@ static void create(LPCExpression exp1, LPCExpression exp2, LPCStmtBlock stmt,
 /*
  * emit code for rlimits statement
  */
-void code()
+void code(void)
 {
     emit("rlimits(");
     stack->code();

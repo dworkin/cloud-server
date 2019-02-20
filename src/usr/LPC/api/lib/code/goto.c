@@ -17,7 +17,7 @@ static void create(string str, varargs int line)
 /*
  * emit code for goto statement
  */
-void code()
+void code(void)
 {
     emit("goto " + label + ";", line());
 }

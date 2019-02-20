@@ -17,7 +17,7 @@ private mapping storage;	/* uninitialized until used */
  * NAME:	_F_init()
  * DESCRIPTION:	System level creator function
  */
-static nomask int _F_init()
+static nomask int _F_init(void)
 {
     if (previous_program() == AUTO) {
 	mixed *args;
@@ -53,7 +53,7 @@ static object clone_object(string path, mixed args...)
  * NAME:	_F_copy()
  * DESCRIPTION:	call copy() in a newly copied object
  */
-nomask void _F_copy()
+nomask void _F_copy(void)
 {
     if (previous_program() == SYSTEM_AUTO) {
 	this_object()->copy();
@@ -84,7 +84,7 @@ static object new_object(string path, mixed args...)
  * NAME:	copy_object()
  * DESCRIPTION:	copy this light-weight object
  */
-static object copy_object()
+static object copy_object(void)
 {
     object obj;
 
@@ -188,7 +188,7 @@ static mixed tls_get(string index)
  * NAME:	_F_touch()
  * DESCRIPTION:	touch call gate
  */
-nomask int _F_touch()
+nomask int _F_touch(void)
 {
     if (previous_program() == OBJECT_SERVER) {
 	this_object()->patch();
@@ -264,7 +264,7 @@ static void startContinuation(object origin, mixed *continuations, int parallel)
  * NAME:	suspendContinuation()
  * DESCRIPTION:	suspend continuation in current object
  */
-static object suspendContinuation()
+static object suspendContinuation(void)
 {
     mixed *ref, *continued;
     object token;

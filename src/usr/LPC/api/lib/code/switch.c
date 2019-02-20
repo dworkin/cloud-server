@@ -19,7 +19,7 @@ static void create(LPCExpression exp, LPCStmtBlock stmt, varargs int line)
 /*
  * emit code for switch statement
  */
-void code()
+void code(void)
 {
     emit("switch(");
     expression->code();

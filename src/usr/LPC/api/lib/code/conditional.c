@@ -22,7 +22,7 @@ static void create(LPCExpression exp, LPCStatement stmt1, LPCStatement stmt2,
 /*
  * emit if statement
  */
-void code()
+void code(void)
 {
     emit("if(");
     condExpression->code();

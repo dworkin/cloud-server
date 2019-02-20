@@ -10,7 +10,7 @@ object stringParser;	/* separate parser for strings */
 /*
  * initialize LPC parser
  */
-static void create()
+static void create(void)
 {
     stringParser = compile_object(LPC_STRING_PARSER);
 }

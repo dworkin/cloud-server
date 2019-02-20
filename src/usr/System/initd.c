@@ -25,7 +25,7 @@ private void load(string path)
  * NAME:	create()
  * DESCRIPTION:	initialize the system
  */
-static void create()
+static void create(void)
 {
     string *domains;
     string domain;
@@ -114,7 +114,7 @@ static void create()
  * NAME:	prepare_reboot()
  * DESCRIPTION:	called from the driver object before a snapshot is made
  */
-void prepare_reboot()
+void prepare_reboot(void)
 {
     if (previous_program() == DRIVER) {
     }
@@ -124,7 +124,7 @@ void prepare_reboot()
  * NAME:	reboot()
  * DESCRIPTION:	get file quotas right after a reboot
  */
-void reboot()
+void reboot(void)
 {
     if (previous_program() == DRIVER) {
 	string *owners;

@@ -22,7 +22,7 @@ static void create(LPCType type, string name, LPCDeclaration *decls, int flag,
 /*
  * emit code for function declaration
  */
-void code()
+void code(void)
 {
     int i, sz;
 

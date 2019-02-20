@@ -118,7 +118,7 @@ static Time operator- (Time t) {
 /*
  * GMT ctime()
  */
-string gmctime()
+string gmctime(void)
 {
     int t, year, days, hours, minutes, seconds, leap;
     string month, weekday;

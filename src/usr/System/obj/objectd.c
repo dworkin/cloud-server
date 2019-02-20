@@ -16,7 +16,7 @@ mapping issues;		/* ([ object : indices ]) */
  * NAME:	create()
  * DESCRIPTION:	initialize database object
  */
-static void create()
+static void create(void)
 {
     objectd = find_object(OBJECTSERVER);
     factor = status(ST_ARRAYSIZE);

@@ -1,10 +1,14 @@
-#include <NKlib.h>
+#include "nik.h"
 
 inherit Terminal;
 inherit NK_KFUN;
 
+static void initExperiment(object user) {
+    user->println("\nStarting the experiment...");
+}
+
 static void step0(object user) {
-    user->message("\nGetting second data set for comparison...\n");
+    user->println("\nGetting second data set for comparison...");
 }
 
 static void step1(DiceDataGenerator generator, int times, int faces, int keep) {
@@ -28,9 +32,14 @@ static void step5(DiceDataGenerator generator) {
     generator->findTheVarianceAndStandardDeviation();
 }
 
-static void step5a(DiceDataGenerator generator, string fileName) {
+static void step5a(DiceDataGenerator generator, string fileName, object reportTo) {
+    string e;
+
     generator->setStopTime();
-    generator->save(fileName);
+    e = catch(generator->save(fileName));
+    if (e) {
+        reportTo->message(e);
+    }
 }
 
 static void step6(DiceDataGenerator generator, object user) {
@@ -73,9 +82,10 @@ static void reportDone(string *fileNames, object user) {
     Array array;
 
     array = new Array(fileNames);
-    user->message("\nThe data sets have been saved:\n");
+    user->println("\nThe data sets have been saved:");
     user->message(array->reduce(new ArrayToListReducer(), 0, sizeof(fileNames) - 1, 1));
-    user->message("\nDone.\n");
+    user->println("\nDone.");
+    user->showPrompt();
     destruct_object(this_object());
 }
 
@@ -92,15 +102,20 @@ void run(object user, int sampleSize, int times, int faces, int keep) {
     f1 = buildFileName(user, 1, times, faces, keep);
     f2 = buildFileName(user, 2, times, faces, keep);
 
-    g1 = new DiceDataGenerator(sampleSize);
-    g2 = new DiceDataGenerator(sampleSize);
+    if (!find_object(DATA_GENERATOR)) {
+        compile_object(DATA_GENERATOR);
+    }
 
-    continuation = new Continuation("step1", g1, times, faces, keep);
+    g1 = clone_object(DATA_GENERATOR, sampleSize);
+    g2 = clone_object(DATA_GENERATOR, sampleSize);
+
+    continuation = new Continuation("initExperiment", user);
+    continuation += new Continuation("step1", g1, times, faces, keep);
     continuation += new Continuation("step2", g1);
     continuation += new Continuation("step3", g1);
     continuation += new Continuation("step4", g1);
     continuation += new Continuation("step5", g1);
-    continuation += new Continuation("step5a", g1, f1);
+    continuation += new Continuation("step5a", g1, f1, user);
     continuation += new Continuation("step6", g1, user);
     continuation += new Continuation("step0", user);
     continuation += new Continuation("step1", g2, times, faces, keep);
@@ -108,7 +123,7 @@ void run(object user, int sampleSize, int times, int faces, int keep) {
     continuation += new Continuation("step3", g2);
     continuation += new Continuation("step4", g2);
     continuation += new Continuation("step5", g2);
-    continuation += new Continuation("step5a", g2, f2);
+    continuation += new Continuation("step5a", g2, f2, user);
     continuation += new Continuation("step6", g2, user);
     continuation += new Continuation("step7", ({ g1, g2 }), user);
     continuation += new Continuation("step8", ({ g1, g2 }), user);
