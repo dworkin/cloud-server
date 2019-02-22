@@ -330,7 +330,9 @@ private void continued(mixed *ref)
 	    storage[token] = ref;
 	}
 	ref[REF_COUNT] = sz;
-	ref[REF_TIMEOUT] = ::call_out("_F_timeoutContinuation", delay, token);
+	ref[REF_TIMEOUT] = ::call_out_other(this_object(),
+					    "_F_timeoutContinuation", delay,
+					    token);
 
 	if (sizeof(continued) != 0 && typeof(continued[CONT_OBJS]) == T_INT &&
 	    continued[CONT_OBJS]) {
@@ -381,7 +383,7 @@ private void continued(mixed *ref)
 	    }
 	    break;
 	}
-	::call_out("_F_continued", delay, ref);
+	::call_out_other(this_object(), "_F_continued", delay, ref);
 	break;
     }
 }
@@ -414,7 +416,8 @@ nomask void _F_wake(mixed *continued, mixed arg)
 {
     if (previous_program() == CONTINUATION_TOKEN) {
 	continued[CONT_VAL] = arg;
-	::call_out("_F_continued", 0, ({ continued, this_object(), 0, 0 }));
+	::call_out_other(this_object(), "_F_continued", 0,
+			 ({ continued, this_object(), 0, 0 }));
     }
 }
 

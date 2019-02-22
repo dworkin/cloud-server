@@ -737,6 +737,7 @@ nomask void _F_callout(string func, string oowner, mixed *args)
 static int call_out_other(object obj, string func, mixed args...)
 {
     string oname;
+    mixed *limits;
 
     CHECKARG(obj, 1, "call_out_other");
     CHECKARG(func, 2, "call_out_other");
@@ -754,7 +755,9 @@ static int call_out_other(object obj, string func, mixed args...)
     /*
      * add callout
      */
-    return obj->_F_callout_other(func, owner, args);
+    limits = TLSVAR(TLS(), TLS_LIMIT);
+    return obj->_F_callout_other(func, (limits) ? limits[LIM_OWNER] : "System",
+				 args);
 }
 
 /*
