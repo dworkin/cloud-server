@@ -2,15 +2,16 @@ NAME
 	call_out_other - start a callout in another object
 
 SYNOPSIS
-	mixed call_out_other(object obj, string function, mixed args...)
+	int call_out_other(object obj, string function, mixed delay,
+			   mixed args...)
 
 
 DESCRIPTION
 	Start a callout in an object.  Only non-private functions can be
 	called with call_out_other().  If the function is static, the object
 	in which the function is called must be the current object.
-	Any additional arguments to call_out_other() will be passed on to the
-	called function.
+	Apart from the object argument, the arguments are the same as for
+	call_out().
 
 ERRORS
 	Calling a function that does not exist, or a function that cannot be

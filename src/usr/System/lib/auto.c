@@ -226,7 +226,7 @@ static void startContinuation(object origin, mixed *continuations, int parallel)
 	    if (!parallel) {
 		::tls_set(TLS_CONT, ref);
 	    }
-	    ::call_out_other(origin, "_F_continued", ref);
+	    ::call_out_other(origin, "_F_continued", 0, ref);
 	} else if (origin != ref[REF_ORIGIN]) {
 	    /*
 	     * should use a distributed continuation
@@ -340,7 +340,7 @@ private void continued(mixed *ref)
 	    continued[CONT_VAL] = allocate(sz);
 	}
 	for (i = 0; i < sz; i++) {
-	    ::call_out_other(objs[i], "_F_continued", ({
+	    ::call_out_other(objs[i], "_F_continued", 0, ({
 		({
 		    0, 0, func, args, nil,			/* extern */
 		    this_object(), 0, nil, ({ token, i }), nil	/* callback */
@@ -377,7 +377,7 @@ private void continued(mixed *ref)
 		}
 	    } else {
 		/* callback */
-		::call_out_other(objs, "_F_doneContinuation", val,
+		::call_out_other(objs, "_F_doneContinuation", 0, val,
 				 continued[CONT_ARGS]...);
 		return;
 	    }
@@ -471,12 +471,12 @@ nomask void _F_timeoutContinuation(int token)
  * NAME:	call_out()
  * DESCRIPTION: prevent System auto functions from being called by callout
  */
-static int call_out(string func, mixed delay, mixed args...)
+static int call_out(string func, mixed args...)
 {
     if (function_object(func, this_object()) == SYSTEM_AUTO) {
 	error("Illegal callout");
     }
-    return ::call_out(func, delay, args...);
+    return ::call_out(func, args...);
 }
 
 /*

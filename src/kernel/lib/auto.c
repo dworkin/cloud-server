@@ -734,13 +734,16 @@ nomask void _F_callout(string func, string oowner, mixed *args)
  * NAME:	call_out_other()
  * DESCRIPTION:	start a callout in another object
  */
-static int call_out_other(object obj, string func, mixed args...)
+static int call_out_other(object obj, string func, mixed delay, mixed args...)
 {
+    int type;
     string oname;
     mixed *limits;
 
     CHECKARG(obj, 1, "call_out_other");
     CHECKARG(func, 2, "call_out_other");
+    type = typeof(delay);
+    CHECKARG(type == T_INT || type == T_FLOAT, 3, "call_out_other");
     if (!this_object()) {
 	return 0;
     }
@@ -756,18 +759,19 @@ static int call_out_other(object obj, string func, mixed args...)
      * add callout
      */
     limits = TLSVAR(TLS(), TLS_LIMIT);
-    return obj->_F_callout_other(func, (limits) ? limits[LIM_OWNER] : "System",
-				 args);
+    return obj->_F_callout_other(delay, func,
+				 (limits) ? limits[LIM_OWNER] : "System", args);
 }
 
 /*
  * NAME:	_F_callout_other()
  * DESCRIPTION:	callout_other gate
  */
-nomask int _F_callout_other(string func, string oowner, mixed *args)
+nomask int _F_callout_other(mixed delay, string func, string oowner,
+			    mixed *args)
 {
     if (previous_program() == AUTO) {
-	return ::call_out("_F_callout", 0, func, oowner, args);
+	return ::call_out("_F_callout", delay, func, oowner, args);
     }
 }
 
