@@ -215,7 +215,7 @@ static void startContinuation(object origin, mixed *continuations, int parallel)
 {
     if (previous_program() == CONTINUATION) {
 	mixed *ref, *continued, *continuation, objs;
-	int sz, i, ssz, j;
+	int sz, i, j;
 	string func;
 
 	if (parallel || !(ref=::tls_get(TLS_CONT))) {
@@ -243,7 +243,7 @@ static void startContinuation(object origin, mixed *continuations, int parallel)
 		 * disallow calling external static functions via continuations
 		 */
 		func = continuation[CONT_FUNC];
-		for (ssz = sizeof(objs), j = 0; j < ssz; j++) {
+		for (j = sizeof(objs); --j >= 0; ) {
 		    if (!function_object(func, objs[j])) {
 			error("Uncallable external function in continuation");
 		    }
@@ -262,7 +262,7 @@ static void startContinuation(object origin, mixed *continuations, int parallel)
 
 /*
  * NAME:	suspendContinuation()
- * DESCRIPTION:	suspend continuation in current object
+ * DESCRIPTION:	suspend current continuation
  */
 static object suspendContinuation()
 {
