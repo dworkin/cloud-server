@@ -291,8 +291,12 @@ private void continued(mixed *ref)
     mixed val, objs, delay, args;
     string func;
 
-    ::tls_set(TLS_CONT, ref);
     continued = ref[REF_CONT];
+    if (sizeof(continued) == 0) {
+	return;
+    }
+
+    ::tls_set(TLS_CONT, ref);
     ({ objs, delay, func, args, val }) = continued[.. CONT_SIZE - 1];
 
     switch (typeof(objs)) {
@@ -440,9 +444,7 @@ nomask void _F_doneContinuation(mixed result, int token, int index)
 	    if (--ref[REF_COUNT] == 0) {
 		storage[token] = nil;
 		::remove_call_out(ref[REF_TIMEOUT]);
-		if (sizeof(continued) != 0) {
-		    continued(ref);
-		}
+		continued(ref);
 	    }
 	}
     }
@@ -460,9 +462,7 @@ nomask void _F_timeoutContinuation(int token)
 	ref = storage[token];
 	if (ref) {
 	    storage[token] = nil;
-	    if (sizeof(ref[REF_CONT]) != 0) {
-		continued(ref);
-	    }
+	    continued(ref);
 	}
     }
 }
