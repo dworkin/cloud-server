@@ -138,30 +138,24 @@ void chain(mixed func, mixed args...)
 /*
  * operator version of add
  */
-static atomic Continuation operator+ (Continuation cont)
+static Continuation operator+ (Continuation cont)
 {
-    mixed *old;
     object obj;
 
-    old = continued;
-    addCont(cont);
     obj = copy_object();
-    continued = old;
+    obj->add(cont);
     return obj;
 }
 
 /*
  * operator version of chain
  */
-static atomic Continuation operator>> (Continuation cont)
+static Continuation operator>> (Continuation cont)
 {
-    mixed *old;
     object obj;
 
-    old = continued;
-    chainCont(cont);
     obj = copy_object();
-    continued = old;
+    obj->chain(cont);
     return obj;
 }
 
