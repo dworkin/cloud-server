@@ -200,39 +200,23 @@ nomask int _F_touch()
 # define TLS_CONT	"cont::"
 
 # define REF_CONT	0	/* continuation */
-# define REF_ORIGIN	1	/* originating object */
-# define REF_COUNT	2	/* callback countdown */
-# define REF_TIMEOUT	3	/* timeout handle */
+# define REF_COUNT	1	/* callback countdown */
+# define REF_TIMEOUT	2	/* timeout handle */
 
-# define CONT_VAL	4	/* previous return value */
-# define CONT_SIZE	5	/* size of continuation */
+# define CONT_VAL	5	/* previous return value */
+# define CONT_SIZE	6	/* size of continuation */
 
 /*
  * NAME:	startContinuation()
  * DESCRIPTION:	runNext a continuation, start first callout if none running yet
  */
-static void startContinuation(object origin, mixed *continuations, int parallel)
+static void startContinuation(mixed *continuations, int parallel)
 {
     if (previous_program() == CONTINUATION) {
-	mixed *ref, *continued, *continuation, objs;
+	mixed *continued, *continuation, objs, *ref;
 	int sz, i, j;
 	string func;
 
-	if (parallel || !(ref=::tls_get(TLS_CONT))) {
-	    /*
-	     * schedule first continuation
-	     */
-	    ref = ({ ({ }), origin, 0, 0 });
-	    if (!parallel) {
-		::tls_set(TLS_CONT, ref);
-	    }
-	    ::call_out_other(origin, "_F_continued", 0, ref);
-	} else if (origin != ref[REF_ORIGIN]) {
-	    /*
-	     * should use a distributed continuation
-	     */
-	    error("Continuation not in same object");
-	}
 	continued = ({ });
 
 	for (sz = sizeof(continuations), i = 0; i < sz; i++) {
@@ -253,6 +237,17 @@ static void startContinuation(object origin, mixed *continuations, int parallel)
 	    continued += continuation + ({ nil });
 	}
 
+	if (parallel || !(ref=::tls_get(TLS_CONT))) {
+	    /*
+	     * schedule first continuation
+	     */
+	    ref = ({ ({ }), 0, 0 });
+	    if (!parallel) {
+		::tls_set(TLS_CONT, ref);
+	    }
+	    ::call_out_other(continued[CONT_ORIGIN], "_F_continued", 0, ref);
+	}
+
 	/*
 	 * run these continuations before all others
 	 */
@@ -270,13 +265,14 @@ static object suspendContinuation()
     object token;
 
     ref = ::tls_get(TLS_CONT);
-    if (!ref || sizeof(continued=ref[REF_CONT]) == 0 || !ref[REF_ORIGIN]) {
+    if (!ref || sizeof(continued=ref[REF_CONT]) == 0 || !continued[CONT_ORIGIN])
+    {
 	error("No continuation");
     }
     ref[REF_CONT] = ({ });
 
     token = new ContinuationToken;
-    token->saveContinuation(continued, ref[REF_ORIGIN]);
+    token->saveContinuation(continued);
     return token;
 }
 
@@ -289,6 +285,7 @@ private void continued(mixed *ref)
     mixed *continued;
     int type, token, sz, i;
     mixed val, objs, delay, args;
+    object origin;
     string func;
 
     continued = ref[REF_CONT];
@@ -296,8 +293,12 @@ private void continued(mixed *ref)
 	return;
     }
 
+    ({ objs, delay, origin, func, args, val }) = continued[.. CONT_SIZE - 1];
+    if (origin != this_object()) {
+	::call_out_other(origin, "_F_continued", 0, ref);
+	return;
+    }
     ::tls_set(TLS_CONT, ref);
-    ({ objs, delay, func, args, val }) = continued[.. CONT_SIZE - 1];
 
     switch (typeof(objs)) {
     case T_INT:
@@ -346,10 +347,10 @@ private void continued(mixed *ref)
 	for (i = 0; i < sz; i++) {
 	    ::call_out_other(objs[i], "_F_continued", 0, ({
 		({
-		    0, 0, func, args, nil,			/* extern */
-		    this_object(), 0, nil, ({ token, i }), nil	/* callback */
+		    0, 0, objs[i], func, args, nil,		/* extern */
+		    this_object(), 0, objs[i], nil, ({ token, i }), nil
+								/* callback */
 		}),
-		objs[i],
 		0,
 		0
 	    }));
@@ -387,7 +388,7 @@ private void continued(mixed *ref)
 	    }
 	    break;
 	}
-	::call_out_other(this_object(), "_F_continued", delay, ref);
+	::call_out_other(continued[CONT_ORIGIN], "_F_continued", delay, ref);
 	break;
     }
 }
@@ -421,7 +422,7 @@ nomask void _F_wake(mixed *continued, mixed arg)
     if (previous_program() == CONTINUATION_TOKEN) {
 	continued[CONT_VAL] = arg;
 	::call_out_other(this_object(), "_F_continued", 0,
-			 ({ continued, this_object(), 0, 0 }));
+			 ({ continued, 0, 0 }));
     }
 }
 
