@@ -62,26 +62,6 @@ private void addCont(Continuation cont)
 }
 
 /*
- * chain a continuation to the current one
- */
-private void chainCont(Continuation cont)
-{
-    int size;
-
-    switch (typeof(cont->continued()[0][CONT_OBJS])) {
-    case T_OBJECT:
-	error("Cannot chain iterative continuation");
-
-    case T_ARRAY:
-	error("Cannot chain distributed continuation");
-    }
-
-    size = sizeof(continued);
-    addCont(cont);
-    continued[size][CONT_OBJS] = TRUE;
-}
-
-/*
  * add continuation or function to current one
  */
 void add(mixed func, mixed args...)
@@ -114,10 +94,20 @@ void add(mixed func, mixed args...)
 void chain(mixed func, mixed args...)
 {
     object origin;
-    int clone;
+    int size, clone;
 
     if (sizeof(args) == 0 && typeof(func) == T_OBJECT) {
-	chainCont(func);
+	switch (typeof(func->continued()[0][CONT_OBJS])) {
+	case T_OBJECT:
+	    error("Cannot chain iterative continuation");
+
+	case T_ARRAY:
+	    error("Cannot chain distributed continuation");
+	}
+
+	size = sizeof(continued);
+	addCont(func);
+	continued[size][CONT_OBJS] = TRUE;
 	return;
     }
     if (started) {
