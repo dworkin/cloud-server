@@ -251,7 +251,7 @@ static object clone_object(string path, varargs string uid)
 
     CHECKARG(path, 1, "clone_object");
     if (uid) {
-	CHECKARG(creator == "System", 1, "clone_object");
+	CHECKARG(SYSTEM(), 1, "clone_object");
     } else {
 	uid = owner;
     }
@@ -330,7 +330,7 @@ static object new_object(mixed obj, varargs string uid)
 	badarg(1, "new_object");
     }
     if (uid) {
-	CHECKARG(create && creator == "System", 1, "new_object");
+	CHECKARG(create && SYSTEM(), 1, "new_object");
     } else {
 	uid = owner;
     }
