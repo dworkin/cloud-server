@@ -94,7 +94,7 @@ static object find_object(string path)
 	return nil;
     }
 
-    path = ::find_object(DRIVER)->normalize_path(path, nil, creator);
+    path = ::find_object(DRIVER)->normalize_path(path, nil);
     if (sscanf(path, "%*s/lib/") != 0) {
 	/*
 	 * It is not possible to find a class object by name, or to call a
@@ -247,6 +247,7 @@ private atomic object _clone(string path, string uid, object obj)
  */
 static object clone_object(string path, varargs string uid)
 {
+    string creator;
     object obj;
 
     CHECKARG(path, 1, "clone_object");
@@ -262,7 +263,9 @@ static object clone_object(string path, varargs string uid)
     /*
      * check access
      */
-    path = ::find_object(DRIVER)->normalize_path(path, nil, creator);
+    obj = ::find_object(DRIVER);
+    creator = obj->creator(object_name(this_object()));
+    path = obj->normalize_path(path, nil, creator);
     if ((sscanf(path, "/kernel/%*s") != 0 && !KERNEL()) ||
 	(creator != "System" &&
 	 !::find_object(ACCESSD)->access(object_name(this_object()), path,
@@ -306,7 +309,7 @@ private atomic object _new(object obj)
  */
 static object new_object(mixed obj, varargs string uid)
 {
-    string str;
+    string creator, str;
     int create;
 
     if (!this_object()) {
@@ -314,7 +317,10 @@ static object new_object(mixed obj, varargs string uid)
     }
     switch (typeof(obj)) {
     case T_STRING:
-	str = ::find_object(DRIVER)->normalize_path(obj, nil, creator);
+	str = obj;
+	obj = ::find_object(DRIVER);
+	creator = obj->creator(object_name(this_object()));
+	str = obj->normalize_path(str, nil, creator);
 	obj = ::find_object(str);
 	create = TRUE;
 	break;
@@ -368,7 +374,7 @@ static object new_object(mixed obj, varargs string uid)
  * NAME:	process_trace()
  * DESCRIPTION:	filter out function call arguments from a call trace
  */
-private mixed *process_trace(object driver, mixed *trace)
+private mixed *process_trace(mixed *trace, string creator, object driver)
 {
     if (sizeof(trace) > TRACE_FIRSTARG &&
 	creator != driver->creator(trace[TRACE_PROGNAME])) {
@@ -384,20 +390,22 @@ private mixed *process_trace(object driver, mixed *trace)
  */
 static mixed *call_trace(varargs mixed index)
 {
+    object driver;
+    string creator;
     mixed *trace;
 
+    driver = ::find_object(DRIVER);
+    creator = driver->creator(object_name(this_object()));
     if (index == nil) {
 	trace = ::call_trace();
 	if (previous_program() != RSRCOBJ) {
 	    trace[1][TRACE_FIRSTARG] = nil;
 	}
 	if (creator != "System") {
-	    object driver;
 	    int i;
 
-	    driver = ::find_object(DRIVER);
 	    for (i = sizeof(trace) - 1; --i >= 0; ) {
-		trace[i] = process_trace(driver, trace[i]);
+		trace[i] = process_trace(trace[i], creator, driver);
 	    }
 	}
     } else {
@@ -406,7 +414,7 @@ static mixed *call_trace(varargs mixed index)
 	    trace[TRACE_FIRSTARG] = nil;
 	}
 	if (creator != "System") {
-	    trace = process_trace(::find_object(DRIVER), trace);
+	    trace = process_trace(trace, creator, driver);
 	}
     }
 
@@ -488,7 +496,7 @@ static mixed status(varargs mixed obj, mixed index)
     case T_STRING:
 	/* get corresponding object */
 	driver = ::find_object(DRIVER);
-	obj = ::find_object(driver->normalize_path(obj, nil, creator));
+	obj = ::find_object(driver->normalize_path(obj, nil));
 	if (!obj) {
 	    return nil;
 	}
