@@ -8,6 +8,10 @@
 # define OBJECT_SERVER		"/usr/System/sys/objectd"
 # define UPGRADE_SERVER		"/usr/System/sys/upgraded"
 # define CONTINUATION		"/lib/Continuation"
+# define CHAINED_CONTINUATION	"/lib/ChainedContinuation"
+# define DELAYED_CONTINUATION	"/lib/DelayedContinuation"
+# define ITERATIVE_CONTINUATION	"/lib/IterativeContinuation"
+# define DIST_CONTINUATION	"/lib/DistContinuation"
 # define CONTINUATION_TOKEN	"/lib/ContinuationToken"
 
 
@@ -66,10 +70,26 @@ nomask void _F_copy()
  */
 static object new_object(string path, mixed args...)
 {
+    string uid;
+
     if (path) {
 	path = DRIVER->normalize_path(path);
-	if (sscanf(path, "%*s/obj/") != 0 || sscanf(path, "%*s/sys/") != 0) {
-	    error("Invalid path");
+	switch (path) {
+	case CONTINUATION:
+	case CHAINED_CONTINUATION:
+	case DELAYED_CONTINUATION:
+	case ITERATIVE_CONTINUATION:
+	case DIST_CONTINUATION:
+	case CONTINUATION_TOKEN:
+	    uid = "System";
+	    break;
+
+	default:
+	    if (sscanf(path, "%*s/obj/") != 0 || sscanf(path, "%*s/sys/") != 0)
+	    {
+		error("Invalid path");
+	    }
+	    break;
 	}
 	if (sscanf(path, "%*s/lib/") != 0 && status(path, O_INDEX) != nil) {
 	    /* let upgrade server generate a leaf object */
@@ -77,7 +97,7 @@ static object new_object(string path, mixed args...)
 	}
     }
     ::tls_set(TLS_ARGUMENTS, args);
-    return ::new_object(path);
+    return ::new_object(path, uid);
 }
 
 /*
