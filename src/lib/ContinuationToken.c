@@ -16,9 +16,9 @@ void saveContinuation(mixed *continued)
 }
 
 /*
- * wake up continuation saved in this token
+ * resume continuation saved in this token
  */
-void wakeContinuation(varargs mixed arg)
+void resumeContinuation(varargs mixed arg)
 {
     if (!continued) {
 	error("No continuation");
@@ -26,6 +26,6 @@ void wakeContinuation(varargs mixed arg)
     if (!continued[CONT_ORIGIN]) {
 	error("No environment for Continuation");
     }
-    continued[CONT_ORIGIN]->_F_wake(continued, arg);
+    continued[CONT_ORIGIN]->_F_resume(continued, arg);
     continued = nil;
 }

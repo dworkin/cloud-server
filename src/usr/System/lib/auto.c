@@ -434,10 +434,10 @@ nomask void _F_continued(mixed *ref)
 }
 
 /*
- * NAME:	_F_wake()
- * DESCRIPTION:	wake up a suspended continuation
+ * NAME:	_F_resume()
+ * DESCRIPTION:	resume a suspended continuation
  */
-nomask void _F_wake(mixed *continued, mixed arg)
+nomask void _F_resume(mixed *continued, mixed arg)
 {
     if (previous_program() == CONTINUATION_TOKEN) {
 	continued[CONT_VAL] = arg;
