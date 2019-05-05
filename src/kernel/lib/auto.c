@@ -252,7 +252,7 @@ static object clone_object(string path, varargs string uid)
 
     CHECKARG(path, 1, "clone_object");
     if (uid) {
-	CHECKARG(SYSTEM(), 1, "clone_object");
+	CHECKARG(KERNEL() || SYSTEM(), 1, "clone_object");
     } else {
 	uid = owner;
     }
