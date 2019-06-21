@@ -32,23 +32,26 @@ private int consolidateString(string *chunks)
 	string str;
 	int offset;
 
+	--chunkBuffered;
 	if (chunkSize > strMax) {
 	    /* split last string */
-	    str = chunks[chunkBuffered - 1];
+	    str = chunks[chunkBuffered];
 	    offset = strlen(str) - (chunkSize - strMax);
-	    chunks[chunkBuffered - 1] = str[.. offset - 1];
+	    chunks[chunkBuffered] = str[.. offset - 1];
 	    str = str[offset ..];
 	}
 
 	/* consolidate string */
-	chunks[chunkFilled] = implode(chunks[chunkFilled .. chunkBuffered - 1],
-				      "");
+	chunks[chunkFilled] = implode(chunks[chunkFilled .. chunkBuffered], "");
 
 	if (chunkSize >= strMax) {
 	    chunks[++chunkFilled] = str;
 	    chunkSize -= strMax;
 	}
-	chunkBuffered = chunkFilled;
+	while (chunkBuffered > chunkFilled) {
+	    chunks[chunkBuffered] = nil;
+	    --chunkBuffered;
+	}
 	if (chunkSize != 0) {
 	    chunkBuffered++;
 	}
@@ -73,12 +76,13 @@ private int consolidateChars(int **chunks)
     if (chunkFilled < chunkBuffered - 1) {
 	int size, i, j, k, *chars, *chunk, *fragment;
 
+	--chunkBuffered;
 	size = chunkSize;
 	if (size > bufMax) {
 	    /* split last character array */
-	    chars = chunks[chunkBuffered - 1];
+	    chars = chunks[chunkBuffered];
 	    i = sizeof(chars) - (size - bufMax);
-	    chunks[chunkBuffered - 1] = chars[.. i - 1];
+	    chunks[chunkBuffered] = chars[.. i - 1];
 	    chars = chars[i ..];
 	    size -= bufMax;
 	}
@@ -86,7 +90,7 @@ private int consolidateChars(int **chunks)
 	/* consolidate characters */
 	chunk = allocate_int(size);
 	k = 0;
-	for (i = chunkFilled; i < chunkBuffered; i++) {
+	for (i = chunkFilled; i <= chunkBuffered; i++) {
 	    fragment = chunks[i];
 	    for (j = 0, size = sizeof(fragment); j < size; j++) {
 		chunk[k++] = fragment[j];
@@ -98,7 +102,10 @@ private int consolidateChars(int **chunks)
 	    chunks[++chunkFilled] = chars;
 	    chunkSize -= bufMax;
 	}
-	chunkBuffered = chunkFilled;
+	while (chunkBuffered > chunkFilled) {
+	    chunks[chunkBuffered] = nil;
+	    --chunkBuffered;
+	}
 	if (chunkSize != 0) {
 	    chunkBuffered++;
 	}
