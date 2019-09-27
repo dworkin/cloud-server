@@ -4,6 +4,7 @@
 # include <type.h>
 
 inherit Iterable;
+private inherit unicode "util/unicode";
 
 
 # define UTF8DECODE	"/sys/utf8decode"
@@ -828,27 +829,25 @@ private int compareChars(int *chunk, int *chars, int len)
 /*
  * compare two chunks
  */
-private mixed *compareChunk(mixed *buf, int bufIndex, int offset, mixed str)
+private int compareChunk(mixed chunk, mixed str)
 {
     int len, slen, comp;
-    mixed chunk;
 
-    ({ buf, bufIndex, offset, chunk }) = streamChunk(buf, bufIndex, offset);
     switch (typeof(chunk)) {
     case T_NIL:
 	switch (typeof(str)) {
 	case T_NIL:
 	    /* equal */
-	    return ({ 0, nil, 0, 0 });
+	    return 0;
 
 	case T_STRING:
 	    /* equal if strlen is 0 */
-	    return ({ -strlen(str), nil, 0, 0 });
+	    return -strlen(str);
 	    break;
 
 	case T_ARRAY:
 	    /* "" < array */
-	    return ({ -1, nil, 0, 0 });
+	    return -1;
 	}
 
     case T_STRING:
@@ -861,39 +860,39 @@ private mixed *compareChunk(mixed *buf, int bufIndex, int offset, mixed str)
 	    /* fall through */
 	case T_NIL:
 	    /* string > "" */
-	    return ({ 1, nil, 0, 0 });
+	    return 1;
 
 	case T_ARRAY:
 	    /* string < array */
-	    return ({ -1, nil, 0, 0 });
+	    return -1;
 	}
 
 	len = strlen(chunk);
 	if (len <= slen) {
 	    if (len == slen) {
 		if (chunk == str) {
-		    return ({ 0, buf, bufIndex, offset });
+		    return 0;
 		}
 	    } else {
 		str = str[.. len - 1];
 		if (chunk == str) {
-		    return ({ -1, nil, 0, 0 });
+		    return -1;
 		}
 	    }
 	} else {
 	    chunk = chunk[.. slen - 1];
 	    if (chunk == str) {
-		return ({ 1, nil, 0, 0 });
+		return 1;
 	    }
 	}
-	return ({ (chunk < str) ? -1 : 1, nil, 0, 0 });
+	return (chunk < str) ? -1 : 1;
 
     case T_ARRAY:
 	switch (typeof(str)) {
 	case T_NIL:
 	case T_STRING:
 	    /* array > string */
-	    return ({ 1, nil, 0, 0 });
+	    return 1;
 
 	case T_ARRAY:
 	    slen = sizeof(str);
@@ -904,15 +903,15 @@ private mixed *compareChunk(mixed *buf, int bufIndex, int offset, mixed str)
 	if (len <= slen) {
 	    comp = compareChars(chunk, str, len);
 	    if (len < slen && comp == 0) {
-		return ({ -1, nil, 0, 0 });
+		return -1;
 	    }
 	} else {
 	    comp = compareChars(chunk, str, slen);
 	    if (comp == 0) {
-		return ({ 1, nil, 0, 0 });
+		return 1;
 	    }
 	}
-	return ({ comp, buf, bufIndex, offset });
+	return comp;
     }
 }
 
@@ -931,8 +930,8 @@ int compare(mixed str)
 	    return -strlen(str);
 	}
 	({ buf, bufIndex, offset }) = streamStart();
-	({ comp, buf, bufIndex, offset }) =
-				    compareChunk(buf, bufIndex, offset, str);
+	({ buf, bufIndex, offset, chunk }) = streamChunk(buf, bufIndex, offset);
+	comp = compareChunk(chunk, str);
 	if (comp != 0) {
 	    return comp;
 	}
@@ -950,8 +949,9 @@ int compare(mixed str)
 	}
 	({ buf, bufIndex, offset }) = streamStart();
 	do {
-	    ({ comp, buf, bufIndex, offset }) =
-			    compareChunk(buf, bufIndex, offset, str->chunk());
+	    ({ buf, bufIndex, offset, chunk }) =
+		streamChunk(buf, bufIndex, offset);
+	    comp = compareChunk(chunk, str->chunk());
 	    if (comp != 0) {
 		return comp;
 	    }
@@ -1005,7 +1005,7 @@ static int operator>= (mixed str)
 
 
 /*
- * return String with first character converted to upper case
+ * return String with first character converted to title case
  */
 String capitalize()
 {
@@ -1021,10 +1021,10 @@ String capitalize()
     buffer = new StringBuffer();
     ({ buf, bufIndex, offset }) = streamStart();
     ({ buf, bufIndex, offset, chunk }) = streamChunk(buf, bufIndex, offset);
-    if (typeof(chunk) == T_STRING && chunk[0] >= 'a' && chunk[0] <= 'z') {
-	/* XXX full unicode conversion */
-	chunk[0] -= 'a' - 'A';
+    if (typeof(chunk) == T_ARRAY) {
+	chunk = chunk[..];
     }
+    chunk[0] = unicode::toTitleCase(chunk[0]);
     buffer->append(chunk);
 
     /* copy remaining chunks */
@@ -1040,11 +1040,11 @@ String capitalize()
 /*
  * return String converted to upper case
  */
-String upperCase()
+String toUpperCase()
 {
     StringBuffer buffer;
     mixed *buf, chunk;
-    int bufIndex, offset, i, len;
+    int bufIndex, offset, i;
 
     /* create StringBuffer and modify chars */
     buffer = new StringBuffer();
@@ -1057,16 +1057,17 @@ String upperCase()
 	    return new String(buffer);
 
 	case T_STRING:
-	    for (i = 0, len = strlen(chunk); i < len; i++) {
-		if (chunk[i] >= 'a' && chunk[i] <= 'z') {
-		    chunk[i] -= 'a' - 'A';
-		}
-	    }
+	    i = strlen(chunk);
 	    break;
 
 	case T_ARRAY:
-	    /* XXX full unicode conversion */
+	    chunk = chunk[..];
+	    i = sizeof(chunk);
 	    break;
+	}
+
+	while (--i >= 0) {
+	    chunk[i] = unicode::toUpperCase(chunk[i]);
 	}
 	buffer->append(chunk);
     }
@@ -1075,11 +1076,11 @@ String upperCase()
 /*
  * return String converted to lower case
  */
-String lowerCase()
+String toLowerCase()
 {
     StringBuffer buffer;
     mixed *buf, chunk;
-    int bufIndex, offset, i, len;
+    int bufIndex, offset, i;
 
     /* create StringBuffer and modify chars */
     buffer = new StringBuffer();
@@ -1092,17 +1093,105 @@ String lowerCase()
 	    return new String(buffer);
 
 	case T_STRING:
-	    for (i = 0, len = strlen(chunk); i < len; i++) {
-		if (chunk[i] >= 'A' && chunk[i] <= 'Z') {
-		    chunk[i] += 'a' - 'A';
-		}
-	    }
+	    i = strlen(chunk);
 	    break;
 
 	case T_ARRAY:
-	    /* XXX full unicode conversion */
+	    chunk = chunk[..];
+	    i = sizeof(chunk);
 	    break;
+	}
+
+	while (--i >= 0) {
+	    chunk[i] = unicode::toLowerCase(chunk[i]);
 	}
 	buffer->append(chunk);
     }
+}
+
+/*
+ * fold the case of a chunk
+ */
+private mixed foldChunk(mixed chunk, int copy)
+{
+    int i;
+
+    switch (typeof(chunk)) {
+    case T_NIL:
+	return chunk;
+
+    case T_STRING:
+	i = strlen(chunk);
+	break;
+
+    case T_ARRAY:
+	if (copy) {
+	    chunk = chunk[..];
+	}
+	i = sizeof(chunk);
+	break;
+    }
+
+    while (--i >= 0) {
+	chunk[i] = unicode::foldCase(chunk[i]);
+    }
+
+    return chunk;
+}
+
+/*
+ * compare with other string, ignoring case
+ */
+int compareIgnoreCase(mixed str)
+{
+    int bufIndex, offset, comp;
+    mixed *buf, chunk;
+
+    switch (typeof(str)) {
+    case T_STRING:
+	/* compare to one chunk */
+	if (length() == 0) {
+	    return -strlen(str);
+	}
+	({ buf, bufIndex, offset }) = streamStart();
+	({ buf, bufIndex, offset, chunk }) = streamChunk(buf, bufIndex, offset);
+	comp = compareChunk(foldChunk(chunk, TRUE), foldChunk(str, FALSE));
+	if (comp != 0) {
+	    return comp;
+	}
+	if (!buf) {
+	    return 0;
+	}
+	({ buf, bufIndex, offset, chunk }) = streamChunk(buf, bufIndex, offset);
+	return !!chunk;
+
+    case T_OBJECT:
+	/* stream both Strings, compare chunk by chunk */
+	str = ((String) str)->buffer();
+	if (length() == 0) {
+	    return -str->length();
+	}
+	({ buf, bufIndex, offset }) = streamStart();
+	do {
+	    ({ buf, bufIndex, offset, chunk }) =
+		streamChunk(buf, bufIndex, offset);
+	    comp = compareChunk(foldChunk(chunk, TRUE),
+				foldChunk(str->chunk(), FALSE));
+	    if (comp != 0) {
+		return comp;
+	    }
+	} while (buf);
+	return 0;
+
+    default:
+	error("Can only compare to String or string");
+    }
+}
+
+/*
+ * this == str, ignoring case
+ */
+int equalsIgnoreCase(mixed str)
+{
+    return (compareIgnoreCase(str) == 0);
 }
