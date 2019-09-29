@@ -24,7 +24,7 @@ static void createContinuation(mixed objs, mixed delay, string func,
 	error("Continuation in non-persistent object");
     }
 
-    continued = ({ ({ objs, delay, origin, func, args }) });
+    continued = ({ objs, delay, origin, func, args, nil });
 }
 
 /*
@@ -40,7 +40,7 @@ static void create(string func, mixed args...)
  */
 private void addCont(Continuation cont)
 {
-    mixed *continuation, *params;
+    mixed *continuation;
     int i;
 
     if (started || cont->started()) {
@@ -48,15 +48,14 @@ private void addCont(Continuation cont)
     }
 
     continuation = cont->continued();
-    params = continuation[0];
-    if (params[CONT_DELAY] != 0 && params[CONT_OBJS] == TRUE &&
-	params[CONT_FUNC] == "_F_return" &&
-	continued[i=sizeof(continued) - 1][CONT_DELAY] == 0) {
+    if (continuation[CONT_DELAY] != 0 && continuation[CONT_OBJS] == TRUE &&
+	continuation[CONT_FUNC] == "_F_return" &&
+	continued[i=(sizeof(continued) - CONT_SIZE + CONT_DELAY)] == 0) {
 	/*
 	 * merge delayed continuation with preceding
 	 */
-	continued[i][CONT_DELAY] = params[CONT_DELAY];
-	continuation = continuation[1 ..];
+	continued[i] = continuation[CONT_DELAY];
+	continuation = continuation[CONT_SIZE ..];
     }
     continued += continuation;
 }
@@ -85,7 +84,7 @@ void add(mixed func, mixed args...)
     if (typeof(func) != T_STRING) {
 	error("Not a function");
     }
-    continued += ({ ({ FALSE, 0, origin, func, args }) });
+    continued += ({ FALSE, 0, origin, func, args, nil });
 }
 
 /*
@@ -97,7 +96,7 @@ void chain(mixed func, mixed args...)
     int size, clone;
 
     if (sizeof(args) == 0 && typeof(func) == T_OBJECT) {
-	switch (typeof(func->continued()[0][CONT_OBJS])) {
+	switch (typeof(func->continued()[CONT_OBJS])) {
 	case T_OBJECT:
 	    error("Cannot chain iterative continuation");
 
@@ -107,7 +106,7 @@ void chain(mixed func, mixed args...)
 
 	size = sizeof(continued);
 	addCont(func);
-	continued[size][CONT_OBJS] = TRUE;
+	continued[size + CONT_OBJS] = TRUE;
 	return;
     }
     if (started) {
@@ -122,7 +121,7 @@ void chain(mixed func, mixed args...)
     if (typeof(func) != T_STRING) {
 	error("Not a function");
     }
-    continued += ({ ({ TRUE, 0, origin, func, args }) });
+    continued += ({ TRUE, 0, origin, func, args, nil });
 }
 
 /*
@@ -157,7 +156,7 @@ atomic void runNext()
     if (started) {
 	error("Continuation already started");
     }
-    if (!continued[0][CONT_ORIGIN]) {
+    if (!continued[CONT_ORIGIN]) {
 	error("No environment for Continuation");
     }
 
@@ -173,7 +172,7 @@ atomic void runParallel()
     if (started) {
 	error("Continuation already started");
     }
-    if (!continued[0][CONT_ORIGIN]) {
+    if (!continued[CONT_ORIGIN]) {
 	error("No environment for Continuation");
     }
 

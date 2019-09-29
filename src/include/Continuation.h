@@ -10,3 +10,5 @@
 # define CONT_ORIGIN	2	/* originating object */
 # define CONT_FUNC	3	/* function to call */
 # define CONT_ARGS	4	/* arguments */
+# define CONT_VAL	5	/* previous return value */
+# define CONT_SIZE	6	/* size of continuation */
