@@ -12,7 +12,6 @@
 # define DELAYED_CONTINUATION	"/lib/DelayedContinuation"
 # define ITERATIVE_CONTINUATION	"/lib/IterativeContinuation"
 # define DIST_CONTINUATION	"/lib/DistContinuation"
-# define CONTINUATION_TOKEN	"/lib/ContinuationToken"
 
 
 private mapping storage;	/* uninitialized until used */
@@ -80,7 +79,6 @@ static object new_object(string path, mixed args...)
 	case DELAYED_CONTINUATION:
 	case ITERATIVE_CONTINUATION:
 	case DIST_CONTINUATION:
-	case CONTINUATION_TOKEN:
 	    uid = "System";
 	    break;
 
@@ -257,7 +255,7 @@ static void startContinuation(mixed *continuation, int parallel)
 static object suspendContinuation()
 {
     mixed *ref, *continued;
-    object token;
+    object continuation;
 
     ref = ::tls_get(TLS_CONT);
     if (!ref || sizeof(continued=ref[REF_CONT]) == 0 || !continued[CONT_ORIGIN])
@@ -266,9 +264,9 @@ static object suspendContinuation()
     }
     ref[REF_CONT] = ({ });
 
-    token = new ContinuationToken;
-    token->saveContinuation(continued);
-    return token;
+    continuation = new Continuation;
+    continuation->saveContinuation(continued);
+    return continuation;
 }
 
 /*
@@ -405,19 +403,6 @@ nomask void _F_continued(mixed *ref)
 {
     if (previous_program() == AUTO) {
 	continued(ref);
-    }
-}
-
-/*
- * NAME:	_F_resume()
- * DESCRIPTION:	resume a suspended continuation
- */
-nomask void _F_resume(mixed *continued, mixed arg)
-{
-    if (previous_program() == CONTINUATION_TOKEN) {
-	continued[CONT_VAL] = arg;
-	::call_out_other(this_object(), "_F_continued", 0,
-			 ({ continued, 0, 0 }));
     }
 }
 

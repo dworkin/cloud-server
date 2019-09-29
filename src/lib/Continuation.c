@@ -1,6 +1,8 @@
 # include <type.h>
 # include <Continuation.h>
 
+# define SYSTEM_AUTO	"/usr/System/lib/auto"
+
 
 private mixed *continued;	/* list of continuations */
 private int started;		/* already started? */
@@ -30,9 +32,21 @@ static void createContinuation(mixed objs, mixed delay, string func,
 /*
  * create a standard continuation
  */
-static void create(string func, mixed args...)
+static void create(varargs string func, mixed args...)
 {
-    createContinuation(FALSE, 0, func, args);
+    if (func) {
+	createContinuation(FALSE, 0, func, args);
+    }
+}
+
+/*
+ * save suspended continuation
+ */
+void saveContinuation(mixed *continued)
+{
+    if (previous_program() == SYSTEM_AUTO) {
+	::continued = continued;
+    }
 }
 
 /*
@@ -151,7 +165,7 @@ static Continuation operator>> (Continuation cont)
 /*
  * start the continuation
  */
-atomic void runNext()
+atomic void runNext(varargs mixed arg)
 {
     if (started) {
 	error("Continuation already started");
@@ -160,6 +174,7 @@ atomic void runNext()
 	error("No environment for Continuation");
     }
 
+    continued[CONT_VAL] = arg;
     ::startContinuation(continued, FALSE);
     started = TRUE;
 }
@@ -167,7 +182,7 @@ atomic void runNext()
 /*
  * start the continuation concurrently
  */
-atomic void runParallel()
+atomic void runParallel(varargs mixed arg)
 {
     if (started) {
 	error("Continuation already started");
@@ -176,6 +191,7 @@ atomic void runParallel()
 	error("No environment for Continuation");
     }
 
+    continued[CONT_VAL] = arg;
     ::startContinuation(continued, TRUE);
     started = TRUE;
 }
