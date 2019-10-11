@@ -145,9 +145,13 @@ private void prepareType(int type)
 		if (size > bufMax - size) {
 		    size = bufMax - size;
 		}
-		ringBuffer = ringBuffer[.. ringStart - 1] + allocate(size) +
-			     ringBuffer[ringStart ..];
-		ringStart += size;
+		if (ringStart < ringEnd) {
+		    ringBuffer += allocate(size);
+		} else {
+		    ringBuffer = ringBuffer[.. ringStart - 1] + allocate(size) +
+				 ringBuffer[ringStart ..];
+		    ringStart += size;
+		}
 	    }
 	}
 	ringEnd = (ringEnd + 1) % sizeof(ringBuffer);
