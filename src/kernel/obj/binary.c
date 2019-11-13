@@ -107,22 +107,24 @@ static void receive_message(string str)
 	if (mode != MODE_RAW) {
 	    if (sscanf(buffer, "%s\r\n%s", str, buffer) != 0 ||
 		sscanf(buffer, "%s\n%s", str, buffer) != 0) {
-		while (sscanf(str, "%s\b%s", head, str) != 0) {
-		    while (sscanf(head, "%s\x7f%s", pre, head) != 0) {
-			len = strlen(pre);
+		if (mode == MODE_EDIT) {
+		    while (sscanf(str, "%s\b%s", head, str) != 0) {
+			while (sscanf(head, "%s\x7f%s", pre, head) != 0) {
+			    len = strlen(pre);
+			    if (len != 0) {
+				head = pre[0 .. len - 2] + head;
+			    }
+			}
+			len = strlen(head);
 			if (len != 0) {
-			    head = pre[0 .. len - 2] + head;
+			    str = head[0 .. len - 2] + str;
 			}
 		    }
-		    len = strlen(head);
-		    if (len != 0) {
-			str = head[0 .. len - 2] + str;
-		    }
-		}
-		while (sscanf(str, "%s\x7f%s", head, str) != 0) {
-		    len = strlen(head);
-		    if (len != 0) {
-			str = head[0 .. len - 2] + str;
+		    while (sscanf(str, "%s\x7f%s", head, str) != 0) {
+			len = strlen(head);
+			if (len != 0) {
+			    str = head[0 .. len - 2] + str;
+			}
 		    }
 		}
 

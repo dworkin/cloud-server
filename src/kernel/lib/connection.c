@@ -19,7 +19,7 @@ static void create(string type)
     userd = find_object(USERD);
     port = -1;
     conntype = type;
-    mode = MODE_ECHO;	/* same as MODE_LINE for binary connection */
+    mode = MODE_ECHO;	/* same as MODE_EDIT for binary connection */
 }
 
 
