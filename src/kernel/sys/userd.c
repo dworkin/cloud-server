@@ -183,6 +183,48 @@ object datagram_user(int port, string str)
 }
 
 /*
+ * NAME:	query_telnet_mode()
+ * DESCRIPTION:	return the current telnet connection mode
+ */
+int query_telnet_mode(int port, object obj)
+{
+    if (previous_program() == LIB_CONN) {
+	object manager;
+
+	manager = telnet[port];
+	return (manager) ? manager->query_mode(obj) : MODE_NOCHANGE;
+    }
+}
+
+/*
+ * NAME:	query_binary_mode()
+ * DESCRIPTION:	return the current binary connection mode
+ */
+int query_binary_mode(int port, object obj)
+{
+    if (previous_program() == LIB_CONN) {
+	object manager;
+
+	manager = binary[port];
+	return (manager) ? manager->query_mode(obj) : MODE_NOCHANGE;
+    }
+}
+
+/*
+ * NAME:	query_datagram_mode()
+ * DESCRIPTION:	return the current datagram connection mode
+ */
+int query_datagram_mode(int port, object obj)
+{
+    if (previous_program() == LIB_CONN) {
+	object manager;
+
+	manager = datagram[port];
+	return (manager) ? manager->query_mode(obj) : MODE_NOCHANGE;
+    }
+}
+
+/*
  * NAME:	query_telnet_timeout()
  * DESCRIPTION:	return the current telnet connection timeout
  */

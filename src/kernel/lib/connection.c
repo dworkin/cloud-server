@@ -14,12 +14,12 @@ private string buffer;		/* buffered output string */
  * NAME:	create()
  * DESCRIPTION:	initialize
  */
-static void create(string type)
+static void create(string type, int mode)
 {
     userd = find_object(USERD);
     port = -1;
     conntype = type;
-    mode = MODE_ECHO;	/* same as MODE_EDIT for binary connection */
+    ::mode = mode;
 }
 
 
@@ -65,8 +65,17 @@ int query_mode()
  */
 static void open(mapping tls)
 {
-    int timeout;
+    int mode, timeout;
     string banner;
+
+    mode = call_other(userd, "query_" + conntype + "_mode", port,
+		      this_object());
+    if (mode != MODE_NOCHANGE) {
+	set_mode(mode);
+	if (mode == MODE_DISCONNECT) {
+	    return;	/* disconnect immediately */
+	}
+    }
 
     if (conntype != "datagram") {
 	banner = call_other(userd, "query_" + conntype + "_banner", port,
@@ -78,14 +87,13 @@ static void open(mapping tls)
 
     timeout = call_other(userd, "query_" + conntype + "_timeout", port,
 			 this_object());
-    if (timeout < 0) {
-	/* disconnect immediately */
-	destruct_object(this_object());
-	return;
-    }
-
-    if (!user && timeout != 0) {
-	call_out("timeout", timeout);
+    if (!user) {
+	if (timeout > 0) {
+	    call_out("timeout", timeout);
+	} else if (timeout < 0) {
+	    /* disconnect immediately */
+	    destruct_object(this_object());
+	}
     }
 }
 

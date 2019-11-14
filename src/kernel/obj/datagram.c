@@ -12,7 +12,7 @@ object driver;		/* driver object */
  */
 static void create()
 {
-    ::create("datagram");
+    ::create("datagram", MODE_RAW);
     driver = find_object(DRIVER);
 }
 

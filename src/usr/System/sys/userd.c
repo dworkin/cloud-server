@@ -87,6 +87,15 @@ object select(string name)
 }
 
 /*
+ * NAME:	query_mode()
+ * DESCRIPTION:	return the login mode
+ */
+int query_mode(object obj)
+{
+    return MODE_ECHO;
+}
+
+/*
  * NAME:	query_timeout()
  * DESCRIPTION:	return the login timeout
  */

@@ -15,7 +15,7 @@ int raw;		/* pending raw input? */
  */
 static void create()
 {
-    ::create("binary");
+    ::create("binary", MODE_RAW);
     driver = find_object(DRIVER);
     buffer = "";
 }

@@ -10,11 +10,16 @@ void set_datagram_manager(int port, object datagramd) [System only]
 	Return a user object, selected by the argument string, which is the
 	first line of input on that connection.
 
+    * int query_mode(object connection)
+
+	Return the initial mode for the connection.  MODE_DISCONNECT can be
+	used to terminate the connection immediately.
+
     * int query_timeout(object connection)
 
 	Return a timeout, after which the given connection is closed if no
 	user object has been associated with it yet.  If the timeout is -1,
-	the connection is closed immediately.
+	this check is performed immediately.
 
     * string query_banner(object connection)
 

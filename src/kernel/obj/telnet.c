@@ -12,7 +12,7 @@ object driver;		/* driver object */
  */
 static void create()
 {
-    ::create("telnet");
+    ::create("telnet", MODE_ECHO);
     driver = find_object(DRIVER);
 }
 
