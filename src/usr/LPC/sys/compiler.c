@@ -52,11 +52,11 @@ TopLevelDecls: TopLevelDeclList				? list		\
 TopLevelDeclList:							\
 TopLevelDeclList: TopLevelDeclList TopLevelDecl				\
 TopLevelDecl: DataDecl							\
-TopLevelDecl: FunctionDecl						" +
+TopLevelDecl: FuncDecl							" +
 "\
 DataDecl: ClassType Dcltrs ';'				? dataDecl	\
-FunctionDecl: ClassType FunctionDcltr CompoundStmt	? functionDecl	\
-FunctionDecl: Class ident '(' Formals ')' CompoundStmt	? voidDecl	\
+FuncDecl: ClassType FunctionDcltr CompoundStmt		? functionDecl	\
+FuncDecl: Class FunctionName '(' Formals ')' CompoundStmt ? voidDecl	\
 Formals:						? noArguments	\
 Formals: 'void'						? noArguments	\
 Formals: FormalList					? arguments	\
