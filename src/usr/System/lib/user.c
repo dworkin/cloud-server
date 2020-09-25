@@ -1,6 +1,7 @@
 # include <kernel/kernel.h>
 # include <kernel/user.h>
 
+inherit "auto";
 inherit LIB_USER;
 
 

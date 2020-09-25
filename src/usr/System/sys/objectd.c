@@ -142,7 +142,11 @@ private void register_object(string creator, string path, string *includes,
     }
 
     /* obtain list of inherited issues */
-    for (i = sizeof(inherits), issues = allocate_int(i); --i >= 0; ) {
+    if ((i=sizeof(inherits)) > 1 && creator != "System") {
+	inherits = inherits[1 ..];
+	--i;
+    }
+    for (issues = allocate_int(i); --i >= 0; ) {
 	issues[i] = status(inherits[i], O_INDEX);
     }
 
@@ -240,6 +244,7 @@ private string *preregister_includes(string path)
     case LIB_USER:
     case BINARY_CONN:
     case TELNET_CONN:
+    case DATAGRAM_CONN:
     case DEFAULT_WIZTOOL:
 	return ({
 	    "/include/config.h",
@@ -335,6 +340,7 @@ private string *preregister_inherits(string path)
 
     case BINARY_CONN:
     case TELNET_CONN:
+    case DATAGRAM_CONN:
 	return ({ LIB_CONN });
 
     case DEFAULT_USER:
@@ -364,7 +370,8 @@ private void preregister_objects()
 	RSRCD, ACCESSD, USERD,
 	API_RSRC, API_ACCESS, API_USER, 
 	LIB_CONN, LIB_USER, LIB_WIZTOOL,
-	RSRCOBJ, BINARY_CONN, TELNET_CONN, DEFAULT_USER, DEFAULT_WIZTOOL,
+	RSRCOBJ, BINARY_CONN, TELNET_CONN, DATAGRAM_CONN, DEFAULT_USER,
+	DEFAULT_WIZTOOL,
 	INIT, OBJECTSERVER, OBJDBASE
     });
 

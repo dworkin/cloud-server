@@ -3,7 +3,6 @@
 # include <kernel/user.h>
 
 inherit kernel AUTO;
-inherit "~/lib/auto";
 inherit "~/lib/user";
 inherit access API_ACCESS;
 
