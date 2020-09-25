@@ -30,7 +30,7 @@ static nomask int _F_init()
 	if (args) {
 	    create(args...);
 	} else {
-	    create();
+	    call_limited("create");
 	}
     }
     return TRUE;

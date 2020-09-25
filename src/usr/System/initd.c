@@ -112,10 +112,7 @@ static void create()
 	    rsrc_incr(domain, "fileblocks",
 		      DRIVER->file_size("/usr/" + domain, TRUE));
 	    if (file_info("/usr/" + domain + "/initd.c")) {
-		rlimits (rsrc_get(domain, "stack")[RSRC_MAX];
-			 rsrc_get(domain, "ticks")[RSRC_MAX]) {
-		    load("/usr/" + domain + "/initd");
-		}
+		load("/usr/" + domain + "/initd");
 	    }
 	}
     }
