@@ -64,7 +64,8 @@ private void addCont(Continuation cont)
     }
 
     continuation = cont->continued();
-    if (continuation[CONT_DELAY] != 0 && continuation[CONT_OBJS] == TRUE &&
+    if (sizeof(continuation) != 0 && continuation[CONT_DELAY] != 0 &&
+	continuation[CONT_OBJS] == TRUE &&
 	continuation[CONT_FUNC] == "_F_return" &&
 	continued[i=(sizeof(continued) - CONT_SIZE + CONT_DELAY)] == 0) {
 	/*
