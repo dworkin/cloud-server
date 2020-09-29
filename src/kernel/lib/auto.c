@@ -295,15 +295,6 @@ static object clone_object(string path, varargs string uid)
 }
 
 /*
- * NAME:	_new()
- * DESCRIPTION:	reversible low-level new
- */
-private atomic object _new(object obj)
-{
-    return ::new_object(obj);
-}
-
-/*
  * NAME:	new_object()
  * DESCRIPTION:	create a new non-persistent object
  */
@@ -367,7 +358,7 @@ static object new_object(mixed obj, varargs string uid)
 
 	TLSVAR(TLS(), TLS_ARGUMENT) = uid;
     }
-    return _new(obj);
+    return ::new_object(obj);
 }
 
 /*
