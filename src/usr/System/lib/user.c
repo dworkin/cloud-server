@@ -2,7 +2,7 @@
 # include <kernel/user.h>
 
 inherit "auto";
-inherit LIB_USER;
+inherit user LIB_USER;
 
 
 /*
@@ -44,5 +44,5 @@ static string address()
 	obj = obj->query_conn();
     }
 
-    return ::query_ip_name(obj);
+    return user::query_ip_name(obj);
 }
