@@ -41,7 +41,7 @@ void set_creator(string str)
  * NAME:	add_included()
  * DESCRIPTION:	register an included file
  */
-void add_included(int index, string path)
+void add_included(int index, object dbobj, string path)
 {
     if (previous_object() == objectd) {
 	mapping map;
@@ -50,12 +50,12 @@ void add_included(int index, string path)
 	map = included[path];
 	if (map) {
 	    if (map[index / factor]) {
-		map[index / factor] |= ({ index });
+		map[index / factor][index] = dbobj;
 	    } else {
-		map[index / factor] = ({ index });
+		map[index / factor] = ([ index : dbobj ]);
 	    }
 	} else {
-	    included[path] = ([ index / factor : ({ index }) ]);
+	    included[path] = ([ index / factor : ([ index : dbobj ]) ]);
 	}
     }
 }
@@ -71,8 +71,8 @@ void del_included(int index, string path)
 
 	sscanf(path, "/usr/%*s/%s", path);
 	map = included[path];
-	map[index / factor] -= ({ index });
-	if (sizeof(map[index / factor]) == 0) {
+	map[index / factor][index] = nil;
+	if (map_sizeof(map[index / factor]) == 0) {
 	    map[index / factor] = nil;
 	    if (map_sizeof(map) == 0) {
 		included[path] = nil;
@@ -103,7 +103,7 @@ mapping query_included(string path)
  * NAME:	add_inherited()
  * DESCRIPTION:	register an inherited object
  */
-void add_inherited(int index, int issue)
+void add_inherited(int index, object dbobj, int issue)
 {
     if (previous_object() == objectd) {
 	mapping map;
@@ -111,12 +111,12 @@ void add_inherited(int index, int issue)
 	map = inherited[issue];
 	if (map) {
 	    if (map[index / factor]) {
-		map[index / factor] |= ({ index });
+		map[index / factor][index] = dbobj;
 	    } else {
-		map[index / factor] = ({ index });
+		map[index / factor] = ([ index : dbobj ]);
 	    }
 	} else {
-	    inherited[issue] = ([ index / factor : ({ index }) ]);
+	    inherited[issue] = ([ index / factor : ([ index : dbobj ]) ]);
 	}
     }
 }
@@ -125,22 +125,20 @@ void add_inherited(int index, int issue)
  * NAME:	del_inherited()
  * DESCRIPTION:	unregister an inherited object
  */
-int del_inherited(int index, int issue)
+void del_inherited(int index, int issue)
 {
     if (previous_object() == objectd) {
 	mapping map;
 
 	map = inherited[issue];
-	map[index / factor] -= ({ index });
-	if (sizeof(map[index / factor]) == 0) {
+	map[index / factor][index] = nil;
+	if (map_sizeof(map[index / factor]) == 0) {
 	    map[index / factor] = nil;
 	    if (map_sizeof(map) == 0) {
 		inherited[issue] = nil;
-		return (objects[issue] == nil);
 	    }
 	}
     }
-    return FALSE;
 }
 
 /*
@@ -159,7 +157,7 @@ mapping query_inherited(int issue)
  * NAME:	add_object()
  * DESCRIPTION:	register an object
  */
-void add_object(mixed files, int index, int *list)
+void add_object(mixed files, int index, mapping inherits)
 {
     if (previous_object() == objectd) {
 	string path;
@@ -197,7 +195,7 @@ void add_object(mixed files, int index, int *list)
 		issues[path] = index;
 	    }
 	}
-	objects[index] = ({ files }) + list;
+	objects[index] = ({ files, inherits });
     }
 }
 
@@ -205,7 +203,7 @@ void add_object(mixed files, int index, int *list)
  * NAME:	del_object()
  * DESCRIPTION:	unregister an object
  */
-int del_object(int index)
+void del_object(int index)
 {
     if (previous_object() == objectd) {
 	mixed files, issue;
@@ -220,7 +218,6 @@ int del_object(int index)
 	    if (map_sizeof(objects) == 0 && map_sizeof(included) == 0) {
 		destruct_object(this_object());
 	    }
-	    return TRUE;
 	} else {
 	    /* lib object */
 	    issue = issues[path];
@@ -239,9 +236,17 @@ int del_object(int index)
 	    if (map_sizeof(objects) == 0 && map_sizeof(included) == 0) {
 		destruct_object(this_object());
 	    }
-	    return (inherited[index] == nil);
 	}
     }
+}
+
+/*
+ * NAME:	query_object()
+ * DESCRIPTION:	see if an object is registered
+ */
+int query_object(int index)
+{
+    return (previous_object() == objectd && !!objects[index]);
 }
 
 /*
@@ -288,10 +293,10 @@ string *query_includes(int index)
  * NAME:	query_inherits()
  * DESCRIPTION:	return the objects inherited by the given object
  */
-int *query_inherits(int index)
+mapping query_inherits(int index)
 {
     if (previous_object() == objectd) {
-	return objects[index][1 ..];
+	return objects[index][1];
     }
 }
 
