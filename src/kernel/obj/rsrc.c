@@ -28,13 +28,14 @@ static void create()
 }
 
 /*
- * NAME:	set_owner()
- * DESCRIPTION:	set the owner of this resource
+ * NAME:	init()
+ * DESCRIPTION:	initialize resource
  */
-void set_owner(string name)
+void init(string name, int time)
 {
     if (previous_object() == rsrcd) {
 	owner = name;
+	resources["tick usage"][RSRC_DECAYTIME] = time;
     }
 }
 

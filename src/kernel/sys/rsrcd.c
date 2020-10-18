@@ -35,14 +35,15 @@ void add_owner(string owner)
 {
     if (KERNEL() && !owners[owner]) {
 	object obj;
+	int time;
 
 	rlimits (-1; -1) {
 	    obj = clone_object(RSRCOBJ);
 	    catch {
 		owners[owner] = obj;
-		obj->set_owner(owner);
+		obj->init(owner, time = time());
 		owners["System"]->rsrc_incr("objects", 1, resources["objects"]);
-		olimits[owner] = ({ -1, -1, 0 });
+		olimits[owner] = ({ -1, -1, time });
 	    } : {
 		destruct_object(obj);
 		error("Too many resource owners");
