@@ -7,7 +7,7 @@ inherit Continuation;
 /*
  * create an iterative continuation
  */
-static void create(Iterator iter, string func, mixed args...)
+static void create(string func, Iterator iter, mixed args...)
 {
     if (!iter) {
 	error("Missing iterator");
