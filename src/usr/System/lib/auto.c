@@ -298,7 +298,7 @@ private void continued(mixed *ref)
 	ref[REF_CONT] = continued[CONT_SIZE ..];
 	if (objs) {
 	    /* chained */
-	    val = call_other(this_object(), func, val, args...);
+	    val = call_other(this_object(), func, (args + ({ val }))...);
 	} else {
 	    /* standard */
 	    val = call_other(this_object(), func, args...);
