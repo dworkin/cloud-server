@@ -615,7 +615,7 @@ static void shutdown(varargs int hotboot)
     }
     rlimits (-1; -1) {
 	::shutdown(hotboot);
-	::find_object(DRIVER)->message("System halted.\n");
+	::find_object(DRIVER)->message("System halted.\n\n");
     }
 }
 
