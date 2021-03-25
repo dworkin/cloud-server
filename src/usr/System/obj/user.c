@@ -617,6 +617,41 @@ string query_name()
 }
 
 /*
+ * NAME:	set_password()
+ * DESCRIPTION:	change the password
+ */
+private void set_password(string str)
+{
+    int salt;
+
+    salt = random(0);
+    password = "    ";
+    password[0] = salt;
+    password[1] = salt >> 8;
+    password[2] = salt >> 16;
+    password[3] = salt >> 24;
+    password += hash_string("SHA1", str, password);
+}
+
+/*
+ * NAME:	check_password()
+ * DESCRIPTION:	check the password
+ */
+private int check_password(string str)
+{
+    if (strlen(password) == 13) {
+	if (hash_string("crypt", str, password) != password) {
+	    return FALSE;
+	}
+	set_password(str);
+    } else if (hash_string("SHA1", str, password[.. 3]) != password[4 ..]) {
+	return FALSE;
+    }
+
+    return TRUE;
+}
+
+/*
  * NAME:	receive_message()
  * DESCRIPTION:	process a message from the user
  */
@@ -729,7 +764,7 @@ int receive_message(string str)
 	    break;
 
 	case STATE_LOGIN:
-	    if (hash_string("crypt", str, password) != password) {
+	    if (!check_password(str)) {
 		previous_object()->message("\nBad password.\n");
 		return MODE_DISCONNECT;
 	    }
@@ -739,7 +774,7 @@ int receive_message(string str)
 	    break;
 
 	case STATE_OLDPASSWD:
-	    if (hash_string("crypt", str, password) != password) {
+	    if (!check_password(str)) {
 		message("\nBad password.\n");
 		break;
 	    }
@@ -755,7 +790,7 @@ int receive_message(string str)
 
 	case STATE_NEWPASSWD2:
 	    if (newpasswd == str) {
-		password = hash_string("crypt", str);
+		set_password(str);
 		message("\nPassword changed.\n");
 	    } else {
 		message("\nMismatch; password not changed.\n");
