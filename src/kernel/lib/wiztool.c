@@ -1969,25 +1969,22 @@ static string swapavg(int num, int div)
  * NAME:	ntoa()
  * DESCRIPTION:	convert a positive integer (or float) to a string
  */
-static string ntoa(mixed num)
+static string ntoa(mixed n)
 {
-    string str;
-    float mantissa;
+    float num;
     int exponent;
 
-    num = (float) num;
-    if (num <= 999999999.0) {
+    num = (float) n;
+    if (num < 1e9) {
 	return ralign((int) num, 9);
     }
 
-    str = (string) num;
-    sscanf(str, "%*se+%d", exponent);
-    mantissa = num / pow(10.0, (float) exponent);
-    if (strlen(str) > 10) {
-	num = (exponent < 10) ? 100000.0 : 10000.0;
-        mantissa = floor(mantissa * num + 0.5) / num;
+    exponent = (int) floor(log10(num)) - 6;
+    if (exponent >= 10) {
+	exponent++;
     }
-    return ralign(mantissa + "e" + exponent, 9);
+    num = floor(num / pow(10.0, (float) exponent) + 0.5);
+    return ralign(num + "e" + exponent, 9);
 }
 
 /*
