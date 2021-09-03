@@ -62,9 +62,9 @@ private int respond(int code)
     string host;
 
     set_mode(MODE_RAW);
-    catch {
+    try {
 	mesg = call_limited("http_message", code, mesg);
-    } : {
+    } catch (...) {
 	return internal_error();
     }
 
@@ -103,9 +103,9 @@ nomask int login(string str)
 
     if (previous_program() == LIB_CONN) {
 	::connection(previous_object());
-	catch {
+	try {
 	    code = call_limited("http_request", request);
-	} : {
+	} catch (...) {
 	    return internal_error();
 	}
 
@@ -145,9 +145,9 @@ nomask int receive_message(string str)
 	    }
 	    str = headers;
 	    headers = nil;
-	    catch {
+	    try {
 		code = call_limited("http_headers", str);
-	    } : {
+	    } catch (...) {
 		return internal_error();
 	    }
 

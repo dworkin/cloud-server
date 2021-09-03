@@ -39,12 +39,12 @@ void add_owner(string owner)
 
 	rlimits (-1; -1) {
 	    obj = clone_object(RSRCOBJ);
-	    catch {
+	    try {
 		owners[owner] = obj;
 		obj->init(owner, time = time());
 		owners["System"]->rsrc_incr("objects", 1, resources["objects"]);
 		olimits[owner] = ({ -1, -1, time });
-	    } : {
+	    } catch (...) {
 		destruct_object(obj);
 		error("Too many resource owners");
 	    }

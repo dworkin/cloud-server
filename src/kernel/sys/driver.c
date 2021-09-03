@@ -210,14 +210,15 @@ void compiling(string path)
 {
     if (previous_program() == AUTO) {
 	mapping tls;
-	string err, *mesg, *messages;
+	string *mesg, *messages;
 
 	tls = TLS();
 	if (path != AUTO && path != DRIVER && !find_object(AUTO)) {
 	    TLSVAR(tls, TLS_SOURCE) = ([ AUTO + ".c": AUTO + ".c" ]);
 	    TLSVAR(tls, TLS_INHERIT) = ({ AUTO });
-	    err = catch(compile_object(AUTO));
-	    if (err) {
+	    try {
+		compile_object(AUTO);
+	    } catch (err) {
 		mesg = ({ "c" + AUTO });
 		messages = TLSVAR(tls, TLS_PUT_ATOMIC);
 		if (messages) {
@@ -388,10 +389,10 @@ private void _initialize(mapping tls)
  */
 static void initialize()
 {
-    catch {
+    try {
 	_initialize(([ ]));
 	message("Initialization complete.\n\n");
-    } : {
+    } catch (...) {
 	message("Initialization failed.\n");
 	shutdown();
     }
@@ -599,7 +600,7 @@ static object inherit_program(string from, string path, int priv)
     obj = find_object(path);
     if (!obj) {
 	int *rsrc;
-	string err, *mesg, *messages;
+	string *mesg, *messages;
 
 	creator = creator(path);
 	rsrc = rsrcd->rsrc_get(creator, "objects");
@@ -609,9 +610,9 @@ static object inherit_program(string from, string path, int priv)
 
 	TLSVAR(tls, TLS_SOURCE) = ([ ]);
 	TLSVAR(tls, TLS_INHERIT) = ({ path });
-	err = catch(obj = (str) ?
-			   compile_object(path, str...) : compile_object(path));
-	if (err) {
+	try {
+	    obj = (str) ? compile_object(path, str...) : compile_object(path);
+	} catch (err) {
 	    mesg = ({ "c" + path });
 	    messages = TLSVAR(tls, TLS_PUT_ATOMIC);
 	    if (messages) {
@@ -913,7 +914,7 @@ static string runtime_error(string str, int caught, int ticks)
     } else if (ticks < 0 && sscanf(trace[caught - 1][TRACE_PROGNAME],
 				   "/kernel/%*s") != 0 &&
 	       trace[caught - 1][TRACE_FUNCTION] != "cmd_code") {
-	return TLSVAR(tls, TLS_ERROR) = str;
+	return str;
     }
 
     _runtime_error(tls, str, caught, ticks, trace, user);

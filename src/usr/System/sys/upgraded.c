@@ -277,7 +277,7 @@ private atomic string *recompile(string *sources, mapping *libs,
 				 object patchtool)
 {
     int i, j, sz, *issues;
-    string name, err, *objects;
+    string name, *objects;
     mapping failed, map;
 
     if (atom) {
@@ -306,8 +306,9 @@ private atomic string *recompile(string *sources, mapping *libs,
 	for (j = 0, sz = sizeof(objects); j < sz; j++) {
 	    /* recompile a leaf object */
 	    name = objects[j];
-	    err = catch(compile(name, map, patchtool));
-	    if (err) {
+	    try {
+		compile(name, map, patchtool);
+	    } catch (err) {
 		int index, k;
 		object user;
 
@@ -408,10 +409,10 @@ mixed upgrade(string owner, string *sources, int atom, object patchtool)
 	    /*
 	     * recompile leaf objects
 	     */
-	    catch {
+	    try {
 		return recompile(sources, map_values(libs), objects, deps, atom,
 				 patchtool);
-	    } : {
+	    } catch (...) {
 		object user;
 
 		list = retrieve_atomic_messages();

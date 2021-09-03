@@ -186,9 +186,9 @@ private int date2time(mixed *date)
 	    }
 	    str += date[i][1] + " ";
 	}
-	catch {
+	try {
 	    return new GMTime(str)->time();
-	} : {
+	} catch (...) {
 	    return 0;
 	}
     }
@@ -223,10 +223,10 @@ private int date2time(mixed *date)
 	year += (year < 70) ? 2000 : 1900;	/* hopefully obsolete in 2070 */
     }
 
-    catch {
+    try {
 	return new GMTime("Someday " + month + " " + day + " " + str + " " +
 			  year)->time();
-    } : {
+    } catch (...) {
 	return 0;
     }
 }

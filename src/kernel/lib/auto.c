@@ -188,7 +188,7 @@ private atomic object _compile(object driver, string path, string uid,
  */
 static object compile_object(string path, string source...)
 {
-    string uid, err;
+    string uid;
     object driver, obj;
     int lib, kernel;
 
@@ -218,8 +218,9 @@ static object compile_object(string path, string source...)
      * do the compiling
      */
     rlimits (-1; -1) {
-	err = catch(obj = _compile(driver, path, uid, source));
-	if (err) {
+	try {
+	    obj = _compile(driver, path, uid, source);
+	} catch (err) {
 	    driver->compile_failed(path, uid);
 	    error(err);
 	}
@@ -831,14 +832,16 @@ static int write_file(string path, string str, varargs int offset)
     }
 
     size = driver->file_size(path);
-    catch {
+    try {
 	rlimits (-1; -1) {
 	    result = ::write_file(path, str, offset);
 	    if (result != 0 && (size=driver->file_size(path) - size) != 0) {
 		rsrcd->rsrc_incr(fcreator, "fileblocks", size);
 	    }
 	}
-    } : error(TLSVAR(TLS(), TLS_ERROR));
+    } catch (err) {
+	error(err);
+    }
 
     return result;
 }
@@ -868,7 +871,7 @@ static int remove_file(string path)
     }
 
     size = driver->file_size(path);
-    catch {
+    try {
 	rlimits (-1; -1) {
 	    result = ::remove_file(path);
 	    if (result != 0 && size != 0) {
@@ -876,7 +879,9 @@ static int remove_file(string path)
 						"fileblocks", -size);
 	    }
 	}
-    } : error(TLSVAR(TLS(), TLS_ERROR));
+    } catch (err) {
+	error(err);
+    }
     return result;
 }
 
@@ -921,7 +926,7 @@ static int rename_file(string from, string to)
 	error("File quota exceeded");
     }
 
-    catch {
+    try {
 	rlimits (-1; -1) {
 	    result = ::rename_file(from, to);
 	    if (result != 0 && fcreator != tcreator) {
@@ -929,7 +934,9 @@ static int rename_file(string from, string to)
 		rsrcd->rsrc_incr(fcreator, "fileblocks", -size);
 	    }
 	}
-    } : error(TLSVAR(TLS(), TLS_ERROR));
+    } catch (err) {
+	error(err);
+    }
     return result;
 }
 
@@ -1052,14 +1059,16 @@ static int make_dir(string path)
 	error("File quota exceeded");
     }
 
-    catch {
+    try {
 	rlimits (-1; -1) {
 	    result = ::make_dir(path);
 	    if (result != 0) {
 		rsrcd->rsrc_incr(fcreator, "fileblocks", 1);
 	    }
 	}
-    } : error(TLSVAR(TLS(), TLS_ERROR));
+    } catch (err) {
+	error(err);
+    }
     return result;
 }
 
@@ -1087,7 +1096,7 @@ static int remove_dir(string path)
 	error("Access denied");
     }
 
-    catch {
+    try {
 	rlimits (-1; -1) {
 	    result = ::remove_dir(path);
 	    if (result != 0) {
@@ -1095,7 +1104,9 @@ static int remove_dir(string path)
 						"fileblocks", -1);
 	    }
 	}
-    } : error(TLSVAR(TLS(), TLS_ERROR));
+    } catch (err) {
+	error(err);
+    }
     return result;
 }
 
@@ -1155,14 +1166,16 @@ static void save_object(string path)
     }
 
     size = driver->file_size(path);
-    catch {
+    try {
 	rlimits (-1; -1) {
 	    ::save_object(path);
 	    if ((size=driver->file_size(path) - size) != 0) {
 		rsrcd->rsrc_incr(fcreator, "fileblocks", size);
 	    }
 	}
-    } : error(TLSVAR(TLS(), TLS_ERROR));
+    } catch (err) {
+	error(err);
+    }
 }
 
 /*
@@ -1180,7 +1193,7 @@ static string editor(varargs string cmd)
 	error("Permission denied");
     }
 
-    catch {
+    try {
 	rlimits (-1; -1) {
 	    rsrcd = ::find_object(RSRCD);
 	    if (!query_editor(this_object())) {
@@ -1200,7 +1213,9 @@ static string editor(varargs string cmd)
 				 driver->file_size(info[0]) - info[1]);
 	    }
 	}
-    } : error(TLSVAR(TLS(), TLS_ERROR));
+    } catch (err) {
+	error(err);
+    }
     return result;
 }
 

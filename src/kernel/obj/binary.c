@@ -85,9 +85,11 @@ void set_message_length(int len)
  */
 private void add_to_buffer(mapping tls, string str)
 {
-    catch {
+    try {
 	buffer += str;
-    } : error("Binary connection buffer overflow");
+    } catch (...) {
+	error("Binary connection buffer overflow");
+    }
 }
 
 /*

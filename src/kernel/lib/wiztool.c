@@ -345,15 +345,16 @@ static object new_object(mixed obj)
  */
 static mixed read_file(string path, varargs int offset, int size)
 {
-    string result, err;
+    string result;
 
     path = driver->normalize_path(path, directory, owner);
     if (!access(owner, path, READ_ACCESS)) {
 	message(path + ": Access denied.\n");
 	return -1;
     }
-    err = catch(result = ::read_file(path, offset, size));
-    if (err) {
+    try {
+	result = ::read_file(path, offset, size);
+    } catch (err) {
 	message(path + ": " + err + ".\n");
 	return -1;
     }
@@ -367,15 +368,15 @@ static mixed read_file(string path, varargs int offset, int size)
 static int write_file(string path, string str, varargs int offset)
 {
     int result;
-    string err;
 
     path = driver->normalize_path(path, directory, owner);
     if (!access(owner, path, WRITE_ACCESS)) {
 	message(path + ": Access denied.\n");
 	return -1;
     }
-    err = catch(result = ::write_file(path, str, offset));
-    if (err) {
+    try {
+	result = ::write_file(path, str, offset);
+    } catch (err) {
 	message(path + ": " + err + ".\n");
 	return -1;
     }
@@ -389,15 +390,15 @@ static int write_file(string path, string str, varargs int offset)
 static int remove_file(string path)
 {
     int result;
-    string err;
 
     path = driver->normalize_path(path, directory, owner);
     if (!access(owner, path, WRITE_ACCESS)) {
 	message(path + ": Access denied.\n");
 	return -1;
     }
-    err = catch(result = ::remove_file(path));
-    if (err) {
+    try {
+	result = ::remove_file(path);
+    } catch (err) {
 	message(path + ": " + err + ".\n");
 	return -1;
     }
@@ -411,7 +412,6 @@ static int remove_file(string path)
 static int rename_file(string from, string to)
 {
     int result;
-    string err;
 
     from = driver->normalize_path(from, directory, owner);
     if (!access(owner, from, WRITE_ACCESS)) {
@@ -423,8 +423,9 @@ static int rename_file(string from, string to)
 	message(to + ": Access denied.\n");
 	return -1;
     }
-    err = catch(result = ::rename_file(from, to));
-    if (err) {
+    try {
+	result = ::rename_file(from, to);
+    } catch (err) {
 	message(to + ": " + err + ".\n");
 	return -1;
     }
@@ -465,15 +466,15 @@ static mixed **get_dir(string path)
 static int make_dir(string path)
 {
     int result;
-    string err;
 
     path = driver->normalize_path(path, directory, owner);
     if (!access(owner, path, WRITE_ACCESS)) {
 	message(path + ": Access denied.\n");
 	return -1;
     }
-    err = catch(result = ::make_dir(path));
-    if (err) {
+    try {
+	result = ::make_dir(path);
+    } catch (err) {
 	message(path + ": " + err + ".\n");
 	return -1;
     }
@@ -487,15 +488,15 @@ static int make_dir(string path)
 static int remove_dir(string path)
 {
     int result;
-    string err;
 
     path = driver->normalize_path(path, directory, owner);
     if (!access(owner, path, WRITE_ACCESS)) {
 	message(path + ": Access denied.\n");
 	return -1;
     }
-    err = catch(result = ::remove_dir(path));
-    if (err) {
+    try {
+	result = ::remove_dir(path);
+    } catch (err) {
 	message(path + ": " + err + ".\n");
 	return -1;
     }
@@ -935,12 +936,12 @@ static void cmd_code(object user, string cmd, string str)
 	  "mixed exec(object user, mixed argv...) {\n" +
 	  "    mixed a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z;\n\n" +
 	  "    " + parsed[0] + "\n}\n";
-    str = catch(obj = compile_object(name, str),
-		result = obj->exec(user, parsed[1 ..]...));
-    if (str) {
-	message("Error: " + str + ".\n");
-    } else {
+    try {
+	obj = compile_object(name, str);
+	result = obj->exec(user, parsed[1 ..]...);
 	store(result);
+    } catch (err) {
+	message("Error: " + err + ".\n");
     }
 
     if (obj) {
@@ -1051,11 +1052,13 @@ static void cmd_clone(object user, string cmd, string str)
     } else if (status(str, O_INDEX) == nil) {
 	message("No such object.\n");
     } else {
-	str = catch(obj = clone_object(str));
-	if (str) {
-	    message(str + ".\n");
-	} else if (obj) {
-	    store(obj);
+	try {
+	    obj = clone_object(str);
+	    if (obj) {
+		store(obj);
+	    }
+	} catch (err) {
+	    message(err + ".\n");
 	}
     }
 }
@@ -1067,7 +1070,6 @@ static void cmd_clone(object user, string cmd, string str)
 static void cmd_destruct(object user, string cmd, string str)
 {
     mixed obj;
-    int flag;
 
     obj = parse_obj(str);
     switch (typeof(obj)) {
@@ -1077,11 +1079,12 @@ static void cmd_destruct(object user, string cmd, string str)
 	return;
     }
 
-    str = catch(flag = destruct_object(obj));
-    if (str) {
-	message(str + ".\n");
-    } else if (flag == 0) {
-	message("No such object.\n");
+    try {
+	if (destruct_object(obj) == 0) {
+	    message("No such object.\n");
+	}
+    } catch (err) {
+	message(err + ".\n");
     }
 }
 
@@ -1119,11 +1122,13 @@ static void cmd_new(object user, string cmd, string str)
 	if (num != -1) {
 	    obj = str;
 	}
-	str = catch(obj = new_object(obj));
-	if (str) {
-	    message(str + ".\n");
-	} else if (obj) {
-	    store(obj);
+	try {
+	    obj = new_object(obj);
+	    if (obj) {
+		store(obj);
+	    }
+	} catch (err) {
+	    message(err + ".\n");
 	}
     }
 }
@@ -1840,9 +1845,10 @@ static void cmd_quota(object user, string cmd, string str)
 		return;
 	    }
 
-	    str = catch(rsrc_set_limit(who, rsrc, limit));
-	    if (str) {
-		message(str + ".\n");
+	    try {
+		rsrc_set_limit(who, rsrc, limit);
+	    } catch (err) {
+		message(err + ".\n");
 	    }
 	}
 	return;
@@ -1896,9 +1902,10 @@ static void cmd_rsrc(object user, string cmd, string str)
 	}
 
 	rsrc = query_rsrc(name);
-	str = catch(set_rsrc(name, limit, rsrc[RSRC_DECAY], rsrc[RSRC_PERIOD]));
-	if (str) {
-	    message(str + ".\n");
+	try {
+	    set_rsrc(name, limit, rsrc[RSRC_DECAY], rsrc[RSRC_PERIOD]);
+	} catch (err) {
+	    message(err + ".\n");
 	}
     } else {
 	if (sizeof(query_resources() & ({ str })) == 0) {
@@ -2094,20 +2101,19 @@ static void cmd_status(object user, string cmd, string str)
 	    obj = driver->normalize_path(str, directory, owner);
 	}
 
-	str = catch(status = status(obj));
-	if (str) {
-	    str += ".\n";
-	} else if (!status) {
-	    str = "No such object.\n";
-	} else {
-	    if (typeof(obj) == T_OBJECT) {
-		obj = object_name(obj);
-	    }
-	    str = driver->creator(obj);
-	    if (!str) {
-		str = "Ecru";
-	    }
-	    str = "Object:      <" + obj + ">" +
+	try {
+	    status = status(obj);
+	    if (!status) {
+		str = "No such object.\n";
+	    } else {
+		if (typeof(obj) == T_OBJECT) {
+		    obj = object_name(obj);
+		}
+		str = driver->creator(obj);
+		if (!str) {
+		    str = "Ecru";
+		}
+		str = "Object:      <" + obj + ">" +
 "\nCompiled at: " + ctime(status[O_COMPILETIME])[4 ..] +
   "    Program size: " + (int) status[O_PROGSIZE] +
 "\nCreator:     " + (str + SPACE16)[.. 16] +
@@ -2118,6 +2124,9 @@ static void cmd_status(object user, string cmd, string str)
   "       Callouts:     " + sizeof(status[O_CALLOUTS]) +
 "\nMaster ID:   " + ((int) status[O_INDEX] + SPACE16)[.. 16] +
   "       Sectors:      " + (int) status[O_NSECTORS] + "\n";
+	    }
+	} catch (err) {
+	    str = err + ".\n";
 	}
     }
 

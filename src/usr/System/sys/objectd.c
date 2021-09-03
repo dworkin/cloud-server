@@ -535,9 +535,11 @@ void compile(string owner, string path, mapping source, string inherits...)
 	    inherits = ({ AUTO });
 	}
 
-	catch {
+	try {
 	    register_object(owner, path, includes, inherits);
-	} : error("Out of space for object \"" + path + "\"");
+	} catch (...) {
+	    error("Out of space for object \"" + path + "\"");
+	}
     }
 }
 
