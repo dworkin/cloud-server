@@ -38,7 +38,7 @@
 # define LPCStmtFor		object "/usr/LPC/api/lib/code/for"
 # define LPCStmtDoWhile		object "/usr/LPC/api/lib/code/dowhile"
 # define LPCStmtSwitch		object "/usr/LPC/api/lib/code/switch"
-# define LPCStmtCatch		object "/usr/LPC/api/lib/code/catch"
+# define LPCStmtTryCatch	object "/usr/LPC/api/lib/code/trycatch"
 # define LPCStmtRlimits		object "/usr/LPC/api/lib/code/rlimits"
 # define LPCEntryStmt		object "/usr/LPC/api/lib/code/entry_stmt"
 

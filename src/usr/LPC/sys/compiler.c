@@ -119,6 +119,8 @@ ListDcltr: Dcltr							\
 ListDcltr: ListDcltr ',' Dcltr						\
 Locals: ListLocal					? list		\
 ListLocal:								\
+Exception: ident							\
+Exception: '...'							\
 ListLocal: ListLocal DataDecl						\
 ListStmt:								\
 ListStmt: ListStmt Stmt					? listStmt	" +
@@ -136,6 +138,8 @@ EStmt: 'for' '(' OptListExp ';' OptListExp ';' OptListExp ')' Stmt	\
 							? forStmt	\
 EStmt: 'rlimits' '(' ListExp ';' ListExp ')' CompoundStmt		\
 							? rlimitsStmt	\
+EStmt: 'try' CompoundStmt 'catch' '(' Exception ')' CompoundStmt	\
+							? tryCatchStmt	\
 EStmt: 'catch' CompoundStmt ':' Stmt			? catchErrStmt	\
 EStmt: 'catch' CompoundStmt				? catchStmt	" +
 "\
@@ -1008,11 +1012,19 @@ static mixed *rlimitsStmt(mixed *parsed)
 }
 
 /*
+ * ({ "try", LPCBlockStmt, "catch", "(", "...", ")", LPCBlockStmt })
+ */
+static mixed *tryCatchStmt(mixed *parsed)
+{
+    return ({ new LPCStmtTryCatch(parsed[1], parsed[4], parsed[6]) });
+}
+
+/*
  * ({ "catch", LPCBlockStmt, ":", LPCStatement })
  */
 static mixed *catchErrStmt(mixed *parsed)
 {
-    return ({ new LPCStmtCatch(parsed[1], parsed[3]) });
+    return ({ new LPCStmtTryCatch(parsed[1], "...", parsed[3]) });
 }
 
 /*
@@ -1020,7 +1032,7 @@ static mixed *catchErrStmt(mixed *parsed)
  */
 static mixed *catchStmt(mixed *parsed)
 {
-    return ({ new LPCStmtCatch(parsed[1], nil) });
+    return ({ new LPCStmtTryCatch(parsed[1], "...", nil) });
 }
 
 /*

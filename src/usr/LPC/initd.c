@@ -30,6 +30,7 @@ static void create()
     compile_object(OBJECT_PATH(LPCStmtRlimits));
     compile_object(OBJECT_PATH(LPCStmtExp));
     compile_object(OBJECT_PATH(LPCStmtSwitch));
+    compile_object(OBJECT_PATH(LPCStmtTryCatch));
     compile_object(OBJECT_PATH(LPCEntryStmt));
     compile_object(OBJECT_PATH(LPCCase));
     compile_object(OBJECT_PATH(LPCCaseRange));
