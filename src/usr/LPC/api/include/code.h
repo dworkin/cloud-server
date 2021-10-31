@@ -18,6 +18,13 @@
 # define LPCExpVar		object "/usr/LPC/api/lib/code/exp_var"
 # define LPCExpGlobalVar	object "/usr/LPC/api/lib/code/exp_global"
 
+/* entry points */
+# define LPCEntry		object "/usr/LPC/api/lib/code/entry"
+# define LPCLabel		object "/usr/LPC/api/lib/code/label"
+# define LPCCase		object "/usr/LPC/api/lib/code/case"
+# define LPCCaseRange		object "/usr/LPC/api/lib/code/case_range"
+# define LPCDefault		object "/usr/LPC/api/lib/code/default"
+
 /* statements */
 # define LPCStatement		object "/usr/LPC/api/lib/code/statement"
 # define LPCStmtExp		object "/usr/LPC/api/lib/code/stmt_exp"
@@ -25,10 +32,6 @@
 # define LPCStmtContinue	object "/usr/LPC/api/lib/code/continue"
 # define LPCStmtReturn		object "/usr/LPC/api/lib/code/return"
 # define LPCStmtReturnExp	object "/usr/LPC/api/lib/code/return_exp"
-# define LPCStmtCase		object "/usr/LPC/api/lib/code/stmt_case"
-# define LPCStmtCaseRange	object "/usr/LPC/api/lib/code/stmt_case_range"
-# define LPCStmtDefault		object "/usr/LPC/api/lib/code/stmt_default"
-# define LPCStmtLabel		object "/usr/LPC/api/lib/code/stmt_label"
 # define LPCStmtGoto		object "/usr/LPC/api/lib/code/goto"
 # define LPCStmtBlock		object "/usr/LPC/api/lib/code/block"
 # define LPCStmtCond		object "/usr/LPC/api/lib/code/conditional"
@@ -37,6 +40,7 @@
 # define LPCStmtSwitch		object "/usr/LPC/api/lib/code/switch"
 # define LPCStmtCatch		object "/usr/LPC/api/lib/code/catch"
 # define LPCStmtRlimits		object "/usr/LPC/api/lib/code/rlimits"
+# define LPCEntryStmt		object "/usr/LPC/api/lib/code/entry_stmt"
 
 /* declarations */
 # define LPCDeclaration		object "/usr/LPC/api/lib/code/declaration"

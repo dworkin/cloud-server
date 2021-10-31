@@ -125,29 +125,33 @@ ListStmt: ListStmt Stmt					? listStmt	" +
 "\
 OptElse: 'else' Stmt					? parsed_1_	\
 OptElse:						? opt		\
-Stmt: ListExp ';'					? expStmt	\
-Stmt: CompoundStmt							\
-Stmt: 'if' '(' ListExp ')' Stmt OptElse			? ifStmt	\
-Stmt: 'do' Stmt 'while' '(' ListExp ')' ';'		? doWhileStmt	\
-Stmt: 'while' '(' ListExp ')' Stmt			? whileStmt	\
-Stmt: 'for' '(' OptListExp ';' OptListExp ';' OptListExp ')' Stmt	\
+Stmt: EStmt								\
+Stmt: Entries EStmt					? entryStmt	\
+EStmt: ListExp ';'					? expStmt	\
+EStmt: CompoundStmt							\
+EStmt: 'if' '(' ListExp ')' Stmt OptElse		? ifStmt	\
+EStmt: 'do' Stmt 'while' '(' ListExp ')' ';'		? doWhileStmt	\
+EStmt: 'while' '(' ListExp ')' Stmt			? whileStmt	\
+EStmt: 'for' '(' OptListExp ';' OptListExp ';' OptListExp ')' Stmt	\
 							? forStmt	\
-Stmt: 'rlimits' '(' ListExp ';' ListExp ')' CompoundStmt		\
+EStmt: 'rlimits' '(' ListExp ';' ListExp ')' CompoundStmt		\
 							? rlimitsStmt	\
-Stmt: 'catch' CompoundStmt ':' Stmt			? catchErrStmt	\
-Stmt: 'catch' CompoundStmt				? catchStmt	" +
+EStmt: 'catch' CompoundStmt ':' Stmt			? catchErrStmt	\
+EStmt: 'catch' CompoundStmt				? catchStmt	" +
 "\
-Stmt: 'switch' '(' ListExp ')' CompoundStmt		? switchStmt	\
-Stmt: 'case' Exp ':' Stmt				? caseStmt	\
-Stmt: 'case' Exp '..' Exp ':' Stmt			? caseRangeStmt	\
-Stmt: 'default' ':' Stmt				? defaultStmt	\
-Stmt: ident ':' Stmt					? labelStmt	\
-Stmt: 'goto' ident ';'					? gotoStmt	\
-Stmt: 'break' ';'					? breakStmt	\
-Stmt: 'continue' ';'					? continueStmt	\
-Stmt: 'return' ListExp ';'				? returnExpStmt	\
-Stmt: 'return' ';'					? returnStmt	\
-Stmt: ';'						? emptyStmt	\
+EStmt: 'switch' '(' ListExp ')' CompoundStmt		? switchStmt	\
+EStmt: 'goto' ident ';'					? gotoStmt	\
+EStmt: 'break' ';'					? breakStmt	\
+EStmt: 'continue' ';'					? continueStmt	\
+EStmt: 'return' ListExp ';'				? returnExpStmt	\
+EStmt: 'return' ';'					? returnStmt	\
+EStmt: ';'						? emptyStmt	\
+Entries: Entry								\
+Entries: Entries Entry							\
+Entry: 'case' Exp ':'					? caseEntry	\
+Entry: 'case' Exp '..' Exp ':'				? rangeEntry	\
+Entry: 'default' ':'					? defaultEntry	\
+Entry: ident ':'					? labelEntry	\
 CompoundStmt: '{' Locals ListStmt '}'			? compoundStmt	" +
 "\
 FunctionCall: FunctionName						\
@@ -1028,35 +1032,46 @@ static mixed *switchStmt(mixed *parsed)
 }
 
 /*
- * ({ "case", LPCExpression, ":", LPCStatement })
+ * ({ LPCEntry, LPCEntry, ... LPCEntry, LPCStatement })
  */
-static mixed *caseStmt(mixed *parsed)
+static mixed *entryStmt(mixed *parsed)
 {
-    return ({ new LPCStmtCase(parsed[1], parsed[3]) });
+    int size;
+
+    size = sizeof(parsed);
+    return ({ new LPCEntryStmt(parsed[.. size - 2], parsed[size - 1]) });
 }
 
 /*
- * ({ "case", LPCExpression, "..", LPCExpression, ":", LPCStatement })
+ * ({ "case", LPCExpression, ":" })
  */
-static mixed *caseRangeStmt(mixed *parsed)
+static mixed *caseEntry(mixed *parsed)
 {
-    return ({ new LPCStmtCaseRange(parsed[1], parsed[3], parsed[5]) });
+    return ({ new LPCCase(parsed[1]) });
 }
 
 /*
- * ({ "default", ":", LPCStatement })
+ * ({ "case", LPCExpression, "..", LPCExpression, ":" })
  */
-static mixed *defaultStmt(mixed *parsed)
+static mixed *caseRangeEntry(mixed *parsed)
 {
-    return ({ new LPCStmtDefault(parsed[2]) });
+    return ({ new LPCCaseRange(parsed[1], parsed[3]) });
 }
 
 /*
- * ({ "label", ":", LPCStatement })
+ * ({ "default", ":" })
  */
-static mixed *labelStmt(mixed *parsed)
+static mixed *defaultEntry(mixed *parsed)
 {
-    return ({ new LPCStmtLabel(parsed[0], parsed[2]) });
+    return ({ new LPCDefault() });
+}
+
+/*
+ * ({ "label", ":" })
+ */
+static mixed *labelEntry(mixed *parsed)
+{
+    return ({ new LPCLabel(parsed[0]) });
 }
 
 /*
