@@ -1752,6 +1752,28 @@ static string ralign(mixed num, int width)
 }
 
 /*
+ * NAME:	ntoa()
+ * DESCRIPTION:	convert a positive integer (or float) to a string
+ */
+static string ntoa(mixed n, int digits)
+{
+    float num;
+    int exponent;
+
+    num = (float) n;
+    if (num < pow(10.0, (float) digits)) {
+	return ralign((int) num, digits);
+    }
+
+    exponent = (int) floor(log10(num)) - digits + 3;
+    if (exponent >= 10) {
+	exponent++;
+    }
+    num = floor(num / pow(10.0, (float) exponent) + 0.5);
+    return ralign(num + "e" + exponent, digits);
+}
+
+/*
  * NAME:	list_resources()
  * DESCRIPTION:	create a listing of resource usage, limits etc
  */
@@ -1763,8 +1785,8 @@ static string list_resources(string name, string *names, mixed *resources)
 
     for (i = sizeof(names); --i >= 0; ) {
 	rsrc = resources[i];
-	str = (names[i] + SPACE16)[.. 15] + ralign(rsrc[RSRC_USAGE], 14) +
-	      ralign(rsrc[RSRC_MAX], 13);
+	str = (names[i] + SPACE16)[.. 15] + " " + ntoa(rsrc[RSRC_USAGE], 13) +
+	      " " + ntoa(rsrc[RSRC_MAX], 12);
 	if ((int) rsrc[RSRC_DECAY] != 0) {
 	    str += ralign(rsrc[RSRC_DECAY], 6) + "%";
 	}
@@ -1973,28 +1995,6 @@ static string swapavg(int num, int div)
 }
 
 /*
- * NAME:	ntoa()
- * DESCRIPTION:	convert a positive integer (or float) to a string
- */
-static string ntoa(mixed n)
-{
-    float num;
-    int exponent;
-
-    num = (float) n;
-    if (num < 1e9) {
-	return ralign((int) num, 9);
-    }
-
-    exponent = (int) floor(log10(num)) - 6;
-    if (exponent >= 10) {
-	exponent++;
-    }
-    num = floor(num / pow(10.0, (float) exponent) + 0.5);
-    return ralign(num + "e" + exponent, 9);
-}
-
-/*
  * NAME:	percentage()
  * DESCRIPTION:	show a percentage
  */
@@ -2024,8 +2024,8 @@ static void cmd_status(object user, string cmd, string str)
 "                                          Server:       " +
   (string) status[ST_VERSION] + "\n" +
 "------------ Swap device -------------\n" +
-"sectors:  " + ntoa(status[ST_SWAPUSED]) + " / " +
-	       ntoa(status[ST_SWAPSIZE]) + " " +
+"sectors:  " + ntoa(status[ST_SWAPUSED], 9) + " / " +
+	       ntoa(status[ST_SWAPSIZE], 9) + " " +
   percentage(status[ST_SWAPUSED], status(ST_SWAPSIZE)) +
   "    Start time:   " + ctime(status[ST_STARTTIME])[4 ..] + "\n" +
 "sector size:   " + (((float) status[ST_SECTORSIZE] / 1024.0) + "K" +
@@ -2055,27 +2055,27 @@ static void cmd_status(object user, string cmd, string str)
 "--------------- Memory ---------------" +
   "    ------------ Callouts ------------\n" +
 "static:   " +
-  ntoa(status[ST_SMEMUSED]) + " / " + ntoa(status[ST_SMEMSIZE]) + " " +
+  ntoa(status[ST_SMEMUSED], 9) + " / " + ntoa(status[ST_SMEMSIZE], 9) + " " +
   percentage(status[ST_SMEMUSED], status[ST_SMEMSIZE]) +
-  "    short: " + ntoa(short) + "            " +
+  "    short: " + ntoa(short, 9) + "            " +
   percentage(short, short + long) + "\n" +
-"dynamic:  " + ntoa(status[ST_DMEMUSED]) + " / " +
-	       ntoa(status[ST_DMEMSIZE]) + " " +
+"dynamic:  " + ntoa(status[ST_DMEMUSED], 9) + " / " +
+	       ntoa(status[ST_DMEMSIZE], 9) + " " +
   percentage(status[ST_DMEMUSED], status[ST_DMEMSIZE]) +
-  " +  other: " + ntoa(long) + "            " +
+  " +  other: " + ntoa(long, 9) + "            " +
   percentage(long, short + long) + " +\n" +
 "          " +
-  ntoa((float) status[ST_SMEMUSED] + (float) status[ST_DMEMUSED]) + " / " +
-  ntoa((float) status[ST_SMEMSIZE] + (float) status[ST_DMEMSIZE]) + " " +
+  ntoa((float) status[ST_SMEMUSED] + (float) status[ST_DMEMUSED], 9) + " / " +
+  ntoa((float) status[ST_SMEMSIZE] + (float) status[ST_DMEMSIZE], 9) + " " +
   percentage((float) status[ST_SMEMUSED] + (float) status[ST_DMEMUSED],
 	     (float) status[ST_SMEMSIZE] + (float) status[ST_DMEMSIZE]) +
   "           " +
-  ntoa(short + long) + " /" + ntoa(status[ST_COTABSIZE]) + " " +
+  ntoa(short + long, 9) + " /" + ntoa(status[ST_COTABSIZE], 9) + " " +
   percentage(short + long, status[ST_COTABSIZE]) + "\n\n" +
 "Objects:  " +
-  ntoa(status[ST_NOBJECTS]) + " / " + ntoa(status[ST_OTABSIZE]) + " " +
+  ntoa(status[ST_NOBJECTS], 9) + " / " + ntoa(status[ST_OTABSIZE], 9) + " " +
   percentage(status[ST_NOBJECTS], status[ST_OTABSIZE]) +
-  "    Users: " + ntoa(i) + " /" + ntoa(status[ST_UTABSIZE]) + " " +
+  "    Users: " + ntoa(i, 9) + " /" + ntoa(status[ST_UTABSIZE], 9) + " " +
   percentage(i, status[ST_UTABSIZE]) + "\n\n";
     } else {
 	i = -1;
