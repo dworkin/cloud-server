@@ -18,8 +18,7 @@ static void create()
     resources = ([
       "objects" :	({ -1,  0,    0 }),
       "stack" :		({ -1,  0,    0 }),
-      "ticks" :		({ -1,  0,    0 }),
-      "tick usage" :	({ -1, 10, 3600 }),
+      "ticks" :		({ -1, 10, 3600 }),
       "fileblocks" :	({ -1,  0,    0 }),
     ]);
 
@@ -250,7 +249,7 @@ void rsrc_incr(string owner, string name, int incr)
 mixed *call_limits(mixed *previous, string owner, int stack, int ticks)
 {
     if (previous_program() == AUTO) {
-	int maxstack, maxticks, time, *limits;
+	int maxstack, maxticks, time, *limits, *rsrc;
 
 	limits = olimits[owner];
 
@@ -267,16 +266,14 @@ mixed *call_limits(mixed *previous, string owner, int stack, int ticks)
 	}
 
 	/* determine available ticks */
+	rsrc = resources["ticks"];
 	maxticks = limits[LIM_MAX_TICKS];
 	if (maxticks < 0) {
-	    maxticks = resources["ticks"][GRSRC_MAX];
+	    maxticks = rsrc[GRSRC_MAX];
 	} else {
-	    int *usage;
-
-	    usage = resources["tick usage"];
-	    if ((time=time()) - limits[LIM_MAX_TIME] >= usage[GRSRC_PERIOD]) {
+	    if ((time=time()) - limits[LIM_MAX_TIME] >= rsrc[GRSRC_PERIOD]) {
 		/* decay ticks */
-		owners[owner]->decay_ticks(limits, time, usage);
+		owners[owner]->decay_ticks(limits, time, rsrc);
 		maxticks = limits[LIM_MAX_TICKS];
 	    }
 	}
@@ -316,8 +313,7 @@ int update_ticks(mixed *limits, int ticks)
 	    if (ticks < 0) {
 		return -1;
 	    }
-	    owners[limits[LIM_OWNER]]->update_ticks(ticks,
-						    resources["tick usage"]);
+	    owners[limits[LIM_OWNER]]->update_ticks(ticks, resources["ticks"]);
 	    ticks = (limits[LIM_NEXT] && limits[LIM_TICKS] >= 0) ?
 		     limits[LIM_NEXT][LIM_MAXTICKS] -= ticks : -1;
 	}

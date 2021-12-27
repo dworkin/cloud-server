@@ -20,8 +20,7 @@ static void create()
 {
     resources = ([
       "stack" :		({   0, -1, 0 }),
-      "ticks" :		({   0, -1, 0 }),
-      "tick usage" :	({ 0.0, -1, 0 })
+      "ticks" :		({ 0.0, -1, 0 })
     ]);
     maxticks = -1;
     rsrcd = find_object(RSRCD);
@@ -35,7 +34,7 @@ void init(string name, int time)
 {
     if (previous_object() == rsrcd) {
 	owner = name;
-	resources["tick usage"][RSRC_DECAYTIME] = time;
+	resources["ticks"][RSRC_DECAYTIME] = time;
     }
 }
 
@@ -111,9 +110,9 @@ void rsrc_set_limit(string name, int max, int decay)
 
 	if ((rsrc=resources[name])) {
 	    rsrc[RSRC_MAX] = max;
-	    if (name == "stack" || name == "ticks" || name == "tick usage") {
+	    if (name == "stack" || name == "ticks") {
 		rlimits (-1; -1) {
-		    set_rlimits(resources["tick usage"], TRUE);
+		    set_rlimits(resources["ticks"], TRUE);
 		}
 	    }
 	} else {
@@ -144,7 +143,7 @@ mixed *rsrc_get(string name, int *grsrc)
 		rlimits (-1; -1) {
 		    /* decay resource */
 		    decay_rsrc(rsrc, grsrc, time);
-		    if (name == "tick usage") {
+		    if (name == "ticks") {
 			set_rlimits(rsrc, TRUE);
 		    }
 		}
@@ -221,7 +220,7 @@ static void delayed_incr(mapping map)
 	    }
 	    rsrc[RSRC_USAGE] += incr;
 
-	    if (name == "tick usage") {
+	    if (name == "ticks") {
 		set_rlimits(rsrc, time == 0);
 	    }
 	} else {
@@ -244,7 +243,7 @@ void decay_ticks(int *limits, int time, mixed *grsrc)
 	mixed *rsrc;
 
 	rlimits (-1; -1) {
-	    rsrc = resources["tick usage"];
+	    rsrc = resources["ticks"];
 	    decay_rsrc(rsrc, grsrc, time);
 	    maxticks = rsrc[RSRC_MAX];
 	    maxticks = (maxticks < 0 || rsrc[RSRC_USAGE] < (float) maxticks) ?
@@ -275,7 +274,7 @@ static void incr_ticks(int ticks, int *grsrc)
     mixed *rsrc;
     int time, max;
 
-    rsrc = resources["tick usage"];
+    rsrc = resources["ticks"];
     time = time();
     if (time - (int) rsrc[RSRC_DECAYTIME] >= grsrc[GRSRC_PERIOD]) {
 	/* decay resource */
