@@ -599,14 +599,7 @@ static object inherit_program(string from, string path, int priv)
     tls = TLS();
     obj = find_object(path);
     if (!obj) {
-	int *rsrc;
 	string *mesg, *messages;
-
-	creator = creator(path);
-	rsrc = rsrcd->rsrc_get(creator, "objects");
-	if (rsrc[RSRC_USAGE] >= rsrc[RSRC_MAX] && rsrc[RSRC_MAX] >= 0) {
-	    error("Too many objects");
-	}
 
 	TLSVAR(tls, TLS_SOURCE) = ([ ]);
 	TLSVAR(tls, TLS_INHERIT) = ({ path });
@@ -623,6 +616,7 @@ static object inherit_program(string from, string path, int priv)
 	    TLSVAR(tls, TLS_PUT_ATOMIC) = messages;
 	    error(err);
 	}
+	creator = creator(path);
 	rsrcd->rsrc_incr(creator, "objects", 1);
 	if (objectd) {
 	    TLSVAR(tls, TLS_SOURCE)[path + ".c"] = (str) ? str : path + ".c";
