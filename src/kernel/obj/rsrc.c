@@ -86,8 +86,6 @@ private void set_rlimits(mixed *rsrc, int update)
     int max;
 
     max = rsrc[RSRC_MAX];
-    max = (max < 0 || rsrc[RSRC_USAGE] < (float) max) ?
-	   resources["ticks"][RSRC_MAX] : 1;
     if (update || maxticks != max) {
 	maxticks = max;
 	rsrcd->set_rlimits(owner,
@@ -245,10 +243,7 @@ void decay_ticks(int *limits, int time, mixed *grsrc)
 	rlimits (-1; -1) {
 	    rsrc = resources["ticks"];
 	    decay_rsrc(rsrc, grsrc, time);
-	    maxticks = rsrc[RSRC_MAX];
-	    maxticks = (maxticks < 0 || rsrc[RSRC_USAGE] < (float) maxticks) ?
-			resources["ticks"][RSRC_MAX] : 1;
-	    limits[LIM_MAX_TICKS] = maxticks;
+	    limits[LIM_MAX_TICKS] = maxticks = rsrc[RSRC_MAX];
 	    limits[LIM_MAX_TIME] = rsrc[RSRC_DECAYTIME];
 	}
     }
