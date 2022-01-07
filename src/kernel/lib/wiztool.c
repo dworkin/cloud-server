@@ -1762,7 +1762,7 @@ static string ntoa(mixed n, int digits)
 
     num = (float) n;
     if (num < pow(10.0, (float) digits)) {
-	return ralign((int) num, digits);
+	return ralign(floor(num + 0.5), digits);
     }
 
     exponent = (int) floor(log10(num)) - digits + 3;
