@@ -288,7 +288,7 @@ static int destruct_object(mixed obj)
     case T_STRING:
 	path = obj = driver->normalize_path(obj, directory, owner);
 	lib = sscanf(path, "%*s/lib/");
-	if (lib) {
+	if (lib || sscanf(path, "%*s#") == 0) {
 	    oowner = driver->creator(path);
 	} else {
 	    obj = ::find_object(path);
@@ -301,7 +301,8 @@ static int destruct_object(mixed obj)
 
     case T_OBJECT:
 	path = object_name(obj);
-	oowner = obj->query_owner();
+	oowner = (sscanf(path, "%*s#") == 0) ?
+		  driver->creator(path) : obj->query_owner();
 	break;
     }
 
@@ -2118,9 +2119,9 @@ static void cmd_status(object user, string cmd, string str)
   "    Program size: " + (int) status[O_PROGSIZE] +
 "\nCreator:     " + (str + SPACE16)[.. 16] +
   "       Variables:    " + (int) status[O_DATASIZE] +
-"\nOwner:       " + (((obj=find_object(obj)) ?
-		     (obj=obj->query_owner()) ? obj : "Ecru" :
-		     str) + SPACE16)[.. 16] +
+"\nOwner:       " + (((sscanf(obj, "%*s#") != 0) ?
+		       (obj=find_object(obj)->query_owner()) ? obj : "Ecru" :
+		       str) + SPACE16)[.. 16] +
   "       Callouts:     " + sizeof(status[O_CALLOUTS]) +
 "\nMaster ID:   " + ((int) status[O_INDEX] + SPACE16)[.. 16] +
   "       Sectors:      " + (int) status[O_NSECTORS] + "\n";
