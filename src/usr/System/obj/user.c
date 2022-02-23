@@ -140,7 +140,7 @@ static void cmd_issues(object user, string cmd, string str)
 		str = implode(issues, ", ");
 	    }
 	}
-	message(indent_string(file + ": ", str));
+	message(file + ": " + str + "\n");
     }
 }
 
@@ -176,14 +176,14 @@ static void cmd_upgrade(object user, string cmd, string str)
 	    if (!atom || sizeof(result) == 0) {
 		sources -= ({ nil });
 		if (sizeof(sources) != 0) {
-		    message("Successfully upgraded:\n" +
-			    break_string(implode(sources, ", "), 0, 2));
+		    message("Successfully upgraded:\n" + implode(sources, ", ") +
+			    "\n");
 		}
 	    }
 
 	    if (sizeof(result) != 0) {
-		message("Errors occured compiling:\n" +
-			break_string(implode(result, ".c, ") + ".c", 0, 2));
+		message("Errors occured compiling:\n" + implode(result, ".c, ") +
+			".c\n");
 	    }
 	}
     }
