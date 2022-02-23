@@ -4,58 +4,32 @@
 mixed *request(string str)
 {
     return parse_string("\
-sp = /[ \t]+/								\
 version = /HTTP\\/[0-9]+\\.[0-9]+/					\
 method = /[^\x00-\x20\x7f-\xff:/?%]+/					\
-scheme_host = /[A-Za-z][-+.A-Za-z0-9]*:(\\/\\/[^\x00-\x20\x7f-\xff/?%]*)?/ \
+scheme_host = /[A-Za-z][-+.A-Za-z0-9]*:\\/\\/[^\x00-\x20\x7f-\xff/?%]*/	\
+scheme_path = /[A-Za-z][-+.A-Za-z0-9]*:([^\x00-\x20\x7f-\xff/?%]|%[0-9A-Fa-f][0-9A-Fa-f])*/ \
 path = /[/?]([^\x00-\x20\x7f-\xff%]|%[0-9A-Fa-f][0-9A-Fa-f])*/		\
 junk = /./								\
 \
-Request:	WS 'GET' sp RequestURI WS		? simpleQ	\
-Request:	WS Method sp RequestURI sp version WS	? fullQ		\
-\
-WS:									\
-WS:		sp					? null		\
+Request:	'GET' ' ' RequestURI 			? simpleQ	\
+Request:	Method ' ' RequestURI ' ' version	? fullQ		\
 \
 Method:		'GET'							\
 Method:		'*'							\
 Method:		method							\
 \
-RequestURI:	SchemeHost Path				? schemeHostPath \
-RequestURI:	Path					? nullScheme	\
-RequestURI:	SchemeHost				? nullPath	\
+RequestURI:	scheme_host path			? schemeHostPath \
+RequestURI:	scheme_host				? schemeHost	\
+RequestURI:	scheme_path				? schemePath	\
+RequestURI:	scheme_path path			? schemePathPath \
+RequestURI:	path					? path		\
 RequestURI:	'*'					? star		\
-\
-SchemeHost:	scheme_host				? schemeHost	\
-\
-Path:		path					? path		\
 ",
 			str);
 }
 
-# define HEX	("\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09......." +	\
-		 "\x0A\x0B\x0C\x0D\x0E\x0F.........................." +	\
-		 "\x0a\x0b\x0c\x0d\x0e\x0f")
-
 /*
- * decode escape sequences
- */
-private string decode(string str)
-{
-    string result, char, head;
-    int c1, c2;
-
-    result = "";
-    char = ".";
-    while (sscanf(str, "%s%%%c%c%s", head, c1, c2, str) != 0) {
-	char[0] = (HEX[c1 - '0'] << 4) + HEX[c2 - '0'];
-	result += head + char;
-    }
-    return result + str;
-}
-
-/*
- * HTTP/0.9 query request
+ * HTTP/0.9 request
  */
 static mixed *simpleQ(mixed *parsed)
 {
@@ -63,83 +37,90 @@ static mixed *simpleQ(mixed *parsed)
 }
 
 /*
- * HTTP/1.x query request
+ * HTTP/1.x request
  */
 static mixed *fullQ(mixed *parsed)
 {
-    int size;
     float version;
 
-    size = sizeof(parsed);
-    sscanf(parsed[size - 1], "HTTP/%f", version);
+    sscanf(parsed[6], "HTTP/%f", version);
     if (version < 1.0) {
 	version = 1.0;
     }
-    return ({ version, parsed[0] }) + parsed[2 .. size - 3];
+    return ({ version, parsed[0] }) + parsed[2 .. 4];
 }
 
 /*
- * return empty array
- */
-static mixed *null(mixed parsed)
-{
-    return ({ });
-}
-
-/*
- * don't accept http:?path
+ * scheme://host/path
  */
 static mixed *schemeHostPath(mixed *parsed)
 {
-    return (parsed[1] || parsed[2][0] != '?') ?
-	    ({ parsed[2], parsed[0], parsed[1] }) : nil;
+    string scheme, host;
+
+    sscanf(parsed[0], "%s://%s", scheme, host);
+    if (strlen(host) == 0) {
+	if (parsed[1][0] == '?') {
+	    return nil;
+	}
+	host = nil;
+    }
+    return ({ parsed[1], scheme + "://", host });
 }
 
 /*
- * no scheme, no host
- */
-static mixed *nullScheme(mixed *parsed)
-{
-    return (parsed[0][0] != '?') ? parsed + ({ nil, nil }) : nil;
-}
-
-/*
- * don't accept null path without host
- */
-static mixed *nullPath(mixed *parsed)
-{
-    return (parsed[1]) ? ({ "" }) + parsed : nil;
-}
-
-/*
- * deal with "*" URI
- */
-static mixed *star(mixed parsed)
-{
-    return ({ nil, nil, nil });
-}
-
-/*
- * scheme, and possibly a host
+ * scheme://host
  */
 static mixed *schemeHost(mixed *parsed)
 {
     string scheme, host;
 
-    scheme = parsed[0];
-    if (sscanf(scheme, "%s://%s", scheme, host) == 0) {
-	sscanf(scheme, "%s:%s", scheme, host);
-    }
+    sscanf(parsed[0], "%s://%s", scheme, host);
     if (strlen(host) == 0) {
 	host = nil;
     }
-    return ({ scheme, host });
+    return ({ "/",  scheme + "://", host });
 }
 
 /*
- * handle a path
+ * scheme:path
  */
-static mixed *path(string *parsed)
+static mixed *schemePath(mixed *parsed)
 {
-    return ({ decode(parsed[0]) });
+    string scheme, path;
+
+    sscanf(parsed[0], "%s:%s", scheme, path);
+    if (strlen(path) == 0) {
+	return nil;
+    }
+    return ({ path, scheme + ":", nil });
+}
+
+/*
+ * scheme:/path, scheme:path1/path2
+ */
+static mixed *schemePathPath(mixed *parsed)
+{
+    string scheme, path;
+
+    sscanf(parsed[0], "%s:%s", scheme, path);
+    if (strlen(path) == 0 && parsed[1][0] == '?') {
+	return nil;
+    }
+    return ({ path + parsed[1], scheme + ":", nil });
+}
+
+/*
+ * /path, ?path
+ */
+static mixed *path(mixed *parsed)
+{
+    return (parsed[0][0] != '?') ? ({ parsed[0], nil, nil }) : nil;
+}
+
+/*
+ * *
+ */
+static mixed *star(mixed parsed)
+{
+    return ({ nil, nil, nil });
 }
