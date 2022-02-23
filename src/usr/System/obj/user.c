@@ -8,7 +8,7 @@ inherit auto	"~/lib/auto";
 inherit user	LIB_USER;
 inherit wiztool	LIB_WIZTOOL;
 
-private inherit	"/lib/util/string";
+private inherit	"/lib/util/ascii";
 
 
 # define USER			"/usr/System/obj/user"

@@ -1,8 +1,4 @@
 /*
- * ASCII string utility functions
- */
-
-/*
  * capitalize a string
  */
 static string capitalize(string str)

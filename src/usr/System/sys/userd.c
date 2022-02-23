@@ -6,7 +6,7 @@ inherit kernel AUTO;
 inherit "~/lib/user";
 inherit access API_ACCESS;
 
-private inherit "/lib/util/string";
+private inherit "/lib/util/ascii";
 
 
 # define USER		"/usr/System/obj/user"

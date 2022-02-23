@@ -4,7 +4,7 @@
 
 inherit "~HTTP/api/lib/http";
 
-private inherit "/lib/util/string";
+private inherit "/lib/util/ascii";
 
 
 # define CHUNK_SIZE	65535

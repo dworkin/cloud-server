@@ -5,8 +5,8 @@
 # include <Time.h>
 # include "http.h"
 
-private inherit "/lib/util/string";
-private inherit base64 "/lib/util/base64";
+private inherit		"/lib/util/ascii";
+private inherit base64	"/lib/util/base64";
 
 /*
  * HTTP protocol class
