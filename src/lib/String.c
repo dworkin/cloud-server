@@ -315,7 +315,7 @@ static void create(mixed data, varargs string utf8)
     int bufMax, strMax, index, byteOffset, charOffset;
     string remainder;
     object decoder;
-    object buffer;
+    StringBuffer buffer;
 
     if (utf8 && utf8 != "UTF8") {
 	error("Bad encoding");
