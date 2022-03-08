@@ -35,7 +35,7 @@ static object request(string str)
     string *dirs;
     int i, sz;
 
-    request = HTTPRequest->parse_request(str);
+    request = "/usr/HTTP/sys/requestline"->request(str);
     if (request) {
 	dirs = map_indices(urlmap);
 	str = nil;

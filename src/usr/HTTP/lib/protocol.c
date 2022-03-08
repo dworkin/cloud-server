@@ -13,6 +13,10 @@ private inherit base64	"/lib/util/base64";
  */
 
 
+# define HTTP_REQUESTLINE	"/usr/HTTP/sys/requestline"
+# define HTTP_HEADERS		"/usr/HTTP/sys/headers"
+# define HTTP_DATE		"/usr/HTTP/sys/date"
+
 private object httpreq;		/* http request parser */
 private object httphdr;		/* http header parser */
 
@@ -21,7 +25,6 @@ private string method;		/* request method */
 private string scheme;		/* RequestURI scheme */
 private string host;		/* RequestURI host */
 private string path;		/* RequestURI path */
-private string *parameters;	/* request parameters */
 
 private string authorization;	/* request authorization */
 private string from;		/* requestor */
@@ -38,8 +41,8 @@ private string content_type;	/* entity type */
  */
 static void create()
 {
-    httpreq = find_object(HTTPRequest);
-    httphdr = find_object(HTTPHeader);
+    httpreq = find_object(HTTP_REQUESTLINE);
+    httphdr = find_object(HTTP_HEADERS);
 }
 
 /*
@@ -53,7 +56,6 @@ static int http_request(mixed request)
     scheme = nil;
     host = nil;
     path = nil;
-    parameters = nil;
 
     authorization = nil;
     from = nil;
@@ -64,7 +66,7 @@ static int http_request(mixed request)
     content_type = nil;
 
     if (typeof(request) == T_STRING) {
-	request = httpreq->parse_request(request);
+	request = httpreq->request(request);
     }
     if (!request) {
 	/* cannot parse request */
@@ -76,7 +78,6 @@ static int http_request(mixed request)
     scheme = request[HTTPREQ_SCHEME];
     host = request[HTTPREQ_HOST];
     path = request[HTTPREQ_PATH];
-    parameters = request[HTTPREQ_PARAMS];
 
     if (version >= 2.0) {
 	/* don't understand this */
@@ -107,7 +108,6 @@ static string	query_method()			{ return method; }
 static string	query_scheme()			{ return scheme; }
 static string	query_host()			{ return host; }
 static string	query_path()			{ return path; }
-static string  *query_parameters()		{ return parameters[..]; }
 
 
 /*
@@ -126,172 +126,80 @@ private string time2date(int time)
 }
 
 /*
- * NAME:	date2time()
- * DESCRIPTION:	convert a date to POSIX time
- */
-private int date2time(mixed *date)
-{
-    string str, month;
-    int i, year, day, size;
-
-    if (date[0] == HTTPHDR_ITEMS) {
-	/* asctime-date */
-	if (sizeof(date) != 6) {
-	    return 0;
-	}
-	str = "";
-	for (i = 1; i < 6; i++) {
-	    if (date[i][0] != HTTPHDR_TOKEN) {
-		return 0;
-	    }
-	    str += date[i][1] + " ";
-	}
-	try {
-	    return new GMTime(str)->time();
-	} catch (...) {
-	    return 0;
-	}
-    }
-
-    if (date[0] != HTTPHDR_LIST || sizeof(date) != 3 ||
-	date[1][0] != HTTPHDR_TOKEN) {
-	return 0;
-    }
-    size = (strlen(date[1][1]) == 3) ? 6 : 4;
-    date = date[2];
-    if (date[0] != HTTPHDR_ITEMS || sizeof(date) != size) {
-	return 0;
-    }
-    str = "";
-    for (i = 1; i < size; i++) {
-	if (date[i][0] != HTTPHDR_TOKEN) {
-	    return 0;
-	}
-	str += date[i][1] + " ";
-    }
-
-    if (size == 6) {
-	/* rfc1123-date */
-	if (sscanf(str, "%d %s %d %s GMT", day, month, year, str) != 4) {
-	    return 0;
-	}
-    } else {
-	/* rfc850-date */
-	if (sscanf(str, "%d-%s-%d %s GMT", day, month, year, str) != 4) {
-	    return 0;
-	}
-	year += (year < 70) ? 2000 : 1900;	/* hopefully obsolete in 2070 */
-    }
-
-    try {
-	return new GMTime("Someday " + month + " " + day + " " + str + " " +
-			  year)->time();
-    } catch (...) {
-	return 0;
-    }
-}
-
-/*
  * NAME:	headers()
  * DESCRIPTION:	parse HTTP/1.x headers
  */
 static int http_headers(string str)
 {
-    mixed **headers, *header, *value;
-    int i, j, sz;
+    mixed **headers, *header, value;
+    int i, sz;
+    Time time;
 
-    headers = httphdr->parse_header(str);
+    headers = httphdr->headers(str);
     if (!headers) {
 	return HTTP_BAD_REQUEST;
     }
 
     for (i = 0, sz = sizeof(headers); i < sz; i++) {
 	header = headers[i];
-	value = (sizeof(header) > 1) ? header[1] : nil;
+	value = header[1];
 	switch (lower_case(header[0])) {
 	case "authorization":
-	    if (value && value[0] == HTTPHDR_ITEMS && sizeof(value) == 3 &&
-		value[1][0] == HTTPHDR_TOKEN && value[2][0] == HTTPHDR_TOKEN &&
-		lower_case(value[1][1]) == "basic") {
-		str = value[2][1];
-		if ((strlen(str) & 3) == 0) {
-		    authorization = base64::decode(str);
-		}
+	    if (value && sscanf(lower_case(value), "basic %s", str) != 0 &&
+		(strlen(str) & 3) == 0) {
+		authorization = base64::decode(str);
 	    }
 	    break;
 
 	case "content-length":
-	    if (value && value[0] == HTTPHDR_TOKEN) {
-		sscanf(value[1], "%d", content_length);
-		if (content_length < 0) {
-		    return HTTP_BAD_REQUEST;
-		}
+	    if (!value || sscanf(value, "%d", content_length) == 0 ||
+		content_length < 0) {
+		return HTTP_BAD_REQUEST;
 	    }
 	    break;
 
 	case "content-type":
-	    if (value && value[0] == HTTPHDR_TYPE) {
-		content_type = lower_case(value[1] + "/" + value[2]);
+	    if (value) {
+		content_type = value;
 	    }
 	    break;
 
 	case "from":
-	    if (value && value[0] == HTTPHDR_TOKEN) {
-		from = value[1];
+	    if (value) {
+		from = value;
 	    }
 	    break;
 
 	case "host":
-	    if (value && value[0] == HTTPHDR_TOKEN && !host) {
-		host = value[1];
+	    if (value && !host) {
+		host = value;
 	    }
 	    break;
 
 	case "if-modified-since":
 	    if (value) {
-		if_modified_since = date2time(value);
-	    }
-	    break;
-
-	case "pragma":
-	    if (value) {
-		if (value[0] == HTTPHDR_TOKEN) {
-		    if (lower_case(value[1]) == "no-cache") {
-			no_cache = TRUE;
-		    }
-		} else if (value[0] == HTTPHDR_ITEMS) {
-		    for (j = sizeof(value); --j != 0; ) {
-			if (value[j][0] == HTTPHDR_TOKEN &&
-			    lower_case(value[j][1]) == "no-cache") {
-			    no_cache = TRUE;
-			    break;
-			}
-		    }
+		time = HTTP_DATE->date(value);
+		if (time) {
+		    if_modified_since = time->time();
 		}
 	    }
 	    break;
 
+	case "pragma":
+	    if (value && lower_case(value) == "no-cache") {
+		no_cache = TRUE;
+	    }
+	    break;
+
 	case "referer":
-	    if (value && value[0] == HTTPHDR_TOKEN) {
-		referer = value[1];
+	    if (value) {
+		referer = value;
 	    }
 	    break;
 
 	case "user-agent":
 	    if (value) {
-		if (value[0] == HTTPHDR_TYPE) {
-		    user_agent = value[1] + "/" + value[2];
-		} else if (value[0] == HTTPHDR_ITEMS) {
-		    str = "";
-		    for (j = 1; j < sizeof(value); j++) {
-			if (value[j][0] == HTTPHDR_TYPE) {
-			    str += " " + value[j][1] + "/" + value[j][2];
-			}
-		    }
-		    if (strlen(str) != 0) {
-			user_agent = str[1 ..];
-		    }
-		}
+		user_agent = value;
 	    }
 	    break;
 	}

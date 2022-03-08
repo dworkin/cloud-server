@@ -1,24 +1,9 @@
-# define HTTPRequest		"/usr/HTTP/sys/request"
-# define HTTPHeader		"/usr/HTTP/sys/header"
-
-
-/* GET http://foo.bar.com/index.html?foo?bar HTTP/1.0 */
+/* GET http://foo.bar.com/index.html HTTP/1.0 */
 # define HTTPREQ_VERSION	0	/* 1.0 */
 # define HTTPREQ_METHOD		1	/* GET */
 # define HTTPREQ_SCHEME		2	/* http */
 # define HTTPREQ_HOST		3	/* foo.bar.com */
 # define HTTPREQ_PATH		4	/* /index.html */
-# define HTTPREQ_PARAMS		5	/* ({ foo, bar }) */
-
-/* header types */
-# define HTTPHDR_TOKEN		0	/* foo */
-# define HTTPHDR_STRING		1	/* "foo" */
-# define HTTPHDR_ASSIGN		2	/* foo=bar */
-# define HTTPHDR_ASSIGNSTR	3	/* foo="bar" */
-# define HTTPHDR_TYPE		4	/* foo/bar */
-# define HTTPHDR_COMMENT	5	/* (foo) */
-# define HTTPHDR_ITEMS		6	/* foo bar */
-# define HTTPHDR_LIST		7	/* foo, "foo", ... */
 
 /* HTTP return codes */
 # define HTTP_OK		200	/* successful */

@@ -1,5 +1,5 @@
 /*
- * ({ version, method, path, scheme, host })
+ * ({ version, method, scheme, host, path })
  */
 mixed *request(string str)
 {
@@ -64,7 +64,7 @@ static mixed *schemeHostPath(mixed *parsed)
 	}
 	host = nil;
     }
-    return ({ parsed[1], scheme + "://", host });
+    return ({ scheme + "://", host, parsed[1] });
 }
 
 /*
@@ -78,7 +78,7 @@ static mixed *schemeHost(mixed *parsed)
     if (strlen(host) == 0) {
 	host = nil;
     }
-    return ({ "/",  scheme + "://", host });
+    return ({ scheme + "://", host, "/" });
 }
 
 /*
@@ -92,7 +92,7 @@ static mixed *schemePath(mixed *parsed)
     if (strlen(path) == 0) {
 	return nil;
     }
-    return ({ path, scheme + ":", nil });
+    return ({ scheme + ":", nil, path });
 }
 
 /*
@@ -106,7 +106,7 @@ static mixed *schemePathPath(mixed *parsed)
     if (strlen(path) == 0 && parsed[1][0] == '?') {
 	return nil;
     }
-    return ({ path + parsed[1], scheme + ":", nil });
+    return ({ scheme + ":", nil, path + parsed[1] });
 }
 
 /*
@@ -114,7 +114,7 @@ static mixed *schemePathPath(mixed *parsed)
  */
 static mixed *path(mixed *parsed)
 {
-    return (parsed[0][0] != '?') ? ({ parsed[0], nil, nil }) : nil;
+    return (parsed[0][0] != '?') ? ({ nil, nil, parsed[0] }) : nil;
 }
 
 /*

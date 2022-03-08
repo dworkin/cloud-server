@@ -20,6 +20,7 @@ Headers:								\
 Headers: Headers Header							\
 \
 Header: token ':' Ows Field Ows '\n'			? header	\
+Header: token ':' Ows '\n'				? emptyHeader	\
 \
 Field: FieldItem							\
 Field: Field OwsSeparator FieldItem					\
@@ -47,6 +48,14 @@ OwsSeparator: obs_fold					? whitespace	\
 static string **header(mixed *parsed)
 {
     return ({ ({ parsed[0], implode(parsed[2 .. sizeof(parsed) - 2], "") }) });
+}
+
+/*
+ * return empty header
+ */
+static string **emptyHeader(mixed *parsed)
+{
+    return ({ ({ parsed[0], nil }) });
 }
 
 /*
