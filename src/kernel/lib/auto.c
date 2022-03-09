@@ -584,7 +584,7 @@ static void connect_datagram(int dgram, string address, int port)
  */
 static void swapout()
 {
-    if (creator != "System") {
+    if (creator != "System" || !this_object()) {
 	error("Permission denied");
     }
     ::swapout();
@@ -616,7 +616,9 @@ static void shutdown(varargs int hotboot)
     }
     rlimits (-1; -1) {
 	::shutdown(hotboot);
-	::find_object(DRIVER)->message("System halted.\n\n");
+	::find_object(DRIVER)->message((hotboot) ?
+					"System hotbooting...\n\n" :
+					"System halted.\n\n");
     }
 }
 
@@ -626,7 +628,7 @@ static void shutdown(varargs int hotboot)
  */
 static int call_touch(object obj)
 {
-    if (creator != "System") {
+    if (creator != "System" || !this_object()) {
 	error("Permission denied");
     }
     return ::call_touch(obj);
