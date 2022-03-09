@@ -36,7 +36,7 @@ static object request(string str)
     int i, sz;
 
     request = "/usr/HTTP/sys/requestline"->request(str);
-    if (request) {
+    if (request && request[HTTPREQ_PATH]) {
 	dirs = map_indices(urlmap);
 	str = nil;
 	for (i = 0, sz = sizeof(dirs); i < sz; i++) {
