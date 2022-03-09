@@ -10,7 +10,7 @@
 # define SYSTEM()	sscanf(previous_program(), "/usr/System/%*s")
 
 /*
- * kernel TLS
+ * kernel Task Local Storage support
  */
 # define TLSVAR(tls, n)	tls[-1 - n]
 
