@@ -4,6 +4,7 @@
 # include <type.h>
 # include <Time.h>
 # include "http.h"
+# include "HttpHeader.h"
 
 private inherit		"/lib/util/ascii";
 private inherit base64	"/lib/util/base64";
@@ -14,11 +15,8 @@ private inherit base64	"/lib/util/base64";
 
 
 # define HTTP_REQUESTLINE	"/usr/HTTP/sys/requestline"
-# define HTTP_HEADERS		"/usr/HTTP/sys/headers"
-# define HTTP_DATE		"/usr/HTTP/sys/date"
 
 private object httpreq;		/* http request parser */
-private object httphdr;		/* http header parser */
 
 private float version;		/* request HTTP version */
 private string method;		/* request method */
@@ -42,7 +40,6 @@ private string content_type;	/* entity type */
 static void create()
 {
     httpreq = find_object(HTTP_REQUESTLINE);
-    httphdr = find_object(HTTP_HEADERS);
 }
 
 /*
@@ -116,13 +113,7 @@ static string	query_path()			{ return path; }
  */
 private string time2date(int time)
 {
-    string str, weekday, month;
-    int day, year;
-
-    str = new Time(time)->gmctime();
-    sscanf(str, "%s %s %d %s %d", weekday, month, day, str, year);
-    return weekday + ", " + ((day >= 10) ? (string) day : "0" + day) + " " +
-	   month + " " + year + " " + str + " GMT";
+    return new HttpTime(new Time(time))->transport();
 }
 
 /*
@@ -131,78 +122,33 @@ private string time2date(int time)
  */
 static int http_headers(string str)
 {
-    mixed **headers, *header, value;
-    int i, sz;
-    Time time;
+    try {
+	HttpHeaders headers;
+	HttpHeader header;
 
-    headers = httphdr->headers(str);
-    if (!headers) {
+	headers = new RemoteHttpHeaders(str);
+	header = headers->get("authorization");
+	if (header && lower_case(header->value()->scheme()) == "basic")
+	    authorization = header->value()->authentication();
+	header = headers->get("content-length");
+	if (header) content_length = header->value();
+	header = headers->get("content-type");
+	if (header) content_type = header->value();
+	header = headers->get("from");
+	if (header) from = header->value();
+	header = headers->get("host");
+	if (header) host = header->value();
+	header = headers->get("if-modified-since");
+	if (header) if_modified_since = header->value()->time()->time();
+	header = headers->get("pragma");
+	if (header && lower_case(header->value()) == "no-cache")
+	    no_cache = TRUE;
+	header = headers->get("referer");
+	if (header) referer = header->value();
+	header = headers->get("user-agent");
+	if (header) user_agent = header->value();
+    } catch (...) {
 	return HTTP_BAD_REQUEST;
-    }
-
-    for (i = 0, sz = sizeof(headers); i < sz; i++) {
-	header = headers[i];
-	value = header[1];
-	switch (lower_case(header[0])) {
-	case "authorization":
-	    if (value && sscanf(lower_case(value), "basic %s", str) != 0 &&
-		(strlen(str) & 3) == 0) {
-		authorization = base64::decode(str);
-	    }
-	    break;
-
-	case "content-length":
-	    if (!value || sscanf(value, "%d", content_length) == 0 ||
-		content_length < 0) {
-		return HTTP_BAD_REQUEST;
-	    }
-	    break;
-
-	case "content-type":
-	    if (value) {
-		content_type = value;
-	    }
-	    break;
-
-	case "from":
-	    if (value) {
-		from = value;
-	    }
-	    break;
-
-	case "host":
-	    if (value && !host) {
-		host = value;
-	    }
-	    break;
-
-	case "if-modified-since":
-	    if (value) {
-		time = HTTP_DATE->date(value);
-		if (time) {
-		    if_modified_since = time->time();
-		}
-	    }
-	    break;
-
-	case "pragma":
-	    if (value && lower_case(value) == "no-cache") {
-		no_cache = TRUE;
-	    }
-	    break;
-
-	case "referer":
-	    if (value) {
-		referer = value;
-	    }
-	    break;
-
-	case "user-agent":
-	    if (value) {
-		user_agent = value;
-	    }
-	    break;
-	}
     }
 
     if (method == "POST" && content_length < 0) {
