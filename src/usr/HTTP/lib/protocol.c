@@ -141,7 +141,8 @@ static int http_headers(string str)
 	header = headers->get("if-modified-since");
 	if (header) if_modified_since = header->value()->time()->time();
 	header = headers->get("pragma");
-	if (header && lower_case(header->value()) == "no-cache")
+	if (header && typeof(header->value()) == T_STRING &&
+	    lower_case(header->value()) == "no-cache")
 	    no_cache = TRUE;
 	header = headers->get("referer");
 	if (header) referer = header->value();
