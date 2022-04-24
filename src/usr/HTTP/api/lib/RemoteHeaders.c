@@ -1,6 +1,5 @@
 # include <Time.h>
 # include <type.h>
-# include "http.h"
 # include "HttpHeader.h"
 
 inherit HttpHeaders;

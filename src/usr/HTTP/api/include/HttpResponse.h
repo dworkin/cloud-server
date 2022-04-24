@@ -1,11 +1,4 @@
-/* GET http://foo.bar.com/index.html HTTP/1.0 */
-# define HTTPREQ_VERSION	0	/* 1.0 */
-# define HTTPREQ_METHOD		1	/* GET */
-# define HTTPREQ_SCHEME		2	/* http */
-# define HTTPREQ_HOST		3	/* foo.bar.com */
-# define HTTPREQ_PATH		4	/* /index.html */
-
-/* HTTP return codes */
+/* HTTP response codes */
 # define HTTP_OK		200	/* successful */
 # define HTTP_CREATED		201
 # define HTTP_ACCEPTED		202

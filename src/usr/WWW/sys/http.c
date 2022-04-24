@@ -1,8 +1,9 @@
 # include <kernel/kernel.h>
 # include <Time.h>
-# include "~HTTP/api/include/http.h"
+# include "~HTTP/api/include/HttpRequest.h"
+# include "~HTTP/api/include/HttpResponse.h"
 
-inherit "~HTTP/api/lib/http";
+inherit "~/lib/http";
 
 private inherit "/lib/util/ascii";
 
@@ -17,7 +18,6 @@ static void create()
 {
     ::create();
     ({ httphost, ftphost, ftphost2 }) = "~WWW/sys/server"->query_host();
-    call_out("disconnect", 300);
 }
 
 private string file_type(string file)
@@ -190,14 +190,19 @@ private object http_read_file(object mesg, string file)
     }
 }
 
-static object http_message(int code, object entity)
+mixed *http_message(int code, HttpRequest request, object entity)
 {
     mixed *info;
     string scheme, host, file;
-    int modified;
+    int code, modified;
     object mesg;
 
-    scheme = query_scheme();
+    code = http_request(request);
+    if (code != 0) {
+	return response(code, nil);
+    }
+
+    scheme = request->scheme();
     if (scheme && lower_case(scheme) != "http") {
 	return not_found();
     }
@@ -207,7 +212,7 @@ static object http_message(int code, object entity)
     } else {
 	host = lower_case(host);
     }
-    file = query_path();
+    file = request->path();
     if (!file) {
 	return bad_request();
     }
@@ -228,15 +233,15 @@ static object http_message(int code, object entity)
 	    }
 	}
 
-	switch (query_method()) {
+	switch (request->method()) {
 	case "GET":
 	    modified = query_if_modified_since();
 	    if (modified != 0 && new Time(modified) >= new Time(info[1])) {
 		return response(HTTP_NOT_MODIFIED, nil);
 	    }
-	    mesg = response(HTTP_OK, nil, info[2], info[0], info[1]);
+	    mesg = response(HTTP_OK, nil, info[2], info[0], info[1])[1];
 	    http_read_file(mesg, file);
-	    return mesg;
+	    return ({ HTTP_OK, mesg });
 
 	case "HEAD":
 	    return response(HTTP_OK, nil, info[2], info[0], info[1]);
@@ -245,9 +250,9 @@ static object http_message(int code, object entity)
 	    if (query_authorization() != "foobar:gnu") {
 		return unauthorized("posting");
 	    }
-	    mesg = response(HTTP_CREATED, nil, info[2], info[0], info[1]);
+	    mesg = response(HTTP_CREATED, nil, info[2], info[0], info[1])[1];
 	    http_read_file(mesg, file);
-	    return mesg;
+	    return ({ HTTP_CREATED, mesg });
 
 	default:
 	    return not_implemented();
@@ -260,7 +265,7 @@ static object http_message(int code, object entity)
 	    return not_found();
 	}
 
-	switch (query_method()) {
+	switch (request->method()) {
 	case "GET":
 	    modified = query_if_modified_since();
 	    if (modified != 0 && new Time(modified) >= new Time(info[1])) {
@@ -269,23 +274,23 @@ static object http_message(int code, object entity)
 	    if (info[0] == -2) {
 		file = ftp_dir(file);
 		info[0] = strlen(file);
-		mesg = response(HTTP_OK, nil, "text/html", info[0], info[1]);
+		mesg = response(HTTP_OK, nil, "text/html", info[0], info[1])[1];
 		mesg->append(file);
 	    } else {
-		mesg = response(HTTP_OK, nil, info[2], info[0], info[1]);
+		mesg = response(HTTP_OK, nil, info[2], info[0], info[1])[1];
 		http_read_file(mesg, file);
 	    }
-	    return mesg;
+	    return ({ HTTP_OK, mesg });
 
 	case "HEAD":
 	    if (info[0] == -2) {
 		file = ftp_dir(file);
 		info[0] = strlen(file);
-		mesg = response(HTTP_OK, nil, "text/html", info[0], info[1]);
+		mesg = response(HTTP_OK, nil, "text/html", info[0], info[1])[1];
 	    } else {
-		mesg = response(HTTP_OK, nil, info[2], info[0], info[1]);
+		mesg = response(HTTP_OK, nil, info[2], info[0], info[1])[1];
 	    }
-	    return mesg;
+	    return ({ HTTP_OK, mesg });
 
 	default:
 	    return not_implemented();

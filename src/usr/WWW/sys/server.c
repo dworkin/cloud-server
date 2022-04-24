@@ -1,16 +1,18 @@
 # include <kernel/kernel.h>
 # include <kernel/user.h>
-# include "~HTTP/api/include/http.h"
+# include "~HTTP/api/include/HttpConnection.h"
 
 inherit "~System/lib/user";
 
-# define SYS_INITD	"/usr/System/initd"
+# define SYS_INITD		"/usr/System/initd"
+# define HTTP_REQUESTLINE	"/usr/HTTP/sys/requestline"
+# define HTTPREQ_PATH		4
 
-object userd;		/* user daemon */
+object userd;			/* user daemon */
 string httphost;
 string ftphost, ftphost2;
 mapping urlmap;
-string errormessage;	/* message returned in case of a login error */
+string errormessage;		/* message returned in case of a login error */
 
 static void create()
 {
@@ -19,7 +21,7 @@ static void create()
     httphost = "localhost:8080";
     ftphost = "ftphost:8080";
     ftphost2 = "ftphost2:8080";
-    urlmap = ([ "" : "~/obj/http" ]);
+    urlmap = ([ "" : compile_object("~/sys/http") ]);
     errormessage = "<HTML>\n" +
 		   "<HEAD><TITLE>400 Bad Request</TITLE></HEAD>\n" +
 		   "<BODY><H1>400 Bad Request</H1></BODY>\n" +
@@ -35,19 +37,16 @@ static object request(string str)
     string *dirs;
     int i, sz;
 
-    request = "/usr/HTTP/sys/requestline"->request(str);
+    request = HTTP_REQUESTLINE->request(str);
     if (request && request[HTTPREQ_PATH]) {
 	dirs = map_indices(urlmap);
-	str = nil;
 	for (i = 0, sz = sizeof(dirs); i < sz; i++) {
 	    if (sscanf(request[HTTPREQ_PATH], dirs[i] + "/%*s") != 0) {
-		str = urlmap[dirs[i]];
+		obj = urlmap[dirs[i]];
 	    }
 	}
-	if (str != nil) {
-	    obj = clone_object(str);
-	    obj->request(request);
-	    return obj;
+	if (obj != nil) {
+	    return clone_object(HTTP_CONNECTION, obj);
 	}
     }
 }
