@@ -22,7 +22,8 @@ static void create()
 }
 
 /*
- * returns the number of spaces requested
+ * NAME:	spaces()
+ * DESCRIPTION:	returns the number of spaces requested
  */
 private string spaces(int width)
 {
@@ -37,7 +38,8 @@ private string spaces(int width)
 }
 
 /*
- * pad with spaces to the left
+ * NAME:	pad_left()
+ * DESCRIPTION:	pad with spaces to the left
  */
 private string pad_left(mixed str, int width)
 {
@@ -50,7 +52,8 @@ private string pad_left(mixed str, int width)
 }
 
 /*
- * pad with spaces to the right
+ * NAME:	pad_right()
+ * DESCRIPTION:	pad with spaces to the right
  */
 private string pad_right(mixed str, int width)
 {

@@ -137,12 +137,11 @@ static int destruct_object(mixed obj)
      */
     oname = object_name(obj);
     clone = sscanf(oname, "%s#%d", oname, lib);
-    if (clone && lib < 0) {
+    if (lib < 0) {
 	error("Cannot destruct non-persistent object");
     }
     lib = sscanf(oname, "%*s/lib/");
-    oowner = (lib || sscanf(oname, "%*s#") == 0) ?
-	      driver->creator(oname) : obj->query_owner();
+    oowner = (lib || !clone) ? driver->creator(oname) : obj->query_owner();
     if ((sscanf(oname, "/kernel/%*s") != 0 && !lib && !KERNEL()) ||
 	(creator != "System" && owner != oowner)) {
 	error("Cannot destruct object: not owner");
