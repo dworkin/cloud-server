@@ -7,7 +7,8 @@ inherit LIB_CONN;	/* basic connection object */
 object driver;		/* driver object */
 string buffer;		/* buffered input */
 int length;		/* length of message to receive */
-int raw;		/* pending raw input? */
+int noline;		/* no full line in input buffer */
+int input;		/* input_message handle */
 
 /*
  * NAME:	create()
@@ -93,16 +94,13 @@ private void add_to_buffer(mapping tls, string str)
 }
 
 /*
- * NAME:	receive_message()
- * DESCRIPTION:	forward a message to listeners
+ * NAME:	receive_buffer()
+ * DESCRIPTION:	process input buffer
  */
-static void receive_message(string str)
+private void receive_buffer(mapping tls)
 {
     int mode, len;
-    string head, pre;
-    mapping tls;
-
-    add_to_buffer(tls = ([ ]), str);
+    string str, head, pre;
 
     while (this_object() &&
 	   (mode=query_mode()) != MODE_BLOCK && mode != MODE_DISCONNECT) {
@@ -132,6 +130,7 @@ static void receive_message(string str)
 
 		::receive_message(tls, str);
 	    } else {
+		noline = TRUE;
 		break;
 	    }
 	} else {
@@ -158,49 +157,62 @@ static void receive_message(string str)
 }
 
 /*
+ * NAME:	receive_message()
+ * DESCRIPTION:	forward a message to listeners
+ */
+static void receive_message(string str)
+{
+    mapping tls;
+
+    if (input != 0) {
+	remove_call_out(input);
+	input = 0;
+    }
+    add_to_buffer(tls = ([ ]), str);
+    noline = FALSE;
+    receive_buffer(tls);
+}
+
+/*
  * NAME:	set_mode()
  * DESCRIPTION:	set the connection mode
  */
 void set_mode(int mode)
 {
-    if (previous_program() == LIB_CONN || SYSTEM()) {
+    if (KERNEL()) {
 	::set_mode(mode);
-	if (!raw && mode == MODE_RAW && strlen(buffer) != 0) {
-	    call_out("raw_message", 0);
-	    raw = TRUE;
+	if (input == 0 && strlen(buffer) != 0) {
+	    switch (mode) {
+	    case MODE_LINE:
+	    case MODE_EDIT:
+		if (!noline) {
+		    break;
+		}
+		/* fall through */
+	    default:
+		return;
+
+	    case MODE_RAW:
+		break;
+	    }
+
+	    input = call_out("input_message", 0);
 	}
     }
 }
 
 /*
- * NAME:	raw_message()
- * DESCRIPTION:	process the whole input buffer after switching to raw mode
+ * NAME:	input_message()
+ * DESCRIPTION:	reprocess the input buffer
  */
-static void raw_message()
+static void input_message()
 {
-    string str;
     mapping tls;
 
-    raw = FALSE;
-    if (query_mode() == MODE_RAW && strlen(buffer) != 0) {
-	if (length > 0) {
-	    if (length < strlen(buffer)) {
-		str = buffer[.. length - 1];
-		buffer = buffer[length ..];
-		length = 0;
-	    } else {
-		length -= strlen(buffer);
-		str = buffer;
-		buffer = "";
-	    }
-	} else {
-	    str = buffer;
-	    buffer = "";
-	}
-	tls = ([ ]);
-	TLSVAR(tls, TLS_USER) = this_object();
-	::receive_message(tls, str);
-    }
+    input = 0;
+    tls = ([ ]);
+    TLSVAR(tls, TLS_USER) = this_object();
+    receive_buffer(tls);
 }
 
 /*

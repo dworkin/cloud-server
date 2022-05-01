@@ -81,7 +81,7 @@ static void receive_datagram(string str)
  */
 void set_mode(int mode)
 {
-    if (previous_program() == LIB_CONN || SYSTEM()) {
+    if (KERNEL()) {
 	::set_mode(mode);
     }
 }

@@ -75,6 +75,17 @@ static void redirect(object LIB_USER user, string str)
 }
 
 /*
+ * NAME:	set_mode()
+ * DESCRIPTION:	set the connection mode
+ */
+static void set_mode(int newmode)
+{
+    if (connection) {
+	connection->set_mode(newmode);
+    }
+}
+
+/*
  * NAME:	login()
  * DESCRIPTION:	log this user in
  */

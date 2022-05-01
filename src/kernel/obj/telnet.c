@@ -61,7 +61,7 @@ void set_mode(int newmode)
 {
     int mode;
 
-    if (previous_program() == LIB_CONN || SYSTEM()) {
+    if (KERNEL()) {
 	mode = query_mode();
 	::set_mode(newmode);
 	if (newmode != mode && (newmode == MODE_NOECHO || newmode == MODE_ECHO))

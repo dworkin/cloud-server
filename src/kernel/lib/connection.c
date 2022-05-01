@@ -210,7 +210,7 @@ static void timeout(mapping tls)
  * NAME:	receive_message()
  * DESCRIPTION:	forward a message to user object
  */
-static int receive_message(mapping tls, string str)
+static void receive_message(mapping tls, string str)
 {
     int mode;
 
@@ -220,7 +220,6 @@ static int receive_message(mapping tls, string str)
     } else {
 	set_mode(mode = user->receive_message(str));
     }
-    return mode;
 }
 
 /*
