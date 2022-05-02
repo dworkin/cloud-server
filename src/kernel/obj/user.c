@@ -52,6 +52,21 @@ private void tell_audience(string str)
 }
 
 /*
+ * NAME:	message()
+ * DESCRIPTION:	send a message
+ */
+int message(string str)
+{
+    object conn;
+
+    conn = query_conn();
+    if (conn && sscanf(object_name(conn), TELNET_CONN + "#%*s") == 0) {
+	str = implode(explode("\n" + str + "\n", "\n"), "\r\n");
+    }
+    return ::message(str);
+}
+
+/*
  * NAME:	login()
  * DESCRIPTION:	login a new user
  */

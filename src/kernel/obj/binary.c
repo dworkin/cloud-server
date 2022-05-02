@@ -216,18 +216,6 @@ static void input_message()
 }
 
 /*
- * NAME:	message()
- * DESCRIPTION:	send a message to the other side
- */
-int message(string str)
-{
-    if (query_mode() < MODE_RAW) {
-	str = implode(explode("\n" + str + "\n", "\n"), "\r\n");
-    }
-    return ::message(str);
-}
-
-/*
  * NAME:	message_done()
  * DESCRIPTION:	called when output is completed
  */
