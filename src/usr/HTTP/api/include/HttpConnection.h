@@ -1,3 +1,3 @@
 # define HttpConnection		object "/usr/HTTP/lib/Connection"
 
-# define HTTP_CONNECTION	"/usr/HTTP/api/obj/connection"
+# define HTTP_SERVER		"/usr/HTTP/api/obj/server"

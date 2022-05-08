@@ -3,8 +3,6 @@
 # include "HttpResponse.h"
 
 
-private HttpRequest request;	/* HTTP request */
-
 /*
  * verify HTTP request
  */
@@ -26,15 +24,21 @@ static int httpRequest(HttpRequest request)
 	return HTTP_BAD_REQUEST;
     }
 
-    ::request = request;
     return 0;
 }
 
 /*
  * verify HTTP headers
  */
-static int httpHeaders(HttpHeaders headers)
+static int httpHeaders(HttpRequest request, HttpHeaders headers)
 {
     request->setHeaders(headers);
     return 0;
+}
+
+/*
+ * verify HTTP response
+ */
+static void httpResponse(HttpResponse response)
+{
 }

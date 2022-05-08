@@ -1,3 +1,5 @@
+# define HttpResponse		object "/usr/HTTP/api/lib/Response"
+
 /* HTTP response codes */
 # define HTTP_OK		200	/* successful */
 # define HTTP_CREATED		201

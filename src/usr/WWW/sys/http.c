@@ -194,16 +194,21 @@ mixed *http_message(int code, HttpRequest request, object entity)
 {
     mixed *info;
     string scheme, host, file;
-    int code, modified;
+    int code2, modified;
     object mesg;
 
-    code = http_request(request);
+    if (request) {
+	code2 = http_request(request);
+    }
     if (code != 0) {
 	return response(code, nil);
     }
+    if (code2 != 0) {
+	return response(code2, nil);
+    }
 
     scheme = request->scheme();
-    if (scheme && lower_case(scheme) != "http") {
+    if (scheme && lower_case(scheme) != "http://") {
 	return not_found();
     }
     host = query_host();

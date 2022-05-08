@@ -268,3 +268,18 @@ static mixed *unauthorized(string realm)
 	  "</BODY></HTML>";
     return response(HTTP_UNAUTHORIZED, realm, "text/html", strlen(str), 0, str);
 }
+
+
+int receiveRequest(int code, HttpRequest request)
+{
+    StringBuffer reply;
+
+    ({ code, reply }) = this_object()->http_message(code, request, nil);
+    previous_object()->sendChunk(reply);
+    return code;
+}
+
+int chunkDone()
+{
+    previous_object()->disconnect();
+}
