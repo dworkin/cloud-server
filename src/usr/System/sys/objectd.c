@@ -618,10 +618,7 @@ mixed include_file(string compiled, string from, string path)
 	    /*
 	     * special include file
 	     */
-	    return ({ "inherit \"/usr/System/lib/auto\";\n\n" +
-		      "# define PathOfobject /**/\n" +
-		      "# define PATHOFOBJECT(o) PathOf##o\n" +
-		      "# define OBJECT_PATH(o) PATHOFOBJECT(o)\n" });
+	    return ({ "inherit \"/usr/System/lib/auto\";\n" });
 	} else {
 	    return ({ "" });
 	}
