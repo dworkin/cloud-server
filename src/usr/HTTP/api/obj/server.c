@@ -11,6 +11,8 @@ inherit HttpConnection;
 
 
 object server;		/* associated server object */
+string requestPath;	/* HttpRequest object path */
+string headersPath;	/* HttpHeaders object path */
 HttpRequest request;	/* HTTP request */
 string headers;		/* HTTP 1.x headers */
 StringBuffer inbuf;	/* entity included in request */
@@ -21,9 +23,14 @@ StringBuffer outbuf;	/* output buffer */
 /*
  * initialize connection object
  */
-static void create(object server)
+static void create(object server, varargs string requestPath,
+		   string headersPath)
 {
     ::server = server;
+    ::requestPath = (requestPath) ?
+		     requestPath : OBJECT_PATH(RemoteHttpRequest);
+    ::headersPath = (headersPath) ?
+		     headersPath : OBJECT_PATH(RemoteHttpHeaders);
     call_out("disconnect", 300);
 }
 
@@ -56,7 +63,7 @@ private int bad_request()
  */
 static int httpRequest(string str)
 {
-    request = new RemoteHttpRequest(str);
+    request = new_object(requestPath, str);
     if (request->version() >= 2.0) {
 	return HTTP_NOT_IMPLEMENTED;
     }
@@ -68,7 +75,7 @@ static int httpRequest(string str)
  */
 static int httpHeaders(string str)
 {
-    return ::httpHeaders(request, new RemoteHttpHeaders(str));
+    return ::httpHeaders(request, new_object(headersPath, str));
 }
 
 /*
