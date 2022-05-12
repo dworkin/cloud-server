@@ -34,7 +34,7 @@ void setHeaders(HttpHeaders headers)
  */
 string transport()
 {
-    string str;
+    string str, vstr;
 
     str = " ";
     if (scheme) {
@@ -52,7 +52,9 @@ string transport()
     if (version < 1.0) {
 	return method + str;
     } else {
-	return method + str + " HTTP/" + version + headers->transport();
+	vstr = (string) (version * 10.0);
+	return method + str + " HTTP/" + vstr[0 .. 0] + "." + vstr[1 .. 1] +
+	       "\r\n" + headers->transport();
     }
 }
 

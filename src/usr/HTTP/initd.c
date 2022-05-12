@@ -1,6 +1,8 @@
 # include "HttpRequest.h"
+# include "HttpResponse.h"
 # include "HttpHeader.h"
 # include "HttpConnection.h"
+
 
 void create()
 {
@@ -11,6 +13,7 @@ void create()
     compile_object("sys/date");
     compile_object(HTTP_SERVER);
     compile_object(OBJECT_PATH(RemoteHttpRequest));
+    compile_object(OBJECT_PATH(RemoteHttpResponse));
     compile_object(OBJECT_PATH(RemoteHttpAuthentication));
     compile_object(OBJECT_PATH(RemoteHttpTime));
     compile_object(OBJECT_PATH(HttpHeader));

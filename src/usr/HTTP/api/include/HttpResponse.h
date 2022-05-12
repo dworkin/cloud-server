@@ -1,4 +1,5 @@
 # define HttpResponse		object "/usr/HTTP/api/lib/Response"
+# define RemoteHttpResponse	object "/usr/HTTP/api/lib/RemoteResponse"
 
 /* HTTP response codes */
 # define HTTP_OK		200	/* successful */
