@@ -24,6 +24,24 @@ void setHeaders(HttpHeaders headers)
     ::headers = headers;
 }
 
+/*
+ * get header value from response
+ */
+mixed headerValue(string str)
+{
+    HttpHeader header;
+
+    if (!headers) {
+	return nil;
+    }
+    header = headers->get(str);
+    if (!header) {
+	return nil;
+    }
+
+    return header->value();
+}
+
 
 /*
  * transport this response

@@ -12,6 +12,7 @@ inherit HttpConnection;
 
 object server;		/* associated server object */
 string requestPath;	/* HttpRequest object path */
+string responsePath;	/* HttpResponse object path */
 string headersPath;	/* HttpHeaders object path */
 HttpRequest request;	/* HTTP request */
 string headers;		/* HTTP 1.x headers */
@@ -24,38 +25,27 @@ StringBuffer outbuf;	/* output buffer */
  * initialize connection object
  */
 static void create(object server, varargs string requestPath,
-		   string headersPath)
+		   string responsePath, string headersPath)
 {
     ::server = server;
     ::requestPath = (requestPath) ?
 		     requestPath : OBJECT_PATH(RemoteHttpRequest);
+    ::responsePath = (responsePath) ?
+		      responsePath : OBJECT_PATH(HttpResponse);
     ::headersPath = (headersPath) ?
 		     headersPath : OBJECT_PATH(RemoteHttpHeaders);
     call_out("disconnect", 300);
 }
 
 /*
- * output an internal error message
+ * prepare to receive a request
  */
-private int internal_error()
+void expectRequest()
 {
-    ::message("<HTML>\n<HEAD><TITLE>" + HTTP_INTERNAL_ERROR +
-	      " Internal Error</TITLE></HEAD>\n<BODY><H1>" +
-	      HTTP_INTERNAL_ERROR +
-	      " Internal Error</H1></BODY>\n</HTML>\n");
-    return MODE_DISCONNECT;
-}
-
-/*
- * output a bad request message
- */
-private int bad_request()
-{
-    ::message("<HTML>\n<HEAD><TITLE>" + HTTP_BAD_REQUEST +
-	      " Bad Request</TITLE></HEAD>\n<BODY><H1>" +
-	      HTTP_BAD_REQUEST +
-	      " Bad Request</H1></BODY>\n</HTML>\n");
-    return MODE_DISCONNECT;
+    if (previous_object() == server) {
+	set_mode(MODE_LINE);
+	request = nil;
+    }
 }
 
 /*
@@ -79,16 +69,6 @@ static int httpHeaders(string str)
 }
 
 /*
- * prepare to receive a request
- */
-void expectRequest()
-{
-    if (previous_object() == server) {
-	set_mode(MODE_LINE);
-    }
-}
-
-/*
  * receive a request
  */
 static int receiveRequest(int code, HttpRequest request)
@@ -97,11 +77,10 @@ static int receiveRequest(int code, HttpRequest request)
     string host;
 
     set_mode(MODE_BLOCK);
-    mode = (code == 0) ? MODE_NOCHANGE : MODE_DISCONNECT;
     try {
 	code = server->receiveRequest(code, request);
     } catch (...) {
-	return internal_error();
+	code = HTTP_INTERNAL_ERROR;
     }
 
     if (request) {
@@ -115,7 +94,7 @@ static int receiveRequest(int code, HttpRequest request)
 	::login("Bad request from " + address() + "\n");
     }
 
-    return mode;
+    return code;
 }
 
 /*
@@ -151,11 +130,32 @@ int login(string str)
 	try {
 	    code = call_limited("httpRequest", str);
 	} catch (...) {
-	    return bad_request();
+	    code = HTTP_BAD_REQUEST;
 	}
 
 	if (code != 0 || request->version() < 1.0) {
-	    return call_limited("receiveRequest", code, request);
+	    /*
+	     * call receiveRequest() early, on error output a raw HTML message
+	     * and disconnect immediately
+	     */
+	    switch (call_limited("receiveRequest", code, request)) {
+	    case HTTP_OK:
+		return MODE_NOCHANGE;
+
+	    case HTTP_INTERNAL_ERROR:
+		::message("<HTML>\n<HEAD><TITLE>" + HTTP_INTERNAL_ERROR +
+			  " Internal Error</TITLE></HEAD>\n<BODY><H1>" +
+			  HTTP_INTERNAL_ERROR +
+			  " Internal Error</H1></BODY>\n</HTML>\n");
+		return MODE_DISCONNECT;
+
+	    default:
+		::message("<HTML>\n<HEAD><TITLE>" + HTTP_BAD_REQUEST +
+			  " Bad Request</TITLE></HEAD>\n<BODY><H1>" +
+			  HTTP_BAD_REQUEST +
+			  " Bad Request</H1></BODY>\n</HTML>\n");
+		return MODE_DISCONNECT;
+	    }
 	}
 	headers = "";
     }
@@ -170,7 +170,7 @@ void logout(int quit)
 {
     if (previous_program() == LIB_CONN) {
 	server->logout();
-	::destruct_object(this_object());
+	destruct_object(this_object());
     }
 }
 
@@ -199,7 +199,18 @@ int receive_message(string str)
 		code = HTTP_BAD_REQUEST;
 	    }
 
-	    return call_limited("receiveRequest", code, request);
+	    switch (call_limited("receiveRequest", code, request)) {
+	    case HTTP_OK:
+		return MODE_NOCHANGE;
+
+	    case HTTP_INTERNAL_ERROR:
+		::message(httpInternalError(responsePath)->transport());
+		return MODE_DISCONNECT;
+
+	    default:
+		::message(httpBadRequest(responsePath)->transport());
+		return MODE_DISCONNECT;
+	    }
 	} else if (inbuf) {
 	    /*
 	     * entity
@@ -215,18 +226,32 @@ int receive_message(string str)
 	    /*
 	     * request
 	     */
-	    request = nil;
+	    if (strlen(str) == 0) {
+		return MODE_NOCHANGE;
+	    }
+
 	    try {
 		code = call_limited("httpRequest", str);
 		if (request->version() < 1.0) {
-		    error("Bad HTTP version");
+		    code = HTTP_BAD_REQUEST;
 		}
 	    } catch (...) {
 		code = HTTP_BAD_REQUEST;
 	    }
 
 	    if (code != 0) {
-		return call_limited("receiveRequest", code, request);
+		switch (call_limited("receiveRequest", code, request)) {
+		case HTTP_OK:
+		    return MODE_NOCHANGE;
+
+		case HTTP_INTERNAL_ERROR:
+		    ::message(httpInternalError(responsePath)->transport());
+		    return MODE_DISCONNECT;
+
+		default:
+		    ::message(httpBadRequest(responsePath)->transport());
+		    return MODE_DISCONNECT;
+		}
 	    }
 	    headers = "";
 	    return MODE_LINE;
@@ -271,7 +296,7 @@ int message_done()
 void sendResponse(HttpResponse response)
 {
     if (previous_object() == server) {
-	::httpResponse(response);
+	httpResponse(response);
 	outbuf = new StringBuffer(response->transport());
 	message();
     }

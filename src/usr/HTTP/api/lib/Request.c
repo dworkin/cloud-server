@@ -30,6 +30,24 @@ void setHeaders(HttpHeaders headers)
 }
 
 /*
+ * get header value from request
+ */
+mixed headerValue(string str)
+{
+    HttpHeader header;
+
+    if (!headers) {
+	return nil;
+    }
+    header = headers->get(str);
+    if (!header) {
+	return nil;
+    }
+
+    return header->value();
+}
+
+/*
  * transport this request
  */
 string transport()

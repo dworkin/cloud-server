@@ -29,7 +29,7 @@ static void create(string type, int mode)
  */
 static void set_mode(int newmode)
 {
-    if (newmode != mode && newmode != MODE_NOCHANGE) {
+    if (newmode != MODE_NOCHANGE && (newmode != mode || blocked)) {
 	if (newmode == MODE_DISCONNECT) {
 	    destruct_object(this_object());
 	} else {

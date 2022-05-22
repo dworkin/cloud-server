@@ -9,9 +9,9 @@ private Time time;	/* actual time */
 /*
  * create time item
  */
-static void create(Time time)
+static void create(varargs Time time)
 {
-    ::time = time;
+    ::time = (time) ? time : new Time(millitime()...);
 }
 
 /*

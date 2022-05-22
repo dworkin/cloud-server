@@ -11,7 +11,7 @@ string **headers(string str)
 ws = /[ \t]+/								\
 obs_fold = /[ \t]*(\n[ \t]+)+/						\
 token = /[-!#$%&'*+.^_`|~A-Za-z0-9]+/					\
-delimiter = /[,/;<=>?@[\\\\\\]{}]/					\
+delimiters = /[,/;<=>?@[\\\\\\]{}]+/					\
 string = /\"([^\x00-\x08\x0a-\x1f\x7f\"\\\\]|\\\\[^\x00-\x08\x0a-\x1f\x7f])*\"/										\
 comment = /\\(([^\x00-\x08\x0a-\x1f\x7f()\\\\]|\\\\[^\x00-\x08\x0a-\x1f\x7f])*\\)/									\
 junk = /./								\
@@ -26,7 +26,7 @@ Field: FieldItem							\
 Field: Field OwsSeparator FieldItem					\
 \
 FieldItem: token							\
-FieldItem: delimiter							\
+FieldItem: delimiters							\
 FieldItem: ':'								\
 FieldItem: string							\
 FieldItem: comment							\

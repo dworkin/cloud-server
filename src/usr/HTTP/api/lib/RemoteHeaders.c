@@ -8,6 +8,19 @@ private inherit "/lib/util/ascii";
 
 
 # define HTTP_HEADERS		"/usr/HTTP/sys/headers"
+# define HTTP_LIST		"/usr/HTTP/sys/list"
+
+/*
+ * add unknown header value as a list
+ */
+static void addUnknownHeader(string name, string value)
+{
+    if (value) {
+	addHeaderList(name, HTTP_LIST->list(value));
+    } else {
+	addHeaderList(name, ({ value }));
+    }
+}
 
 /*
  * populate headers from blob
@@ -46,7 +59,7 @@ static void create(string blob)
 	    break;
 
 	default:
-	    addHeaderList(name, ({ value }));
+	    addUnknownHeader(name, value);
 	    break;
 	}
     }

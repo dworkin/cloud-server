@@ -79,6 +79,15 @@ void add(HttpHeader header)
 }
 
 /*
+ * remove a header
+ */
+void del(HttpHeader header)
+{
+    map[lower_case(header->name())] = nil;
+    headers -= ({ header });
+}
+
+/*
  * get header by name
  */
 HttpHeader get(string name)
@@ -102,3 +111,6 @@ string transport()
 
     return implode(results, "\r\n") + "\r\n\r\n";
 }
+
+
+HttpHeader *headers()	{ return headers[..]; }
