@@ -1,7 +1,7 @@
 # include <type.h>
 
 /*
- * Base component of all headers and header items.
+ * Base component of all fields and field items.
  */
 
 /*
@@ -40,6 +40,6 @@ static string transportValue(mixed item)
 }
 
 /*
- * transport an entire item, header or headers
+ * transport an entire item, field or fields
  */
 string transport();

@@ -91,6 +91,7 @@ private void add_to_buffer(mapping tls, string str)
     } catch (...) {
 	error("Binary connection buffer overflow");
     }
+    noline = FALSE;
 }
 
 /*
@@ -169,7 +170,6 @@ static void receive_message(string str)
 	input = 0;
     }
     add_to_buffer(tls = ([ ]), str);
-    noline = FALSE;
     receive_buffer(tls);
 }
 

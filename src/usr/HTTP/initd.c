@@ -1,13 +1,13 @@
 # include "HttpRequest.h"
 # include "HttpResponse.h"
-# include "HttpHeader.h"
+# include "HttpField.h"
 # include "HttpConnection.h"
 
 
 void create()
 {
     compile_object("sys/requestline");
-    compile_object("sys/headers");
+    compile_object("sys/fields");
     compile_object("sys/urlencode");
     compile_object("sys/urldecode");
     compile_object("sys/date");
@@ -17,6 +17,6 @@ void create()
     compile_object(OBJECT_PATH(RemoteHttpResponse));
     compile_object(OBJECT_PATH(RemoteHttpAuthentication));
     compile_object(OBJECT_PATH(RemoteHttpTime));
-    compile_object(OBJECT_PATH(HttpHeader));
-    compile_object(OBJECT_PATH(RemoteHttpHeaders));
+    compile_object(OBJECT_PATH(HttpField));
+    compile_object(OBJECT_PATH(RemoteHttpFields));
 }

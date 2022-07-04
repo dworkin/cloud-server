@@ -1,14 +1,14 @@
 # include <type.h>
-# include "HttpHeader.h"
+# include "HttpField.h"
 
-inherit HttpHeaderItem;
+inherit HttpFieldItem;
 
 
-private string name;	/* header name */
-private mixed value;	/* header value */
+private string name;	/* field name */
+private mixed value;	/* field value */
 
 /*
- * create header
+ * create field
  */
 static void create(string name, mixed value)
 {
@@ -17,18 +17,18 @@ static void create(string name, mixed value)
 }
 
 /*
- * add items to a header value list
+ * add items to a field value list
  */
 void add(mixed *value)
 {
     if (typeof(::value) != T_ARRAY) {
-	error("Header is not a list");
+	error("Field is not a list");
     }
     ::value += value;
 }
 
 /*
- * transport header
+ * transport field
  */
 string transport()
 {

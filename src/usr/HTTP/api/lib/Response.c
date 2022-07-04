@@ -1,10 +1,10 @@
-# include "HttpHeader.h"
+# include "HttpField.h"
 
 
 private float version;		/* HTTP version */
 private int code;		/* response code */
 private string comment;		/* response comment */
-private HttpHeaders headers;	/* response headers */
+private HttpFields headers;	/* response headers */
 
 /*
  * create response
@@ -19,7 +19,7 @@ static void create(float version, int code, string comment)
 /*
  * add headers
  */
-void setHeaders(HttpHeaders headers)
+void setHeaders(HttpFields headers)
 {
     ::headers = headers;
 }
@@ -29,7 +29,7 @@ void setHeaders(HttpHeaders headers)
  */
 mixed headerValue(string str)
 {
-    HttpHeader header;
+    HttpField header;
 
     if (!headers) {
 	return nil;
@@ -62,4 +62,4 @@ string transport()
 float version()		{ return version; }
 int code()		{ return code; }
 string comment()	{ return comment; }
-HttpHeaders headers()	{ return headers; }
+HttpField headers()	{ return headers; }

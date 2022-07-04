@@ -1,5 +1,5 @@
 # include <Time.h>
-# include "HttpHeader.h"
+# include "HttpField.h"
 
 inherit HttpTime;
 

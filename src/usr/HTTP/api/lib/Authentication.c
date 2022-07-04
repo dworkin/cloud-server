@@ -1,6 +1,6 @@
-# include "HttpHeader.h"
+# include "HttpField.h"
 
-inherit HttpHeaderItem;
+inherit HttpFieldItem;
 
 private inherit base64 "/lib/util/base64";
 

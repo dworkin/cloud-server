@@ -1,11 +1,11 @@
 /*
  * ({
- *   ({ name1, field1 }),
- *   ({ name2, field2 }),
+ *   ({ name1, items }),
+ *   ({ name2, items }),
  *         ...
  * })
  */
-string **headers(string str)
+string **fields(string str)
 {
     return parse_string("\
 ws = /[ \t]+/								\
@@ -16,14 +16,14 @@ string = /\"([^\x00-\x08\x0a-\x1f\x7f\"\\\\]|\\\\[^\x00-\x08\x0a-\x1f\x7f])*\"/	
 comment = /\\(([^\x00-\x08\x0a-\x1f\x7f()\\\\]|\\\\[^\x00-\x08\x0a-\x1f\x7f])*\\)/									\
 junk = /./								\
 \
-Headers:								\
-Headers: Headers Header							\
+Fields:									\
+Fields: Fields Field							\
 \
-Header: token ':' Ows Field Ows '\n'			? header	\
-Header: token ':' Ows '\n'				? emptyHeader	\
+Field: token ':' Ows FieldItems Ows '\n'		? field		\
+Field: token ':' Ows '\n'				? emptyField	\
 \
-Field: FieldItem							\
-Field: Field OwsSeparator FieldItem					\
+FieldItems: FieldItem							\
+FieldItems: FieldItems OwsSeparator FieldItem				\
 \
 FieldItem: token							\
 FieldItem: delimiters							\
@@ -43,17 +43,17 @@ OwsSeparator: obs_fold					? whitespace	\
 }
 
 /*
- * return header line
+ * return field line
  */
-static string **header(mixed *parsed)
+static string **field(mixed *parsed)
 {
     return ({ ({ parsed[0], implode(parsed[2 .. sizeof(parsed) - 2], "") }) });
 }
 
 /*
- * return empty header
+ * return empty field
  */
-static string **emptyHeader(mixed *parsed)
+static string **emptyField(mixed *parsed)
 {
     return ({ ({ parsed[0], nil }) });
 }

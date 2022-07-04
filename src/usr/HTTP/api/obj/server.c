@@ -1,19 +1,17 @@
-# include <kernel/kernel.h>
 # include <kernel/user.h>
 # include <String.h>
 # include "HttpRequest.h"
-# include "HttpHeader.h"
+# include "HttpField.h"
 # include "HttpResponse.h"
 # include "HttpConnection.h"
 
-inherit "~System/lib/user";
 inherit HttpConnection;
 
 
 object server;		/* associated server object */
 string requestPath;	/* HttpRequest object path */
 string responsePath;	/* HttpResponse object path */
-string headersPath;	/* HttpHeaders object path */
+string headersPath;	/* HttpFields object path */
 HttpRequest request;	/* HTTP request */
 string headers;		/* HTTP 1.x headers */
 StringBuffer inbuf;	/* entity included in request */
@@ -33,7 +31,7 @@ static void create(object server, varargs string requestPath,
     ::responsePath = (responsePath) ?
 		      responsePath : OBJECT_PATH(HttpResponse);
     ::headersPath = (headersPath) ?
-		     headersPath : OBJECT_PATH(RemoteHttpHeaders);
+		     headersPath : OBJECT_PATH(RemoteHttpFields);
     call_out("disconnect", 300);
 }
 
@@ -51,21 +49,21 @@ void expectRequest()
 /*
  * parse and verify a HTTP request
  */
-static int httpRequest(string str)
+static int receiveRequestLine(string str)
 {
     request = new_object(requestPath, str);
     if (request->version() >= 2.0) {
 	return HTTP_NOT_IMPLEMENTED;
     }
-    return ::httpRequest(request);
+    return ::receiveRequestLine(request);
 }
 
 /*
  * parse and verify HTTP headers
  */
-static int httpHeaders(string str)
+static int receiveRequestHeaders(string str)
 {
-    return ::httpHeaders(request, new_object(headersPath, str));
+    return ::receiveRequestHeaders(request, new_object(headersPath, str));
 }
 
 /*
@@ -91,7 +89,7 @@ static int receiveRequest(int code, HttpRequest request)
 	::login("HTTP from " + address() + ", " + code + " " +
 		request->method() + " " + host + request->path() + "\n");
     } else {
-	::login("Bad request from " + address() + "\n");
+	::login("HTTP from " + address() + ", " + code + "\n");
     }
 
     return code;
@@ -128,7 +126,7 @@ int login(string str)
     if (previous_program() == LIB_CONN) {
 	::connection(previous_object());
 	try {
-	    code = call_limited("httpRequest", str);
+	    code = call_limited("receiveRequestLine", str);
 	} catch (...) {
 	    code = HTTP_BAD_REQUEST;
 	}
@@ -194,7 +192,7 @@ int receive_message(string str)
 	    str = headers;
 	    headers = nil;
 	    try {
-		code = call_limited("httpHeaders", str);
+		code = call_limited("receiveRequestHeaders", str);
 	    } catch (...) {
 		code = HTTP_BAD_REQUEST;
 	    }
@@ -231,7 +229,7 @@ int receive_message(string str)
 	    }
 
 	    try {
-		code = call_limited("httpRequest", str);
+		code = call_limited("receiveRequestLine", str);
 		if (request->version() < 1.0) {
 		    code = HTTP_BAD_REQUEST;
 		}
@@ -264,15 +262,16 @@ int receive_message(string str)
 /*
  * send (part of) a message
  */
-static void message()
+static int message(StringBuffer buffer)
 {
     string str;
 
-    str = outbuf->chunk();
+    str = buffer->chunk();
     if (!str || strlen(str) == 0) {
-	outbuf = nil;
+	return FALSE;
     } else {
 	::message(str);
+	return TRUE;
     }
 }
 
@@ -281,11 +280,8 @@ static void message()
  */
 int message_done()
 {
-    if (previous_program() == LIB_CONN) {
-	call_limited("message");
-	if (!outbuf) {
-	    server->chunkDone();
-	}
+    if (previous_program() == LIB_CONN && !call_limited("message", outbuf)) {
+	server->chunkDone();
     }
     return MODE_NOCHANGE;
 }
@@ -296,9 +292,8 @@ int message_done()
 void sendResponse(HttpResponse response)
 {
     if (previous_object() == server) {
-	httpResponse(response);
-	outbuf = new StringBuffer(response->transport());
-	message();
+	::sendResponse(response);
+	message(outbuf = new StringBuffer(response->transport()));
     }
 }
 
@@ -308,8 +303,7 @@ void sendResponse(HttpResponse response)
 void sendChunk(StringBuffer chunk)
 {
     if (previous_object() == server) {
-	outbuf = chunk;
-	message();
+	message(outbuf = chunk);
     }
 }
 

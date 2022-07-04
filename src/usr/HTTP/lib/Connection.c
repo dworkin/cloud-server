@@ -1,13 +1,15 @@
 # include "HttpRequest.h"
-# include "HttpHeader.h"
+# include "HttpField.h"
 # include "HttpResponse.h"
 # include <Time.h>
 
+inherit "~System/lib/user";
+
 
 /*
- * verify HTTP request
+ * received HTTP request line
  */
-static int httpRequest(HttpRequest request)
+static int receiveRequestLine(HttpRequest request)
 {
     switch (request->method()) {
     case "GET":
@@ -29,9 +31,9 @@ static int httpRequest(HttpRequest request)
 }
 
 /*
- * verify HTTP headers
+ * received HTTP request headers
  */
-static int httpHeaders(HttpRequest request, HttpHeaders headers)
+static int receiveRequestHeaders(HttpRequest request, HttpFields headers)
 {
     request->setHeaders(headers);
     return 0;
@@ -43,12 +45,12 @@ static int httpHeaders(HttpRequest request, HttpHeaders headers)
 static HttpResponse httpBadRequest(string responsePath)
 {
     HttpResponse response;
-    HttpHeaders headers;
+    HttpFields headers;
 
     response = new_object(responsePath, 1.1, HTTP_BAD_REQUEST, "Bad Request");
-    headers = new HttpHeaders();
-    headers->add(new HttpHeader("Date", new HttpTime));
-    headers->add(new HttpHeader("Connection", ({ "close" })));
+    headers = new HttpFields();
+    headers->add(new HttpField("Date", new HttpTime));
+    headers->add(new HttpField("Connection", ({ "close" })));
     response->setHeaders(headers);
 
     return response;
@@ -60,21 +62,21 @@ static HttpResponse httpBadRequest(string responsePath)
 static HttpResponse httpInternalError(string responsePath)
 {
     HttpResponse response;
-    HttpHeaders headers;
+    HttpFields headers;
 
     response = new_object(responsePath, 1.1, HTTP_INTERNAL_ERROR,
 			  "Internal Error");
-    headers = new HttpHeaders();
-    headers->add(new HttpHeader("Date", new HttpTime));
-    headers->add(new HttpHeader("Connection", ({ "close" })));
+    headers = new HttpFields();
+    headers->add(new HttpField("Date", new HttpTime));
+    headers->add(new HttpField("Connection", ({ "close" })));
     response->setHeaders(headers);
 
     return response;
 }
 
 /*
- * verify HTTP response
+ * prepare to send HTTP response
  */
-static void httpResponse(HttpResponse response)
+static void sendResponse(HttpResponse response)
 {
 }

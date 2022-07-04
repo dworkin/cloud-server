@@ -1,4 +1,4 @@
-# include "HttpHeader.h"
+# include "HttpField.h"
 
 inherit HttpAuthentication;
 

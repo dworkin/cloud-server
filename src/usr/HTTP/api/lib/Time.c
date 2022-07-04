@@ -1,7 +1,7 @@
 # include <Time.h>
-# include "HttpHeader.h"
+# include "HttpField.h"
 
-inherit HttpHeaderItem;
+inherit HttpFieldItem;
 
 
 private Time time;	/* actual time */

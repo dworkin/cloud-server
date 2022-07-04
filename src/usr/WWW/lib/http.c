@@ -6,7 +6,7 @@
 # include <String.h>
 # include <Time.h>
 # include "~HTTP/api/include/HttpRequest.h"
-# include "~HTTP/api/include/HttpHeader.h"
+# include "~HTTP/api/include/HttpField.h"
 # include "~HTTP/api/include/HttpResponse.h"
 
 private inherit	"/lib/util/ascii";
@@ -28,8 +28,8 @@ private string content_type;	/* entity type */
  */
 static int http_request(HttpRequest request)
 {
-    HttpHeaders headers;
-    HttpHeader header;
+    HttpFields headers;
+    HttpField header;
 
     authorization = nil;
     from = nil;
