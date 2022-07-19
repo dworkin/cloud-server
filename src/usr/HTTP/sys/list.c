@@ -16,7 +16,7 @@ List: List Comma ListValue Ows						\
 \
 Comma: ','						? null		\
 \
-ListValue: Ows						? empty		\
+ListValue: Ows								\
 ListValue: Ows Value					? value		\
 \
 Value: Item								\
@@ -42,14 +42,6 @@ OwsSeparator: ws							\
 static mixed *null(mixed parsed)
 {
     return ({ });
-}
-
-/*
- * empty list value
- */
-static mixed *empty(mixed parsed)
-{
-    return ({ nil });
 }
 
 /*

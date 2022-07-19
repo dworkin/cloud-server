@@ -18,7 +18,7 @@ static void addUnknownField(string name, string value)
     if (value) {
 	addFieldList(name, HTTP_LIST->list(value));
     } else {
-	addFieldList(name, ({ value }));
+	addFieldList(name, ({ }));
     }
 }
 
