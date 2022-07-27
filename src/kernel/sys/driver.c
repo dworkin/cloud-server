@@ -788,7 +788,9 @@ private void _runtime_error(mapping tls, string str, int caught, int ticks,
     }
 
     if (errord) {
-	errord->runtime_error(str, caught, trace);
+	catch {
+	    errord->runtime_error(str, caught, trace);
+	}
     } else {
 	if (caught != 0) {
 	    str += " [caught]";
@@ -834,7 +836,9 @@ private void _runtime_error(mapping tls, string str, int caught, int ticks,
 
 	message(str);
 	if (caught == 0 && user) {
-	    user->message(str);
+	    catch {
+		user->message(str);
+	    }
 	}
     }
 }
