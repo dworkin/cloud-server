@@ -65,10 +65,10 @@ void set_object_manager(object objectd)	[System only]
 	object's "untouched" status should be preserved through the following
 	call.
 
-    * int forbid_call(string path)
+    * string call_object(string path)
 
-	Return a non-zero value if `path' is not a legal first argument
-	for call_other().
+	Return a path, or nil if `path' is not a valid first argument for
+	call_other().
 
 
 void set_error_manager(object errord)	[System only]

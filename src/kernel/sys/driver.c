@@ -505,7 +505,7 @@ static object call_object(string path)
 	path = normalize_path(path);
     }
     if (sscanf(path, "%*s/lib/") != 0 ||
-	(objectd && objectd->forbid_call(path))) {
+	(objectd && !(path=objectd->call_object(path)))) {
 	error("Illegal use of call_other");
     }
     return find_object(path);

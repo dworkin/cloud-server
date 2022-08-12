@@ -501,13 +501,13 @@ int **query_inherited(int index)
 
 
 /*
- * NAME:	forbid_call()
+ * NAME:	call_object()
  * DESCRIPTION:	block instantiation of clone masters and generated leaf objects
  */
-int forbid_call(string path)
+string call_object(string path)
 {
-    return (sscanf(path, "%*s/obj/%*s#") == 1 ||
-	    sscanf(path, "%*s/@@@/%*s#") == 1);
+    return (sscanf(path, "%*s/obj/%*s#") != 1 &&
+	    sscanf(path, "%*s/@@@/%*s#") != 1) ? path : nil;
 }
 
 /*
