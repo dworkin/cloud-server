@@ -15,6 +15,11 @@ static int receiveRequestLine(HttpRequest request)
     case "GET":
     case "HEAD":
     case "POST":
+    case "PUT":
+    case "DELETE":
+    case "CONNECT":
+    case "OPTIONS":
+    case "TRACE":
 	break;
 
     default:

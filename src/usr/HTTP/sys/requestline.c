@@ -42,10 +42,17 @@ static mixed *simpleQ(mixed *parsed)
 static mixed *fullQ(mixed *parsed)
 {
     float version;
+    string str;
 
     sscanf(parsed[6], "HTTP/%f", version);
     if (version < 1.0) {
 	version = 1.0;
+    }
+    if (parsed[0] == "CONNECT") {
+	return (parsed[2] != nil && parsed[3] == nil &&
+		sscanf(parsed[4], "%*d%s", str) == 2 && strlen(str) == 0) ?
+		({ version, "CONNECT", nil, parsed[2] + parsed[4], nil }) :
+		nil;
     }
     return ({ version, parsed[0] }) + parsed[2 .. 4];
 }
