@@ -198,16 +198,15 @@ int receive_message(string str)
 	    }
 
 	    switch (call_limited("receiveRequest", code, request)) {
-	    case HTTP_OK:
-		return MODE_NOCHANGE;
-
 	    case HTTP_INTERNAL_ERROR:
 		::message(httpInternalError(responsePath)->transport());
 		return MODE_DISCONNECT;
 
-	    default:
-		::message(httpBadRequest(responsePath)->transport());
+	    case HTTP_BAD_REQUEST:
 		return MODE_DISCONNECT;
+
+	    default:
+		return MODE_NOCHANGE;
 	    }
 	} else if (inbuf) {
 	    /*
@@ -239,16 +238,15 @@ int receive_message(string str)
 
 	    if (code != 0) {
 		switch (call_limited("receiveRequest", code, request)) {
-		case HTTP_OK:
-		    return MODE_NOCHANGE;
-
 		case HTTP_INTERNAL_ERROR:
 		    ::message(httpInternalError(responsePath)->transport());
 		    return MODE_DISCONNECT;
 
-		default:
-		    ::message(httpBadRequest(responsePath)->transport());
+		case HTTP_BAD_REQUEST:
 		    return MODE_DISCONNECT;
+
+		default:
+		    return MODE_NOCHANGE;
 		}
 	    }
 	    headers = "";

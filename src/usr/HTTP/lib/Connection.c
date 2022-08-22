@@ -45,23 +45,6 @@ static int receiveRequestHeaders(HttpRequest request, HttpFields headers)
 }
 
 /*
- * create bad request response
- */
-static HttpResponse httpBadRequest(string responsePath)
-{
-    HttpResponse response;
-    HttpFields headers;
-
-    response = new_object(responsePath, 1.1, HTTP_BAD_REQUEST, "Bad Request");
-    headers = new HttpFields();
-    headers->add(new HttpField("Date", new HttpTime));
-    headers->add(new HttpField("Connection", ({ "close" })));
-    response->setHeaders(headers);
-
-    return response;
-}
-
-/*
  * create internal error response
  */
 static HttpResponse httpInternalError(string responsePath)
