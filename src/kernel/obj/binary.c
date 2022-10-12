@@ -103,8 +103,7 @@ private void receive_buffer(mapping tls)
     int mode, len;
     string str, head, pre;
 
-    while (this_object() &&
-	   (mode=query_mode()) != MODE_BLOCK && mode != MODE_DISCONNECT) {
+    while ((mode=query_mode()) != MODE_BLOCK && mode != MODE_DISCONNECT) {
 	if (mode != MODE_RAW) {
 	    if (sscanf(buffer, "%s\r\n%s", str, buffer) != 0 ||
 		sscanf(buffer, "%s\n%s", str, buffer) != 0) {

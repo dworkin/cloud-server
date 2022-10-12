@@ -22,3 +22,4 @@
 # define MODE_BLOCK		6	/* block input */
 
 # define DEFAULT_TIMEOUT	120	/* two minutes */
+# define DISCONNECT_TIMEOUT	2	/* 2 seconds */
