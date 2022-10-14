@@ -46,7 +46,7 @@ static object request(string str)
 	    }
 	}
 	if (obj != nil) {
-	    return clone_object(HTTP_SERVER, obj);
+	    return clone_object(HTTP1_SERVER, obj);
 	}
     }
 }

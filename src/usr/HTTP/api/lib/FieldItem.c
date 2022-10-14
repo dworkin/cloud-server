@@ -7,36 +7,48 @@
 /*
  * transport part of an item
  */
-static string transportValue(mixed item)
+static string transportValue(mixed item, varargs mixed *params)
 {
-    string *names;
+    string str;
     mixed *values;
     int i, sz;
 
     switch (typeof(item)) {
     case T_NIL:
-	return "";
+	str = "";
+	break;
 
     case T_INT:
     case T_FLOAT:
-	return (string) item;
+	str = (string) item;
+	break;
 
     case T_STRING:
-	return item;
+	str = item;
+	break;
 
     case T_OBJECT:
-	return item->transport();
+	str = item->transport();
+	break;
 
     case T_ARRAY:
 	values = allocate(sz = sizeof(item));
 	for (i = 0; i < sz; i++) {
 	    values[i] = transportValue(item[i]);
+	    if (params && params[i] && sizeof(params[i]) != 0) {
+		values[i] += ";" + implode(params[i], ";");
+	    }
 	}
 	return implode(values, ", ");
 
     default:
 	error("Unhandled value in transport");
     }
+
+    if (params && sizeof(params) != 0) {
+	str += ";" + implode(params, ";");
+    }
+    return str;
 }
 
 /*

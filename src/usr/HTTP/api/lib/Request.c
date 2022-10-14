@@ -30,6 +30,14 @@ void setHeaders(HttpFields headers)
 }
 
 /*
+ * set the host
+ */
+void setHost(string host)
+{
+    ::host = host;
+}
+
+/*
  * get header value from request
  */
 mixed headerValue(string str)
@@ -72,7 +80,7 @@ string transport()
     } else {
 	vstr = (string) (version * 10.0);
 	return method + str + " HTTP/" + vstr[0 .. 0] + "." + vstr[1 .. 1] +
-	       "\r\n" + headers->transport();
+	       "\r\n" + headers->transport() + "\r\n";
     }
 }
 

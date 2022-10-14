@@ -5,7 +5,7 @@
 # include "HttpResponse.h"
 # include "HttpConnection.h"
 
-inherit HttpConnection;
+inherit Http1Connection;
 
 
 object server;		/* associated server object */
@@ -36,25 +36,11 @@ static void create(object server, varargs string requestPath,
 }
 
 /*
- * prepare to receive a request
- */
-void expectRequest()
-{
-    if (previous_object() == server) {
-	set_mode(MODE_LINE);
-	request = nil;
-    }
-}
-
-/*
  * parse and verify a HTTP request
  */
 static int receiveRequestLine(string str)
 {
     request = new_object(requestPath, str);
-    if (request->version() >= 2.0) {
-	return HTTP_NOT_IMPLEMENTED;
-    }
     return ::receiveRequestLine(request);
 }
 
@@ -114,6 +100,16 @@ static void receiveEntity(StringBuffer entity)
 {
     set_mode(MODE_BLOCK);
     server->receiveEntity(request, entity);
+}
+
+/*
+ * finished handling a request
+ */
+void doneRequest()
+{
+    if (previous_object() == server) {
+	set_mode((persistent()) ? MODE_LINE : MODE_DISCONNECT);
+    }
 }
 
 /*
@@ -219,6 +215,8 @@ int receive_message(string str)
 		inbuf = nil;
 		call_limited("receiveEntity", entity);
 	    }
+
+	    return MODE_NOCHANGE;
 	} else {
 	    /*
 	     * request
@@ -249,37 +247,35 @@ int receive_message(string str)
 		    return MODE_NOCHANGE;
 		}
 	    }
+
 	    headers = "";
 	    return MODE_LINE;
 	}
     }
-
-    return MODE_RAW;
 }
 
 /*
  * send (part of) a message
  */
-static int message(StringBuffer buffer)
+static void message(StringBuffer buffer)
 {
     string str;
 
     str = buffer->chunk();
-    if (!str || strlen(str) == 0) {
-	return FALSE;
+    if (!str) {
+	server->chunkDone();
     } else {
 	::message(str);
-	return TRUE;
     }
 }
 
 /*
- * output remainer of message
+ * output remainder of message
  */
 int message_done()
 {
-    if (previous_program() == LIB_CONN && !call_limited("message", outbuf)) {
-	server->chunkDone();
+    if (previous_program() == LIB_CONN) {
+	call_limited("message", outbuf);
     }
     return MODE_NOCHANGE;
 }
@@ -298,10 +294,23 @@ void sendResponse(HttpResponse response)
 /*
  * send a chunk of data
  */
-void sendChunk(StringBuffer chunk)
+void sendChunk(StringBuffer chunk, varargs string *params)
+{
+    if (previous_object() == server && chunk->length() != 0) {
+	if (params) {
+	    chunk = chunked(chunk, params);
+	}
+	message(outbuf = chunk);
+    }
+}
+
+/*
+ * send a length 0 chunk
+ */
+void endChunk(varargs string *params, HttpFields trailers)
 {
     if (previous_object() == server) {
-	message(outbuf = chunk);
+	message(outbuf = chunked(nil, params, trailers));
     }
 }
 

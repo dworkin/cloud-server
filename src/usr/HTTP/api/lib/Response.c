@@ -55,7 +55,7 @@ string transport()
     }
     str = (string) (version * 10.0);
     return "HTTP/" + str[0 .. 0] + "." + str[1 .. 1] + " " + code + " " +
-	   comment + "\r\n" + headers->transport();
+	   comment + "\r\n" + headers->transport() + "\r\n";
 }
 
 

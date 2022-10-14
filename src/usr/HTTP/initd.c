@@ -11,8 +11,11 @@ void create()
     compile_object("sys/urlencode");
     compile_object("sys/urldecode");
     compile_object("sys/date");
+    compile_object("sys/tokenparam");
     compile_object("sys/list");
-    compile_object(HTTP_SERVER);
+    compile_object("sys/tokenlist");
+    compile_object("sys/tokenparamlist");
+    compile_object(HTTP1_SERVER);
     compile_object(OBJECT_PATH(RemoteHttpRequest));
     compile_object(OBJECT_PATH(RemoteHttpResponse));
     compile_object(OBJECT_PATH(RemoteHttpAuthentication));

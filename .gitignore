@@ -1,4 +1,3 @@
-bin/
 src/include/float.h
 src/include/kfun.h
 src/include/limits.h

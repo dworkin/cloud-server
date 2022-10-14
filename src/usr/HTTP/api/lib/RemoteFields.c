@@ -9,6 +9,8 @@ private inherit "/lib/util/ascii";
 
 # define HTTP_FIELDS		"/usr/HTTP/sys/fields"
 # define HTTP_LIST		"/usr/HTTP/sys/list"
+# define HTTP_TOKENLIST		"/usr/HTTP/sys/tokenlist"
+# define HTTP_TOKENPARAMLIST	"/usr/HTTP/sys/tokenparamlist"
 
 /*
  * add unknown field value as a list
@@ -56,6 +58,24 @@ static void create(string blob)
 
 	case "if-modified-since":
 	    addField(name, new RemoteHttpTime(value));
+	    break;
+
+	case "connection":
+	    if (value) {
+		addFieldList(name, HTTP_TOKENLIST->tokenlist(value));
+	    } else {
+		addFieldList(name, ({ }));
+	    }
+	    break;
+
+	case "te":
+	case "transfer-encoding":
+	    if (value) {
+		addFieldList(name,
+			     HTTP_TOKENPARAMLIST->tokenparamlist(value)...);
+	    } else {
+		addFieldList(name, ({ }), ({ }));
+	    }
 	    break;
 
 	default:
