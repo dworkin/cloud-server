@@ -1,7 +1,7 @@
 /*
  * parse a comma-separated list
  */
-mixed list(string str)
+mixed *list(string str)
 {
     return parse_string("\
 ws = /[ \t]+/								\

@@ -62,4 +62,4 @@ string transport()
 float version()		{ return version; }
 int code()		{ return code; }
 string comment()	{ return comment; }
-HttpField headers()	{ return headers; }
+HttpFields headers()	{ return headers; }

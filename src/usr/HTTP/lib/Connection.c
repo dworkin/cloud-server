@@ -4,7 +4,6 @@
 # include <Iterator.h>
 
 inherit "~System/lib/user";
-private inherit "/lib/util/ascii";
 
 
 /*
@@ -71,21 +70,39 @@ static int receiveRequestHeaders(HttpRequest request, HttpFields headers)
 }
 
 /*
- * create internal error response
+ * received HTTP response status line
  */
-static HttpResponse httpInternalError(string responsePath)
+static void receiveStatusLine(HttpResponse response)
 {
-    HttpResponse response;
-    HttpFields headers;
+}
 
-    response = new_object(responsePath, 1.1, HTTP_INTERNAL_ERROR,
-			  "Internal Error");
-    headers = new HttpFields();
-    headers->add(new HttpField("Date", new HttpTime));
-    headers->add(new HttpField("Connection", ({ "close" })));
+/*
+ * received HTTP response header
+ */
+static void receiveResponseHeader(HttpResponse response, HttpField header)
+{
+}
+
+/*
+ * received HTTP response headers
+ */
+static int receiveResponseHeaders(HttpResponse response, HttpFields headers)
+{
+    Iterator i;
+    HttpField header;
+
+    for (i = headers->iterator(); (header=i->next()); ) {
+	receiveResponseHeader(response, header);
+    }
+
     response->setHeaders(headers);
+}
 
-    return response;
+/*
+ * prepare to send HTTP request
+ */
+static void sendRequest(HttpRequest request)
+{
 }
 
 /*

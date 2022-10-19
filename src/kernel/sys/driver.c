@@ -312,10 +312,10 @@ void message(string str)
 }
 
 /*
- * NAME:	load()
+ * NAME:	_compile()
  * DESCRIPTION:	find or compile object
  */
-private object load(string path)
+private atomic object _compile(string path)
 {
     object obj;
     mapping tls;
@@ -343,9 +343,9 @@ private void _initialize(mapping tls)
     message("Initializing...\n");
 
     /* load initial objects */
-    load(AUTO);
-    call_other(rsrcd = load(RSRCD), "???");
-    load(RSRCOBJ);
+    _compile(AUTO);
+    call_other(rsrcd = _compile(RSRCD), "???");
+    _compile(RSRCOBJ);
 
     /* initialize some resources */
     rsrcd->set_rsrc("stack",     100,  0,    0);
@@ -361,9 +361,9 @@ private void _initialize(mapping tls)
 		     file_size("/doc", TRUE) + file_size("/include", TRUE));
 
     /* load remainder of manager objects */
-    call_other(accessd = load(ACCESSD), "???");
-    call_other(userd = load(USERD), "???");
-    call_other(load(DEFAULT_WIZTOOL), "???");
+    call_other(accessd = _compile(ACCESSD), "???");
+    call_other(userd = _compile(USERD), "???");
+    call_other(_compile(DEFAULT_WIZTOOL), "???");
 
     /* correct object count */
     rsrcd->rsrc_incr("System", "objects", 7);
@@ -940,7 +940,8 @@ static string atomic_error(string str, int atom, int ticks)
     }
 
     if (trace[atom][TRACE_FUNCTION] != "_compile" ||
-	trace[atom][TRACE_PROGNAME] != AUTO) {
+	((progname=trace[atom][TRACE_PROGNAME]) != AUTO && progname != DRIVER))
+    {
 	if (errord) {
 	    errord->atomic_error(str, atom, trace);
 	} else {

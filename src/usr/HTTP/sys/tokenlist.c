@@ -1,7 +1,7 @@
 /*
  * parse a comma-separated token list
  */
-mixed tokenlist(string str)
+mixed *tokenlist(string str)
 {
     return parse_string("\
 whitespace = /[ \t]+/							\

@@ -1,7 +1,7 @@
 /*
  * parse a token-parameter
  */
-mixed tokenparam(string str)
+mixed *tokenparam(string str)
 {
     return parse_string("\
 whitespace = /[ \t]+/							\

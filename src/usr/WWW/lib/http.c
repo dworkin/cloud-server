@@ -279,7 +279,7 @@ int receiveRequest(int code, HttpRequest request)
     return code;
 }
 
-int chunkDone()
+int doneChunk()
 {
     previous_object()->disconnect();
 }

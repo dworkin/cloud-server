@@ -70,29 +70,31 @@ int query_mode()
  */
 static void open(mapping tls)
 {
-    int mode, delay;
-    string banner;
+    if (user) {
+	user->connected();
+    } else {
+	int mode, delay;
+	string banner;
 
-    mode = call_other(userd, "query_" + conntype + "_mode", port,
-		      this_object());
-    if (mode != MODE_NOCHANGE) {
-	set_mode(mode);
-	if (mode == MODE_DISCONNECT) {
-	    return;	/* disconnect immediately */
+	mode = call_other(userd, "query_" + conntype + "_mode", port,
+			  this_object());
+	if (mode != MODE_NOCHANGE) {
+	    set_mode(mode);
+	    if (mode == MODE_DISCONNECT) {
+		return;	/* disconnect immediately */
+	    }
 	}
-    }
 
-    if (conntype != "datagram") {
-	banner = call_other(userd, "query_" + conntype + "_banner", port,
-			    this_object());
-	if (banner) {
-	    send_message(banner);
+	if (conntype != "datagram") {
+	    banner = call_other(userd, "query_" + conntype + "_banner", port,
+				this_object());
+	    if (banner) {
+		send_message(banner);
+	    }
 	}
-    }
 
-    delay = call_other(userd, "query_" + conntype + "_timeout", port,
-		       this_object());
-    if (!user) {
+	delay = call_other(userd, "query_" + conntype + "_timeout", port,
+			   this_object());
 	if (delay > 0) {
 	    timeout = call_out("timeout", delay);
 	} else if (delay < 0) {

@@ -5,7 +5,6 @@
 # include <status.h>
 # include <type.h>
 # include <trace.h>
-# include <kfun.h>
 
 # define TLS()			::call_trace()[1][TRACE_FIRSTARG]
 # define CHECKARG(arg, n, func)	if (!(arg)) badarg((n), (func))
@@ -570,11 +569,7 @@ static void connect_datagram(int dgram, string address, int port)
     if (previous_program() != DATAGRAM_CONN) {
 	error("Permission denied");
     }
-# ifdef KF_CONNECT_DATAGRAM
     ::connect_datagram(dgram, address, port);
-# else
-    ::call_out("unconnected", 0, 0);
-# endif
 }
 
 /*

@@ -16,6 +16,7 @@ void create()
     compile_object("sys/tokenlist");
     compile_object("sys/tokenparamlist");
     compile_object(HTTP1_SERVER);
+    compile_object(HTTP1_CLIENT);
     compile_object(OBJECT_PATH(RemoteHttpRequest));
     compile_object(OBJECT_PATH(RemoteHttpResponse));
     compile_object(OBJECT_PATH(RemoteHttpAuthentication));
