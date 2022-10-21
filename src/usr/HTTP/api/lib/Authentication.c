@@ -1,8 +1,7 @@
 # include "HttpField.h"
+# include <type.h>
 
 inherit HttpFieldItem;
-
-private inherit base64 "/lib/util/base64";
 
 
 private string scheme;		/* authentication scheme */
@@ -22,9 +21,16 @@ static void create(string scheme, varargs mixed authentication)
  */
 string transport()
 {
-    return (authentication) ?
-	    scheme + " " + base64::encode(authentication) :
-	    scheme;
+    switch (typeof(authentication)) {
+    case T_NIL:
+	return scheme;
+
+    case T_STRING:
+	return scheme + " " + authentication;
+
+    case T_ARRAY:
+	return scheme + " " + implode(authentication, ", ");
+    }
 }
 
 

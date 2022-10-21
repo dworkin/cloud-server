@@ -1,7 +1,7 @@
 /*
- * parse a token-parameter
+ * type/subtype params
  */
-mixed *tokenparam(string str)
+string *typeparam(string str)
 {
     return parse_string("\
 ws = /[ \t]+/								\
@@ -9,26 +9,26 @@ token = /[-!#$%&'*+.^_`|~A-Za-z0-9]+/					\
 string = /\"([^\x00-\x08\x0a-\x1f\x7f\"\\\\]|\\\\[^\x00-\x08\x0a-\x1f\x7f])*\"/										\
 junk = /./								\
 \
-TokenParam: token Params				? token		\
+Type: token '/' token Params				? type		\
 \
 Params:									\
 Params: Params Param							\
 \
-Param: Ws ';' Ws token Ws '=' Ws Value			? param		\
+Param: Ows ';' Ows token Ows '=' Ows Value		? param		\
 \
-Ws:									\
-Ws: ws							? null		\
+Ows:									\
+Ows: ws							? null		\
 \
 Value: token								\
-Value: string",	str);
+Value: string", str);
 }
 
 /*
- * token params
+ * type/subtype params
  */
-static mixed *token(mixed *parsed)
+static mixed *type(mixed *parsed)
 {
-    return ({ parsed[0], parsed[1 ..] });
+    return ({ parsed[0] + "/" + parsed[2], parsed[3 ..] });
 }
 
 /*
@@ -42,7 +42,7 @@ static mixed *param(mixed *parsed)
 /*
  * nothing
  */
-static mixed *null(mixed parsed)
+static mixed null(mixed parsed)
 {
     return ({ });
 }

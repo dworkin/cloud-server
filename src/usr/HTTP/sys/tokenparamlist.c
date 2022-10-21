@@ -20,13 +20,15 @@ List: List Comma ListValue						\
 Comma: ','						? null		\
 \
 ListValue:								\
-ListValue: token ParamList						\
+ListValue: token Params					? token		\
 \
-ParamList:						? empty		\
-ParamList: ParamList ';' token '=' Param		? paramList	\
+Params:									\
+Params: Params Param							\
 \
-Param: token								\
-Param: string",	str);
+Param: ';' token '=' Value				? param		\
+\
+Value: token								\
+Value: string",	str);
 
     sz = sizeof(list);
     values = allocate(sz / 2);
@@ -41,23 +43,23 @@ Param: string",	str);
 /*
  * ','
  */
-static mixed *null(mixed parsed)
+static mixed null(mixed parsed)
 {
     return ({ });
 }
 
 /*
- * empty parameter list
+ * token params
  */
-static mixed *empty(mixed parsed)
+static mixed *token(mixed *parsed)
 {
-    return ({ ({ }) });
+    return ({ parsed[0], parsed[1 ..] });
 }
 
 /*
- * parameter list
+ * param=value
  */
-static mixed *paramList(mixed *parsed)
+static mixed *param(mixed *parsed)
 {
-    return ({ parsed[0] + ({ parsed[2] + "=" + parsed[4] }) });
+    return ({ parsed[1] + "=" + parsed[3] });
 }

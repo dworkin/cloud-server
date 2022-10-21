@@ -8,6 +8,9 @@ private inherit "/lib/util/ascii";
 
 
 # define HTTP_FIELDS		"/usr/HTTP/sys/fields"
+# define HTTP_AUTHENTICATE	"/usr/HTTP/sys/authenticate"
+# define HTTP_PRODUCTS		"/usr/HTTP/sys/products"
+# define HTTP_TYPEPARAM		"/usr/HTTP/sys/typeparam"
 # define HTTP_LIST		"/usr/HTTP/sys/list"
 # define HTTP_TOKENLIST		"/usr/HTTP/sys/tokenlist"
 # define HTTP_TOKENPARAMLIST	"/usr/HTTP/sys/tokenparamlist"
@@ -49,11 +52,21 @@ static void create(string blob)
 	    break;
 
 	case "content-type":
+	    addField(name, HTTP_TYPEPARAM->typeparam(value)...);
+	    break;
+
 	case "from":
 	case "host":
 	case "referer":
-	case "user-agent":
+	    if (sscanf(value, "%*s ") != 0) {
+		error("Bad field");
+	    }
 	    addField(name, value);
+	    break;
+
+	case "server":
+	case "user-agent":
+	    addField(name, HTTP_PRODUCTS->products(value));
 	    break;
 
 	case "if-modified-since":
@@ -75,6 +88,14 @@ static void create(string blob)
 			     HTTP_TOKENPARAMLIST->tokenparamlist(value)...);
 	    } else {
 		addFieldList(name, ({ }), ({ }));
+	    }
+	    break;
+
+	case "www-authenticate":
+	    if (value) {
+		addFieldList(name, HTTP_AUTHENTICATE->authenticate(value));
+	    } else {
+		addFieldList(name, ({ }));
 	    }
 	    break;
 

@@ -1,6 +1,7 @@
 # define HttpFieldItem		object "/usr/HTTP/api/lib/FieldItem"
 # define HttpAuthentication	object "/usr/HTTP/api/lib/Authentication"
 # define RemoteHttpAuthentication object "/usr/HTTP/api/lib/RemoteAuthentication"
+# define HttpProduct		object "/usr/HTTP/api/lib/Product"
 # define HttpTime		object "/usr/HTTP/api/lib/Time"
 # define RemoteHttpTime		object "/usr/HTTP/api/lib/RemoteTime"
 

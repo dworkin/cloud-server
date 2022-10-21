@@ -3,4 +3,4 @@
 
 # define SYS_PERSISTENT				/* persistent system */
 
-# define SERVER_NAME	"Cloud Server"		/* name of the server */
+# define SERVER_NAME	"CloudServer"		/* name of the server */

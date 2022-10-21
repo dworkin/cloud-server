@@ -2,19 +2,19 @@
 
 inherit HttpAuthentication;
 
-private inherit base64 "/lib/util/base64";
 
+# define HTTP_AUTHORIZE		"/usr/HTTP/sys/authorize"
 
 /*
  * create authentication item
  */
 static void create(string blob)
 {
-    string scheme, authentication;
+    mixed *parsed;
 
-    if (sscanf(blob, "%s %s", scheme, authentication) == 0 ||
-	(strlen(authentication) & 3) != 0) {
+    parsed = HTTP_AUTHORIZE->authorize(blob);
+    if (!parsed) {
 	error("Bad request");
     }
-    ::create(scheme, base64::decode(authentication));
+    ::create(parsed...);
 }

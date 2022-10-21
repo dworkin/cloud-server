@@ -10,6 +10,7 @@
 # include "~HTTP/api/include/HttpResponse.h"
 
 private inherit	"/lib/util/ascii";
+private inherit base64 "/lib/util/base64";
 
 
 private float version;		/* request version */
@@ -48,7 +49,7 @@ static int http_request(HttpRequest request)
 	headers = request->headers();
 	header = headers->get("authorization");
 	if (header && lower_case(header->value()->scheme()) == "basic")
-	    authorization = header->value()->authentication();
+	    authorization = base64::decode(header->value()->authentication());
 	header = headers->get("content-length");
 	if (header) content_length = header->value();
 	header = headers->get("content-type");
@@ -179,9 +180,8 @@ private string http_response(int code, string str, varargs string type,
 
 
     message = "HTTP/1.0 " + message + "\r\nDate: " + time2date(time()) +
-	      "\r\nServer: " +
-	      implode(explode(status(ST_VERSION), " "), "/") + " " +
-	      SERVER_NAME + "/" + SERVER_VERSION + "\r\n";
+	      "\r\nServer: " + SERVER_NAME + "/" + SERVER_VERSION + " " +
+	      implode(explode(status(ST_VERSION), " "), "/") + "\r\n";
 
     switch (code) {
     case HTTP_MOVED_PERMANENTLY:
