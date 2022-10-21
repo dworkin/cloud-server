@@ -1,6 +1,6 @@
 # include <kernel/kernel.h>
 # include <kernel/user.h>
-# include "~HTTP/api/include/HttpConnection.h"
+# include "~HTTP/HttpConnection.h"
 
 inherit "~System/lib/user";
 

@@ -638,9 +638,16 @@ static object inherit_program(string from, string path, int priv)
  */
 static mixed include_file(string from, string path)
 {
+    string user, file;
     mapping source;
     mixed result;
 
+    if (sscanf(path, "~%s/%s", user, file) != 0 && strlen(user) != 0) {
+	/*
+	 * ~System/file.h => ~System/api/include/file.h
+	 */
+	path = "~" + user + "/api/include/" + file;
+    }
     if (strlen(path) != 0 && path[0] != '~' && sscanf(path, "%*s/../") == 0 &&
 	(sscanf(path, "/include/%*s") != 0 || sscanf(path, "%*s/") == 0)) {
 	/*

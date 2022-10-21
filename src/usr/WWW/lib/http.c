@@ -5,9 +5,9 @@
 # include <type.h>
 # include <String.h>
 # include <Time.h>
-# include "~HTTP/api/include/HttpRequest.h"
-# include "~HTTP/api/include/HttpField.h"
-# include "~HTTP/api/include/HttpResponse.h"
+# include "~HTTP/HttpRequest.h"
+# include "~HTTP/HttpField.h"
+# include "~HTTP/HttpResponse.h"
 
 private inherit	"/lib/util/ascii";
 private inherit base64 "/lib/util/base64";

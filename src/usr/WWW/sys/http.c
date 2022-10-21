@@ -1,7 +1,7 @@
 # include <kernel/kernel.h>
 # include <Time.h>
-# include "~HTTP/api/include/HttpRequest.h"
-# include "~HTTP/api/include/HttpResponse.h"
+# include "~HTTP/HttpRequest.h"
+# include "~HTTP/HttpResponse.h"
 
 inherit "~/lib/http";
 
