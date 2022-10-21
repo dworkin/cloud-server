@@ -642,7 +642,9 @@ static mixed include_file(string from, string path)
     mapping source;
     mixed result;
 
-    if (sscanf(path, "~%s/%s", user, file) != 0 && strlen(user) != 0) {
+    if (sscanf(path, "~%s/%s", user, file) != 0 && strlen(user) != 0 &&
+	sscanf(file, "include/%*s") == 0 &&
+	sscanf(file, "api/include/%*s") == 0) {
 	/*
 	 * ~System/file.h => ~System/api/include/file.h
 	 */
