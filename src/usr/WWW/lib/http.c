@@ -66,8 +66,6 @@ static int http_request(HttpRequest request)
 	    no_cache = TRUE;
 	header = headers->get("referer");
 	if (header) referer = header->value();
-	header = headers->get("user-agent");
-	if (header) user_agent = header->value();
     } catch (...) {
 	return HTTP_BAD_REQUEST;
     }
