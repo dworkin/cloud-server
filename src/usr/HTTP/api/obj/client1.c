@@ -72,11 +72,11 @@ static int receiveHeaders(string str)
 {
     try {
 	receiveResponseHeaders(response, new_object(headersPath, str));
-	client->receiveResponse(response);
-	return MODE_NOCHANGE;
     } catch (...) {
 	return MODE_DISCONNECT;
     }
+    client->receiveResponse(response);
+    return MODE_NOCHANGE;
 }
 
 /*

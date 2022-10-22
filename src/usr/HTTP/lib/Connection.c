@@ -11,22 +11,6 @@ inherit "~System/lib/user";
  */
 static int receiveRequestLine(HttpRequest request)
 {
-    switch (request->method()) {
-    case "GET":
-    case "HEAD":
-    case "POST":
-    case "PUT":
-    case "DELETE":
-    case "CONNECT":
-    case "OPTIONS":
-    case "TRACE":
-	break;
-
-    default:
-	/* method not implemented */
-	return HTTP_NOT_IMPLEMENTED;
-    }
-
     if (!request->path()) {
 	/* invalid request */
 	return HTTP_BAD_REQUEST;

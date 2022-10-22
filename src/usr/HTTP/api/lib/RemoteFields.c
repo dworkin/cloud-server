@@ -3,7 +3,6 @@
 # include "HttpField.h"
 
 inherit HttpFields;
-
 private inherit "/lib/util/ascii";
 
 
@@ -16,12 +15,60 @@ private inherit "/lib/util/ascii";
 # define HTTP_TOKENPARAMLIST	"/usr/HTTP/sys/tokenparamlist"
 
 /*
+ * parse WWW-Authenticate
+ */
+static HttpAuthentication *parseAuthenticate(string str)
+{
+    return HTTP_AUTHENTICATE->authenticate(str);
+}
+
+/*
+ * parse User-Agent, Server
+ */
+static HttpProduct *parseProducts(string str)
+{
+    return HTTP_PRODUCTS->products(str);
+}
+
+/*
+ * parse Content-Type
+ */
+static mixed *parseTypeParam(string str)
+{
+    return HTTP_TYPEPARAM->typeparam(str);
+}
+
+/*
+ * parse generic list
+ */
+static string *parseList(string str)
+{
+    return HTTP_LIST->list(str);
+}
+
+/*
+ * parse Connection
+ */
+static string *parseTokenList(string str)
+{
+    return HTTP_TOKENLIST->tokenlist(str);
+}
+
+/*
+ * parse TE, Transfer-Encoding
+ */
+static mixed *parseTokenParamList(string str)
+{
+    return HTTP_TOKENPARAMLIST->tokenparamlist(str);
+}
+
+/*
  * add unknown field value as a list
  */
 static void addUnknownField(string name, string value)
 {
     if (value) {
-	addFieldList(name, HTTP_LIST->list(value));
+	addFieldList(name, parseList(value));
     } else {
 	addFieldList(name, ({ }));
     }
@@ -47,12 +94,27 @@ static void create(string blob)
 	    addField(name, new RemoteHttpAuthentication(value));
 	    break;
 
+	case "connection":
+	    if (value) {
+		addFieldList(name, parseTokenList(value));
+	    } else {
+		addFieldList(name, ({ }));
+	    }
+	    break;
+
 	case "content-length":
 	    addField(name, (int) value);
 	    break;
 
 	case "content-type":
-	    addField(name, HTTP_TYPEPARAM->typeparam(value)...);
+	    addField(name, parseTypeParam(value)...);
+	    break;
+
+	case "date":
+	case "expires":
+	case "if-modified-since":
+	case "last-modified":
+	    addField(name, new RemoteHttpTime(value));
 	    break;
 
 	case "from":
@@ -66,26 +128,13 @@ static void create(string blob)
 
 	case "server":
 	case "user-agent":
-	    addField(name, HTTP_PRODUCTS->products(value));
-	    break;
-
-	case "if-modified-since":
-	    addField(name, new RemoteHttpTime(value));
-	    break;
-
-	case "connection":
-	    if (value) {
-		addFieldList(name, HTTP_TOKENLIST->tokenlist(value));
-	    } else {
-		addFieldList(name, ({ }));
-	    }
+	    addField(name, parseProducts(value));
 	    break;
 
 	case "te":
 	case "transfer-encoding":
 	    if (value) {
-		addFieldList(name,
-			     HTTP_TOKENPARAMLIST->tokenparamlist(value)...);
+		addFieldList(name, parseTokenParamList(value)...);
 	    } else {
 		addFieldList(name, ({ }), ({ }));
 	    }
@@ -93,7 +142,7 @@ static void create(string blob)
 
 	case "www-authenticate":
 	    if (value) {
-		addFieldList(name, HTTP_AUTHENTICATE->authenticate(value));
+		addFieldList(name, parseAuthenticate(value));
 	    } else {
 		addFieldList(name, ({ }));
 	    }

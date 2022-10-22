@@ -251,7 +251,6 @@ static void receiveChunk(StringBuffer chunk, varargs HttpFields trailers)
 int receive_message(string str)
 {
     if (previous_program() == LIB_CONN) {
-	int code, len;
 	StringBuffer chunk;
 
 	if (fields) {
@@ -280,7 +279,8 @@ int receive_message(string str)
 				 (strlen(str) != 0) ?
 				  new_object(trailersPath, str) : nil);
 		    return MODE_NOCHANGE;
-		} catch (...) {
+		} catch (err) {
+		    relay->receiveError(err);
 		    return MODE_DISCONNECT;
 		}
 	    }
@@ -293,7 +293,9 @@ int receive_message(string str)
 		 * end of chunk
 		 */
 		if (strlen(str) != 0) {
-		    return MODE_DISCONNECT;	/* \r\n expected */
+		    /* \r\n expected */
+		    relay->receiveError("HTTP protocol error");
+		    return MODE_DISCONNECT;
 		}
 
 		chunk = inbuf;
@@ -302,7 +304,8 @@ int receive_message(string str)
 		set_mode(MODE_BLOCK);
 		try {
 		    call_limited("receiveChunk", chunk);
-		} catch (...) {
+		} catch (err) {
+		    relay->receiveError(err);
 		    return MODE_DISCONNECT;
 		}
 	    } else {
@@ -317,11 +320,7 @@ int receive_message(string str)
 		    inbuf = nil;
 
 		    set_mode(MODE_BLOCK);
-		    try {
-			call_limited("receiveEntity", chunk);
-		    } catch (...) {
-			return MODE_DISCONNECT;
-		    }
+		    call_limited("receiveEntity", chunk);
 		}
 	    }
 
@@ -332,7 +331,8 @@ int receive_message(string str)
 	     */
 	    try {
 		return call_limited("receiveChunkLine", str);
-	    } catch (...) {
+	    } catch (err) {
+		relay->receiveError(err);
 		return MODE_DISCONNECT;
 	    }
 	} else {

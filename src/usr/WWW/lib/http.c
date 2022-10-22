@@ -10,62 +10,26 @@
 # include "~HTTP/HttpResponse.h"
 
 private inherit	"/lib/util/ascii";
-private inherit base64 "/lib/util/base64";
 
 
 private float version;		/* request version */
-private string host;		/* request host */
-private string authorization;	/* request authorization */
-private string from;		/* requestor */
-private int if_modified_since;	/* if-modified-since time */
-private int no_cache;		/* no-cache flag */
-private string referer;		/* referring page */
-private string user_agent;	/* user agent description */
-private int content_length;	/* entity length */
-private string content_type;	/* entity type */
 
 /*
  * process HTTP request
  */
 static int http_request(HttpRequest request)
 {
-    HttpFields headers;
-    HttpField header;
+    int content_length;
+    mixed value;
 
-    authorization = nil;
-    from = nil;
-    host = nil;
-    if_modified_since = 0;
-    no_cache = FALSE;
-    user_agent = nil;
     content_length = -1;
-    content_type = nil;
-
     version = request->version();
-    host = request->host();
 
-    headers = request->headers();
-    if (headers) try {
-	headers = request->headers();
-	header = headers->get("authorization");
-	if (header && lower_case(header->value()->scheme()) == "basic")
-	    authorization = base64::decode(header->value()->authentication());
-	header = headers->get("content-length");
-	if (header) content_length = header->value();
-	header = headers->get("content-type");
-	if (header) content_type = header->value();
-	header = headers->get("from");
-	if (header) from = header->value();
-	header = headers->get("host");
-	if (header) host = header->value();
-	header = headers->get("if-modified-since");
-	if (header) if_modified_since = header->value()->time()->time();
-	header = headers->get("pragma");
-	if (header && typeof(header->value()) == T_STRING &&
-	    lower_case(header->value()) == "no-cache")
-	    no_cache = TRUE;
-	header = headers->get("referer");
-	if (header) referer = header->value();
+    try {
+	value = request->headerValue("Content-Length");
+	if (value != nil) {
+	    content_length = value;
+	}
     } catch (...) {
 	return HTTP_BAD_REQUEST;
     }
@@ -77,31 +41,17 @@ static int http_request(HttpRequest request)
 }
 
 /*
- * convert POSIX time to date string
- */
-private string time2date(int time)
-{
-    return new HttpTime(new Time(time))->transport();
-}
-
-static string	query_authorization()		{ return authorization; }
-static string	query_from()			{ return from; }
-static string	query_host()			{ return host; }
-static int	query_if_modified_since()	{ return if_modified_since; }
-static int	query_no_cache()		{ return no_cache; }
-static string	query_referer()			{ return referer; }
-static string	query_user_agent()		{ return user_agent; }
-static int	query_content_length()		{ return content_length; }
-static string	query_content_type()		{ return content_type; }
-
-
-/*
  * construct a response to a request
  */
-private string http_response(int code, string str, varargs string type,
-			     int length, int modtime, int expires)
+private HttpResponse http_response(int code, string str, varargs string type,
+				   int length, int modtime, int expires)
 {
     string message;
+    HttpResponse response;
+    HttpFields headers;
+    HttpProduct lib, driver;
+    HttpAuthentication authentication;
+    Time time;
 
     switch (code) {
     case HTTP_OK:
@@ -173,53 +123,63 @@ private string http_response(int code, string str, varargs string type,
     }
 
     if (version < 1.0) {
-	return "";
+	return nil;
     }
 
 
-    message = "HTTP/1.0 " + message + "\r\nDate: " + time2date(time()) +
-	      "\r\nServer: " + SERVER_NAME + "/" + SERVER_VERSION + " " +
-	      implode(explode(status(ST_VERSION), " "), "/") + "\r\n";
+    response = new HttpResponse(1.0, code, message);
+    headers = new HttpFields();
+    headers->add(new HttpField("Date", new HttpTime()));
+    lib = new HttpProduct(SERVER_NAME, SERVER_VERSION);
+    driver = new HttpProduct(explode(status(ST_VERSION), " ")...);
+    headers->add(new HttpField("Server", ({ lib, driver })));
 
     switch (code) {
     case HTTP_MOVED_PERMANENTLY:
     case HTTP_MOVED_TEMPORARILY:
-	message += "Location: " + str + "\r\n";
+	headers->add(new HttpField("Location", str));
 	break;
 
     case HTTP_UNAUTHORIZED:
-	message += "WWW-Authenticate: Basic realm=\"" + str + "\"\r\n";
+	authentication = new HttpAuthentication("Basic",
+						({ "realm=\"" + str + "\"" }));
+	headers->add(new HttpField("WWW-Authenticate", authentication));
 	break;
     }
 
     if (type) {
-	message += "Content-Type: " + type + "\r\n";
+	headers->add(new HttpField("Content-Type", type));
 	if (length >= 0) {
-	    message += "Content-Length: " + length + "\r\n";
+	    headers->add(new HttpField("Content-Length", length));
 	}
 	if (modtime != 0) {
-	    message += "Last-Modified: " + time2date(modtime) + "\r\n";
+	    time = new Time(modtime);
+	    headers->add(new HttpField("Last-Modified", new HttpTime(time)));
 	}
 	if (expires != 0) {
-	    message += "Expires: " + time2date(expires) + "\r\n";
+	    time = new Time(expires);
+	    headers->add(new HttpField("Expires", new HttpTime(time)));
 	}
     }
 
-    return message + "\r\n";
+    response->setHeaders(headers);
+    return response;
 }
 
 
 static mixed *response(int code, string str, varargs string type, int length,
 		       int modtime, string body)
 {
+    HttpResponse response;
+
     if (!body) {
 	body = "";
     }
-    return ({
-	code,
-	new StringBuffer(http_response(code, str, type, length, modtime) +
-			 body)
-    });
+    response = http_response(code, str, type, length, modtime);
+    if (response) {
+	body = response->transport() + body;
+    }
+    return ({ code, new StringBuffer(body) });
 }
 
 static mixed *bad_request()

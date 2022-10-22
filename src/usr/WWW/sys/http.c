@@ -4,8 +4,8 @@
 # include "~HTTP/HttpResponse.h"
 
 inherit "~/lib/http";
-
 private inherit "/lib/util/ascii";
+private inherit base64 "/lib/util/base64";
 
 
 # define CHUNK_SIZE	65535
@@ -192,10 +192,10 @@ private object http_read_file(object mesg, string file)
 
 mixed *http_message(int code, HttpRequest request, object entity)
 {
-    mixed *info;
+    mixed *info, value;
     string scheme, host, file;
-    int code2, modified;
-    object mesg;
+    int code2;
+    object mesg, header;
 
     if (request) {
 	code2 = http_request(request);
@@ -211,7 +211,7 @@ mixed *http_message(int code, HttpRequest request, object entity)
     if (scheme && lower_case(scheme) != "http://") {
 	return not_found();
     }
-    host = query_host();
+    host = request->host();
     if (!host) {
 	host = httphost;
     } else {
@@ -240,8 +240,8 @@ mixed *http_message(int code, HttpRequest request, object entity)
 
 	switch (request->method()) {
 	case "GET":
-	    modified = query_if_modified_since();
-	    if (modified != 0 && new Time(modified) >= new Time(info[1])) {
+	    value = request->headerValue("If-Modified-Since");
+	    if (value && value->time() >= new Time(info[1])) {
 		return response(HTTP_NOT_MODIFIED, nil);
 	    }
 	    mesg = response(HTTP_OK, nil, info[2], info[0], info[1])[1];
@@ -252,7 +252,9 @@ mixed *http_message(int code, HttpRequest request, object entity)
 	    return response(HTTP_OK, nil, info[2], info[0], info[1]);
 
 	case "POST":
-	    if (query_authorization() != "foobar:gnu") {
+	    value = request->headerValue("Authorization");
+	    if (value && lower_case(value->scheme()) == "basic" &&
+		base64::decode(value->authorization()) != "foobar:gnu") {
 		return unauthorized("posting");
 	    }
 	    mesg = response(HTTP_CREATED, nil, info[2], info[0], info[1])[1];
@@ -272,8 +274,8 @@ mixed *http_message(int code, HttpRequest request, object entity)
 
 	switch (request->method()) {
 	case "GET":
-	    modified = query_if_modified_since();
-	    if (modified != 0 && new Time(modified) >= new Time(info[1])) {
+	    value = request->headerValue("If-Modified-Since");
+	    if (value && value->time() >= new Time(info[1])) {
 		return response(HTTP_NOT_MODIFIED, nil);
 	    }
 	    if (info[0] == -2) {
