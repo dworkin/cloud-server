@@ -71,7 +71,7 @@ int query_mode()
 static void open(mapping tls)
 {
     if (user) {
-	user->connected();
+	set_mode(user->login(nil));
     } else {
 	int mode, delay;
 	string banner;
@@ -194,7 +194,9 @@ void set_user(object obj, string str)
 {
     if (KERNEL()) {
 	user = obj;
-	set_mode(obj->login(str));
+	if (str) {
+	    set_mode(obj->login(str));
+	}
     }
 }
 

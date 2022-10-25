@@ -31,7 +31,7 @@ static void create(object client, string address, int port,
 /*
  * connection established (client)
  */
-static void _connected()
+static void connected()
 {
     client->connected();
 }
@@ -39,11 +39,13 @@ static void _connected()
 /*
  * connection established
  */
-void connected()
+int login(string str)
 {
     if (previous_program() == LIB_CONN) {
-	call_limited("_connected");
+	set_mode(MODE_BLOCK);
+	call_limited("connected");
     }
+    return MODE_NOCHANGE;
 }
 
 /*
@@ -89,14 +91,6 @@ void doneResponse()
 	    set_mode(MODE_DISCONNECT);
 	}
     }
-}
-
-/*
- * initial connection mode
- */
-int login(string str)
-{
-    return MODE_BLOCK;
 }
 
 /*
