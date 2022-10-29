@@ -1,5 +1,6 @@
 # include <kernel/kernel.h>
 # include <kernel/access.h>
+# include <kernel/rsrc.h>
 # include <kernel/user.h>
 # include <status.h>
 # include <type.h>
@@ -411,6 +412,110 @@ static void cmd_ungrant(object user, string cmd, string str)
 	} else {
 	    set_access(who, str, 0);
 	}
+    }
+}
+
+/*
+ * NAME:	list_ticks()
+ * DESCRIPTION:	create a listing of tick quotas
+ */
+private string list_ticks(string *names, mixed *resources, mixed *maxusage)
+{
+    int i, n;
+    mixed *rsrc;
+    string str, unit;
+
+    for (i = sizeof(names); --i >= 0; ) {
+	rsrc = resources[i];
+	str = (names[i] + "                ")[.. 15] + " " +
+	      ntoa(rsrc[RSRC_USAGE], 13) + " " + ntoa(maxusage[i], 12) + " " +
+	      ntoa(rsrc[RSRC_MAX], 12);
+	if ((int) rsrc[RSRC_DECAY] != 0) {
+	    str += ralign(rsrc[RSRC_DECAY], 6) + "%";
+	}
+	if ((int) rsrc[RSRC_PERIOD] != 0) {
+	    switch (n = rsrc[RSRC_PERIOD]) {
+	    case 1 .. 60 - 1:
+		unit = "second";
+		break;
+
+	    case 60 .. 60 * 60 - 1:
+		n /= 60;
+		unit = "minute";
+		break;
+
+	    case 60 * 60 .. 24 * 60 * 60 - 1:
+		n /= 60 * 60;
+		unit = "hour";
+		break;
+
+	    default:
+		n /= 24 * 60 * 60;
+		unit = "day";
+		break;
+	    }
+	    str += " per " + ((n == 1) ? unit : n + " " + unit + "s");
+	}
+	resources[i] = str;
+    }
+
+    return
+"owner                    usage    max usage          max  decay  period\n" +
+"----------------+-------------+------------+------------+------+---------\n" +
+	   implode(resources, "\n") + "\n";
+}
+
+/*
+ * NAME:	cmd_quota()
+ * DESCRIPTION:	resource quota command
+ */
+static void cmd_quota(object user, string cmd, string str)
+{
+    string who;
+    float maxusage;
+
+    if (str && sscanf(str, "%s ticks usage %f", who, maxusage) == 2) {
+	if (who == "Ecru") {
+	    who = nil;
+	}
+	if (sizeof(query_owners() & ({ who })) == 0) {
+	    message("No such resource owner.\n");
+	} else {
+	    try {
+		rsrc_set_maxtickusage(who, maxusage);
+	    } catch (err) {
+		message(err + ".\n");
+	    }
+	}
+    } else {
+	::cmd_quota(user, cmd, str);
+    }
+}
+
+/*
+ * NAME:	cmd_rsrc()
+ * DESCRIPTION:	deal with resources
+ */
+static void cmd_rsrc(object user, string cmd, string str)
+{
+    int i, sz;
+    string *names;
+    mixed *resources, *maxusage, *rsrc;
+
+    if (str == "ticks") {
+	names = query_owners();
+	resources = allocate(i = sz = sizeof(names));
+	maxusage = allocate(sz);
+	while (--i >= 0) {
+	    resources[i] = rsrc_get(names[i], str);
+	    maxusage[i] = rsrc_get_maxtickusage(names[i]);
+	}
+	if (sz != 0 && !names[0]) {
+	    names[0] = "Ecru";
+	}
+	message(list_ticks(names, resources, maxusage));
+    } else {
+	::cmd_rsrc(user, cmd, str);
     }
 }
 

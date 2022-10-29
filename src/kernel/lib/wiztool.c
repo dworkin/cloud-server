@@ -201,6 +201,19 @@ static void rsrc_set_limit(string rowner, string name, int max)
 }
 
 /*
+ * NAME:	rsrc_set_maxtickusage()
+ * DESCRIPTION:	set maximum tick usage
+ */
+static void rsrc_set_maxtickusage(string rowner, float tickusage)
+{
+    if (!access(owner, "/", FULL_ACCESS)) {
+	message("Permission denied.\n");
+    } else {
+	::rsrc_set_maxtickusage(rowner, tickusage);
+    }
+}
+
+/*
  * NAME:	rsrc_get()
  * DESCRIPTION:	get individual resource usage
  */

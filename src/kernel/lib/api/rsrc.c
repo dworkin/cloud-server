@@ -102,6 +102,18 @@ static void rsrc_set_limit(string owner, string name, int max)
 }
 
 /*
+ * NAME:	rsrc_set_maxtickusage()
+ * DESCRIPTION:	set maximum tick usage
+ */
+static void rsrc_set_maxtickusage(string owner, float tickusage)
+{
+    if (tickusage < -1.0) {
+	error("Bad argument for rsrc_set_maxtickusage");
+    }
+    rsrcd->rsrc_set_maxtickusage(owner, tickusage);
+}
+
+/*
  * NAME:	rsrc_get()
  * DESCRIPTION:	get individual resource usage
  */
@@ -111,6 +123,15 @@ static mixed *rsrc_get(string owner, string name)
 	error("Bad arguments for rsrc_get");
     }
     return rsrcd->rsrc_get(owner, name);
+}
+
+/*
+ * NAME:	rsrc_get_maxtickusage()
+ * DESCRIPTION:	get maximum tick usage
+ */
+static float rsrc_get_maxtickusage(string owner)
+{
+    return rsrcd->rsrc_get_maxtickusage(owner);
 }
 
 /*

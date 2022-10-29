@@ -203,6 +203,22 @@ void rsrc_set_limit(string owner, string name, int max)
 }
 
 /*
+ * NAME:	rsrc_set_maxtickusage()
+ * DESCRIPTION:	set maximum tick usage
+ */
+void rsrc_set_maxtickusage(string owner, float tickusage)
+{
+    if (previous_program() == API_RSRC) {
+	object obj;
+
+	if (!(obj=owners[owner])) {
+	    error("No such resource owner: " + owner);
+	}
+	obj->rsrc_set_maxtickusage(tickusage);
+    }
+}
+
+/*
  * NAME:	rsrc_get()
  * DESCRIPTION:	get individual resource usage
  */
@@ -219,6 +235,22 @@ mixed *rsrc_get(string owner, string name)
 	    error("No such resource: " + name);
 	}
 	return obj->rsrc_get(name, rsrc);
+    }
+}
+
+/*
+ * NAME:	rsrc_get_maxtickusage()
+ * DESCRIPTION:	get maximum tick usage
+ */
+float rsrc_get_maxtickusage(string owner)
+{
+    if (previous_program() == API_RSRC) {
+	object obj;
+
+	if (!(obj=owners[owner])) {
+	    error("No such resource owner: " + owner);
+	}
+	return obj->rsrc_get_maxtickusage();
     }
 }
 

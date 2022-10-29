@@ -11,6 +11,7 @@ object rsrcd;		/* resource manager */
 mapping resources;	/* registered resources */
 string owner;		/* owner of these resources */
 int maxticks;		/* maximum number of ticks currently allowed */
+float maxusage;		/* maximum tick usage */
 
 /*
  * NAME:	create()
@@ -23,6 +24,7 @@ static void create()
       "ticks" :		({ 0.0, -1, 0 })
     ]);
     maxticks = -1;
+    maxusage = -1.0;
     rsrcd = find_object(RSRCD);
 }
 
@@ -86,6 +88,9 @@ private void set_rlimits(mixed *rsrc, int update)
     int max;
 
     max = rsrc[RSRC_MAX];
+    if (maxusage > 0.0 && rsrc[RSRC_USAGE] >= maxusage) {
+	max = 1;
+    }
     if (update || maxticks != max) {
 	maxticks = max;
 	rsrcd->set_rlimits(owner,
@@ -115,6 +120,20 @@ void rsrc_set_limit(string name, int max, int decay)
 	    }
 	} else {
 	    resources[name] = ({ (decay == 0) ? 0 : 0.0, max, 0 });
+	}
+    }
+}
+
+/*
+ * NAME:	rsrc_set_maxtickusage()
+ * DESCRIPTION:	set the maximum tick usage
+ */
+void rsrc_set_maxtickusage(float tickusage)
+{
+    if (previous_object() == rsrcd) {
+	maxusage = tickusage;
+	rlimits (-1; -1) {
+	    set_rlimits(resources["ticks"], FALSE);
 	}
     }
 }
@@ -152,6 +171,17 @@ mixed *rsrc_get(string name, int *grsrc)
 	    }
 	    return rsrc;
 	}
+    }
+}
+
+/*
+ * NAME:	rsrc_get_maxtickusage()
+ * DESCRIPTION:	get maximum tick usage
+ */
+float rsrc_get_maxtickusage()
+{
+    if (previous_object() == rsrcd) {
+	return maxusage;
     }
 }
 
@@ -243,7 +273,9 @@ void decay_ticks(int *limits, int time, mixed *grsrc)
 	rlimits (-1; -1) {
 	    rsrc = resources["ticks"];
 	    decay_rsrc(rsrc, grsrc, time);
-	    limits[LIM_MAX_TICKS] = maxticks = rsrc[RSRC_MAX];
+	    maxticks = (maxusage > 0.0 && rsrc[RSRC_USAGE] >= maxusage) ?
+			1 : rsrc[RSRC_MAX];
+	    limits[LIM_MAX_TICKS] = maxticks;
 	    limits[LIM_MAX_TIME] = rsrc[RSRC_DECAYTIME];
 	}
     }
@@ -267,7 +299,7 @@ void update_ticks(int ticks, mixed *grsrc)
 static void incr_ticks(int ticks, int *grsrc)
 {
     mixed *rsrc;
-    int time, max;
+    int time;
 
     rsrc = resources["ticks"];
     time = time();
