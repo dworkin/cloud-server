@@ -87,10 +87,7 @@ private void set_rlimits(mixed *rsrc, int update)
 {
     int max;
 
-    max = rsrc[RSRC_MAX];
-    if (maxusage > 0.0 && rsrc[RSRC_USAGE] >= maxusage) {
-	max = 1;
-    }
+    max = (maxusage > 0.0 && rsrc[RSRC_USAGE] >= maxusage) ? 1 : rsrc[RSRC_MAX];
     if (update || maxticks != max) {
 	maxticks = max;
 	rsrcd->set_rlimits(owner,
@@ -131,8 +128,8 @@ void rsrc_set_limit(string name, int max, int decay)
 void rsrc_set_maxtickusage(float tickusage)
 {
     if (previous_object() == rsrcd) {
-	maxusage = tickusage;
 	rlimits (-1; -1) {
+	    maxusage = tickusage;
 	    set_rlimits(resources["ticks"], FALSE);
 	}
     }
