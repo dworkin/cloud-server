@@ -14,13 +14,14 @@ private inherit hex "/lib/util/hex";
 
 private object relay;		/* object to relay to */
 private string trailersPath;	/* HttpFields object path */
-private string fields;		/* HTTP 1.x headers/trailers */
+private string frame;		/* HTTP 1.x headers/trailers or WsFrame */
 private int inchunk;		/* expecting chunk? */
-private string compression;	/* compression, if any */
+private string transform;	/* compression or masking */
 private StringBuffer inbuf;	/* entity included in request/response */
 private int length;		/* length of entity to receive */
 private StringBuffer outbuf;	/* output buffer */
 private int persistent;		/* is connection persistent? */
+private int webSocket;		/* WebSocket enabled? */
 
 /*
  * initialize HTTP/1.x connection
@@ -77,7 +78,7 @@ static void receiveStatusLine(HttpResponse response)
     float version;
 
     version = response->version();
-    if (version < 1.0 || version >= 2.0) {
+    if (floor(version) != 1.0) {
 	error("Server version out of range");
     }
 
@@ -107,7 +108,7 @@ static void receiveResponseHeader(HttpResponse response, HttpField header)
  */
 static void startHeaders()
 {
-    fields = "";
+    frame = "";
 }
 
 # ifdef KF_GUNZIP
@@ -198,7 +199,7 @@ void expectChunk(varargs string compression)
     if (previous_object() == relay) {
 	set_mode(MODE_LINE);
 	inchunk = TRUE;
-	::compression = compression;
+	transform = compression;
     }
 }
 
@@ -218,7 +219,7 @@ static int receiveChunkLine(string str)
 	set_message_length(length);
 	return MODE_RAW;
     } else {
-	fields = "";
+	frame = "";
 	return MODE_LINE;
     }
 }
@@ -229,7 +230,7 @@ static int receiveChunkLine(string str)
 static void receiveChunk(StringBuffer chunk, varargs HttpFields trailers)
 {
     inchunk = FALSE;
-    switch (compression) {
+    switch (transform) {
 # ifdef KF_GUNZIP
     case "gzip":
 	chunk = gunzip(chunk);
@@ -246,23 +247,116 @@ static void receiveChunk(StringBuffer chunk, varargs HttpFields trailers)
 }
 
 /*
- * receive (part of) HTTP message
+ * notify relay of receive error
+ */
+static void receiveError(string str)
+{
+    relay->receiveError(str);
+}
+
+/*
+ * received a WebSocket chunk
+ */
+static void receiveWsChunk(StringBuffer chunk)
+{
+    if (transform) {
+	chunk = maskWsChunk(chunk, transform);
+    }
+    set_mode(MODE_BLOCK);
+    inchunk = FALSE;
+    relay->receiveWsChunk(chunk);
+}
+
+/*
+ * receive a WebSocket frame
+ */
+static string receiveWsFrame(string str)
+{
+    mixed *result;
+    int opcode, flags, len;
+
+    while (inchunk && (result=::receiveWsFrame(str))) {
+	({ opcode, flags, len, transform, str }) = result;
+	relay->receiveWsFrame(opcode, flags, len);
+
+	if (len > strlen(str)) {
+	    /* incomplete */
+	    set_message_length(::length = len - strlen(str));
+	    inbuf = new StringBuffer(str);
+	    return nil;
+	}
+
+	/* process a WebSocket chunk */
+	receiveWsChunk(new StringBuffer(str[.. len - 1]));
+	str = str[len ..];
+    }
+
+    return str;
+}
+
+/*
+ * expect a WebSocket frame
+ */
+void expectWsFrame()
+{
+    if (previous_object() == relay) {
+	string str;
+
+	set_mode(MODE_RAW);
+	inchunk = TRUE;
+
+	if (!webSocket) {
+	    webSocket = TRUE;
+	    frame = "";
+	} else if (frame) {
+	    str = frame;
+	    frame = nil;
+
+	    frame = receiveWsFrame(str);
+	}
+    }
+}
+
+/*
+ * receive (part of) message
  */
 int receive_message(string str)
 {
     if (previous_program() == LIB_CONN) {
 	StringBuffer chunk;
 
-	if (fields) {
+	if (webSocket) {
+	    try {
+		if (frame) {
+		    str = frame + str;
+		    frame = nil;
+
+		    frame = call_limited("receiveWsFrame", str);
+		} else {
+		    inbuf->append(str);
+		    length -= strlen(str);
+		    if (length == 0) {
+			chunk = inbuf;
+			inbuf = nil;
+
+			call_limited("receiveWsChunk", chunk);
+		    }
+		}
+		return MODE_NOCHANGE;
+	    } catch (err) {
+		call_limited("receiveError", err);
+		return MODE_DISCONNECT;
+	    }
+	} else if (frame) {
 	    /*
 	     * headers or trailers
 	     */
 	    if (strlen(str) != 0) {
-		fields += str + "\n";
+		frame += str + "\n";
 		return MODE_NOCHANGE;
 	    }
-	    str = fields;
-	    fields = nil;
+	    str = frame;
+	    frame = nil;
 
 	    set_mode(MODE_BLOCK);
 	    if (!inchunk) {
@@ -280,7 +374,7 @@ int receive_message(string str)
 				  new_object(trailersPath, str) : nil);
 		    return MODE_NOCHANGE;
 		} catch (err) {
-		    relay->receiveError(err);
+		    call_limited("receiveError", err);
 		    return MODE_DISCONNECT;
 		}
 	    }
@@ -294,7 +388,7 @@ int receive_message(string str)
 		 */
 		if (strlen(str) != 0) {
 		    /* \r\n expected */
-		    relay->receiveError("HTTP protocol error");
+		    call_limited("receiveError", "HTTP protocol error");
 		    return MODE_DISCONNECT;
 		}
 
@@ -305,7 +399,7 @@ int receive_message(string str)
 		try {
 		    call_limited("receiveChunk", chunk);
 		} catch (err) {
-		    relay->receiveError(err);
+		    call_limited("receiveError", err);
 		    return MODE_DISCONNECT;
 		}
 	    } else {
@@ -332,7 +426,7 @@ int receive_message(string str)
 	    try {
 		return call_limited("receiveChunkLine", str);
 	    } catch (err) {
-		relay->receiveError(err);
+		call_limited("receiveError", err);
 		return MODE_DISCONNECT;
 	    }
 	} else {
@@ -431,6 +525,36 @@ void endChunk(varargs string *params, HttpFields trailers)
 }
 
 /*
+ * send a WebSocket chunk
+ */
+void sendWsChunk(int opcode, int flags, varargs int mask, StringBuffer chunk)
+{
+    if (previous_object() == relay) {
+	StringBuffer buffer;
+	string str;
+
+	if (mask != 0) {
+	    str = "....";
+	    str[0] = mask >> 24;
+	    str[1] = mask >> 16;
+	    str[2] = mask >> 8;
+	    str[3] = mask;
+	}
+
+	buffer = new StringBuffer(sendWsFrame(opcode, flags,
+					      (chunk) ? chunk->length() : 0,
+					      str));
+	if (chunk) {
+	    if (mask != 0) {
+		chunk = maskWsChunk(chunk, str);
+	    }
+	    buffer->append(chunk);
+	}
+	sendMessage(buffer);
+    }
+}
+
+/*
  * break the connection
  */
 void disconnect()
@@ -497,4 +621,5 @@ static void sendResponse(HttpResponse response)
 }
 
 
-static int persistent()	{ return persistent; }
+int persistent()	{ return persistent; }
+int webSocket()		{ return webSocket; }

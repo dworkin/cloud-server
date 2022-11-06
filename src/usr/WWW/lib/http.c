@@ -49,73 +49,72 @@ private HttpResponse http_response(int code, string str, varargs string type,
     string message;
     HttpResponse response;
     HttpFields headers;
-    HttpProduct lib, driver;
     HttpAuthentication authentication;
     Time time;
 
     switch (code) {
     case HTTP_OK:
-	message = HTTP_OK + " OK";
+	message = "OK";
 	break;
 
     case HTTP_CREATED:
-	message = HTTP_CREATED + " Created";
+	message = "Created";
 	break;
 
     case HTTP_ACCEPTED:
-	message = HTTP_ACCEPTED + " Accepted";
+	message = "Accepted";
 	break;
 
     case HTTP_NO_CONTENT:
-	message = HTTP_NO_CONTENT + " No Content";
+	message = "No Content";
 	break;
 
     case HTTP_MULTIPLE_CHOICES:
-	message = HTTP_MULTIPLE_CHOICES + " Multiple Choices";
+	message = "Multiple Choices";
 	break;
 
     case HTTP_MOVED_PERMANENTLY:
-	message = HTTP_MOVED_PERMANENTLY + " Moved Permanently";
+	message = "Moved Permanently";
 	break;
 
-    case HTTP_MOVED_TEMPORARILY:
-	message = HTTP_MOVED_TEMPORARILY + " Moved Temporarily";
+    case HTTP_FOUND:
+	message = "Moved Temporarily";
 	break;
 
     case HTTP_NOT_MODIFIED:
-	message = HTTP_NOT_MODIFIED + " Not Modified";
+	message = "Not Modified";
 	break;
 
     case HTTP_BAD_REQUEST:
-	message = HTTP_BAD_REQUEST + " Bad Request";
+	message = "Bad Request";
 	break;
 
     case HTTP_UNAUTHORIZED:
-	message = HTTP_UNAUTHORIZED + " Unauthorized";
+	message = "Unauthorized";
 	break;
 
     case HTTP_FORBIDDEN:
-	message = HTTP_FORBIDDEN + " Forbidden";
+	message = "Forbidden";
 	break;
 
     case HTTP_NOT_FOUND:
-	message = HTTP_NOT_FOUND + " Not Found";
+	message = "Not Found";
 	break;
 
     case HTTP_INTERNAL_ERROR:
-	message = HTTP_INTERNAL_ERROR + " Internal Server Error";
+	message = "Internal Server Error";
 	break;
 
     case HTTP_NOT_IMPLEMENTED:
-	message = HTTP_NOT_IMPLEMENTED + " Not Implemented";
+	message = "Not Implemented";
 	break;
 
     case HTTP_BAD_GATEWAY:
-	message = HTTP_BAD_GATEWAY + " Bad Gateway";
+	message = "Bad Gateway";
 	break;
 
-    case HTTP_UNAVAILABLE:
-	message = HTTP_UNAVAILABLE + " Service Unavailable";
+    case HTTP_SERVICE_UNAVAILABLE:
+	message = "Service Unavailable";
 	break;
 
     default:
@@ -130,13 +129,14 @@ private HttpResponse http_response(int code, string str, varargs string type,
     response = new HttpResponse(1.0, code, message);
     headers = new HttpFields();
     headers->add(new HttpField("Date", new HttpTime()));
-    lib = new HttpProduct(SERVER_NAME, SERVER_VERSION);
-    driver = new HttpProduct(explode(status(ST_VERSION), " ")...);
-    headers->add(new HttpField("Server", ({ lib, driver })));
+    headers->add(new HttpField("Server", ({
+	new HttpProduct(SERVER_NAME, SERVER_VERSION),
+	new HttpProduct(explode(status(ST_VERSION), " ")...)
+    })));
 
     switch (code) {
     case HTTP_MOVED_PERMANENTLY:
-    case HTTP_MOVED_TEMPORARILY:
+    case HTTP_FOUND:
 	headers->add(new HttpField("Location", str));
 	break;
 

@@ -17,7 +17,6 @@ void create()
     compile_object("sys/tokenparam");
     compile_object("sys/typeparam");
     compile_object("sys/list");
-    compile_object("sys/tokenlist");
     compile_object("sys/tokenparamlist");
     compile_object(HTTP1_SERVER);
     compile_object(HTTP1_CLIENT);

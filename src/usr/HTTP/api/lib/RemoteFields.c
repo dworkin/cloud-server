@@ -11,7 +11,6 @@ private inherit "/lib/util/ascii";
 # define HTTP_PRODUCTS		"/usr/HTTP/sys/products"
 # define HTTP_TYPEPARAM		"/usr/HTTP/sys/typeparam"
 # define HTTP_LIST		"/usr/HTTP/sys/list"
-# define HTTP_TOKENLIST		"/usr/HTTP/sys/tokenlist"
 # define HTTP_TOKENPARAMLIST	"/usr/HTTP/sys/tokenparamlist"
 
 /*
@@ -44,14 +43,6 @@ static mixed *parseTypeParam(string str)
 static string *parseList(string str)
 {
     return HTTP_LIST->list(str);
-}
-
-/*
- * parse Connection
- */
-static string *parseTokenList(string str)
-{
-    return HTTP_TOKENLIST->tokenlist(str);
 }
 
 /*
@@ -94,14 +85,6 @@ static void create(string blob)
 	    addField(name, new RemoteHttpAuthentication(value));
 	    break;
 
-	case "connection":
-	    if (value) {
-		addFieldList(name, parseTokenList(value));
-	    } else {
-		addFieldList(name, ({ }));
-	    }
-	    break;
-
 	case "content-length":
 	    addField(name, (int) value);
 	    break;
@@ -120,7 +103,8 @@ static void create(string blob)
 	case "from":
 	case "host":
 	case "referer":
-	    if (sscanf(value, "%*s ") != 0) {
+	case "sec-websocket-key":
+	    if (!value || sscanf(value, "%*s ") != 0) {
 		error("Bad field");
 	    }
 	    addField(name, value);
