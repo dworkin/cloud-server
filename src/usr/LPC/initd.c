@@ -1,4 +1,4 @@
-# include "code.h"
+# include "Code.h"
 # include "compiler.h"
 
 /*
@@ -8,7 +8,7 @@ static void create()
 {
     compile_object(OBJECT_PATH(LPCStmtBlock));
     compile_object(OBJECT_PATH(LPCStmtBreak));
-    compile_object(OBJECT_PATH(LPCStmtCond));
+    compile_object(OBJECT_PATH(LPCStmtConditional));
     compile_object(OBJECT_PATH(LPCStmtContinue));
     compile_object(OBJECT_PATH(LPCStmtDoWhile));
     compile_object(OBJECT_PATH(LPCExp1));

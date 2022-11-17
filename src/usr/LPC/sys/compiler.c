@@ -1,6 +1,6 @@
-# include "compiler.h"
-# include "code.h"
+# include "Code.h"
 # include "expression.h"
+# include "compiler.h"
 
 inherit LPC_PARSE_UTIL;
 
@@ -975,7 +975,7 @@ static mixed *expComma(mixed *parsed)
  */
 static mixed *ifStmt(mixed *parsed)
 {
-    return ({ new LPCStmtCond(parsed[2], parsed[4], parsed[5]) });
+    return ({ new LPCStmtConditional(parsed[2], parsed[4], parsed[5]) });
 }
 
 /*
