@@ -221,6 +221,7 @@ mixed *http_message(int code, HttpRequest request, object entity)
     if (!file) {
 	return bad_request();
     }
+    sscanf(file, "%s?", file);
     file = DRIVER->normalize_path(file, "");
 
     if (host == httphost) {
