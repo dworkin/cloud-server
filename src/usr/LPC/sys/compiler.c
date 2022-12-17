@@ -125,13 +125,15 @@ ListLocal: ListLocal DataDecl						\
 ListStmt:								\
 ListStmt: ListStmt Stmt					? listStmt	" +
 "\
-OptElse: 'else' Stmt					? parsed_1_	\
-OptElse:						? opt		\
-Stmt: EStmt								\
-Stmt: Entries EStmt					? entryStmt	\
+IfStmt: 'if' '(' ListExp ')' Stmt			? ifStmt	\
+Stmt: BStmt								\
+Stmt: IfStmt								\
+Stmt: Entries IfStmt					? entryStmt	\
+BStmt: EStmt								\
+BStmt: Entries EStmt					? entryStmt	\
 EStmt: ListExp ';'					? expStmt	\
 EStmt: CompoundStmt							\
-EStmt: 'if' '(' ListExp ')' Stmt OptElse		? ifStmt	\
+EStmt: 'if' '(' ListExp ')' BStmt 'else' Stmt		? ifElseStmt	\
 EStmt: 'do' Stmt 'while' '(' ListExp ')' ';'		? doWhileStmt	\
 EStmt: 'while' '(' ListExp ')' Stmt			? whileStmt	\
 EStmt: 'for' '(' OptListExp ';' OptListExp ';' OptListExp ')' Stmt	\
@@ -971,11 +973,19 @@ static mixed *expComma(mixed *parsed)
 }
 
 /*
- * ({ "if", "(", LPCExpression, ")", LPCStatement, nil })
+ * ({ "if", "(", LPCExpression, ")", LPCStatement })
  */
 static mixed *ifStmt(mixed *parsed)
 {
-    return ({ new LPCStmtConditional(parsed[2], parsed[4], parsed[5]) });
+    return ({ new LPCStmtConditional(parsed[2], parsed[4], nil) });
+}
+
+/*
+ * ({ "if", "(", LPCExpression, ")", LPCStatement, 'else', LPCStatement })
+ */
+static mixed *ifElseStmt(mixed *parsed)
+{
+    return ({ new LPCStmtConditional(parsed[2], parsed[4], parsed[6]) });
 }
 
 /*
