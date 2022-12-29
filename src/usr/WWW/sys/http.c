@@ -28,7 +28,8 @@ private string file_type(string file)
     if (sizeof(exp) > 1) {
 	switch (lower_case(exp[sizeof(exp) - 1])) {
 	case "html":
-	    return "text/html";
+	case "md":
+	    return "text/html; charset=UTF-8";
 
 	case "jpg":
 	    return "image/jpeg";
@@ -66,13 +67,66 @@ private string file_type(string file)
     return "text/plain";
 }
 
+private string md_read_file(string file)
+{
+    mixed *pg;
+    int sz, i;
+
+    pg = "/usr/HTML/sys/markdown"->markdown(read_file(file));
+    for (sz = sizeof(pg), i = 0; i < sz; i++) {
+	pg[i] = pg[i]->html();
+    }
+    return "<!DOCTYPE HTML><HTML>		\
+<STYLE TYPE=\"text/css\">			\
+    body {					\
+	font-family: sans-serif;		\
+	line-height: 140%;			\
+	font-size: 90%;				\
+    }						\
+    a { text-decoration: none; }		\
+    a:hover { text-decoration:underline; }	\
+    a img {					\
+	border-style: none;			\
+	vertical-align: middle;			\
+	padding: 16px;				\
+    }						\
+    pre {					\
+	font-family: monospace;			\
+	font-size: 110%;			\
+	box-sizing: border-box;			\
+	padding: 16px;				\
+	border-radius: 6px;			\
+	background-color: whitesmoke;		\
+    }						\
+    code {					\
+	font-family: monospace;			\
+	font-size: 110%;			\
+	padding: .2em .4em;			\
+	border-radius: 6px;			\
+	background-color: whitesmoke;		\
+    }						\
+    h1 {					\
+	margin-top: 1em;			\
+	font-size: 160%;			\
+	text-align: center;			\
+    }						\
+    h2 { margin-top: 1em; font-size: 120%; }	\
+    h3 { margin-top: 2em; font-size: 100%; }	\
+</STYLE>\n\
+<BODY>" + implode(pg, "") + "</BODY></HTML>";
+}
+
 private mixed *http_file_info(string file)
 {
     mixed *info;
+    string str;
 
     info = file_info(file);
     if (info) {
 	info[2] = file_type(file);
+	if (sscanf(file, "%*s.md%s", str) && strlen(str) == 0) {
+	    info[0] = strlen(md_read_file(file));
+	}
     }
 
     return info;
@@ -177,6 +231,11 @@ private object http_read_file(object mesg, string file)
     int offset, len;
     string str;
 
+    if (sscanf(file, "%*s.md%s", str) && strlen(str) == 0) {
+	mesg->append(md_read_file(file));
+	return mesg;
+    }
+
     offset = 0;
 
     for (;;) {
@@ -235,7 +294,11 @@ mixed *http_message(int code, HttpRequest request, object entity)
 	    file += "/index.html";
 	    info = http_file_info(file);
 	    if (!info) {
-		return not_found();
+		file = file[.. strlen(file) - 5] + "md";
+		info = http_file_info(file);
+		if (!info) {
+		    return not_found();
+		}
 	    }
 	}
 

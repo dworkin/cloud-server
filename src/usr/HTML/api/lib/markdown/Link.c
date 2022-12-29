@@ -44,7 +44,8 @@ string html()
     desc = implode(strs, "");
 
     if (image) {
-	html = "<IMG SRC=\"" + url + "\" ALT=\"" + desc + "\"";
+	html = "<IMG STYLE=\"float: left\" SRC=\"" + url + "\" ALT=\"" + desc +
+	       "\"";
 	if (comment) {
 	    html += " TITLE=\"" + comment + "\"";
 	}

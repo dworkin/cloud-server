@@ -41,7 +41,7 @@ string html()
 	strs[i] = (elements[i]) ? elements[i]->html() : "<BR>\n";
     }
 
-    return "<P>" + implode(strs, " ") + "\n";
+    return "<P STYLE=\"clear: left\">" + implode(strs, " ") + "\n";
 }
 
 
