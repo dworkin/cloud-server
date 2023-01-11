@@ -12,14 +12,14 @@ nl_tab_tab = /\n(\t\t|        )/					\
 spaces_nl = /   *\n/							\
 spaces_nl_tab = /   *\n(\t|    )/					\
 spaces_nl_tab_tab = /   *\n(\t\t|        )/				\
-code = /\n```\n(([^\n]?[^\n]?|[^`\n][^\n]*|`[^`\n][^\n]*|``[^`\n][^\n]*)\n)*```\n/										\
+code = /\n```\n(([^\n]?[^\n]?|[^`\n][^\n]*|`[^`\n][^\n]*|``[^`\n][^\n]*)\n)*```\n/									\
 header = /#|##|###|####|#####|######/					\
 number = /[0-9]+\\./							\
 text = /[^-#0-9\\\\ \t\n]([^\\\\ \t\n]+|\\\\.)*/			\
 text = /--+([^\\\\ \t\n]+|\\\\.)*/					\
 text = /#######([^\\\\ \t\n]+|\\\\.)*/					\
 text = /[0-9]+/								\
-text = /[0-9]+[^*0-9.\\\\ \t\n]([^\\\\ \t]+|\\\\.)+/			\
+text = /[0-9]+[^*0-9.\\\\ \t\n]([^\\\\ \t\n]+|\\\\.)+/			\
 text = /\\\\.([^\\\\ \t\n]+|\\\\.)*/					\
 spaces = /[ \t]+/							" +
 "\
@@ -31,11 +31,14 @@ OptNewlines: Newlines					? null		\
 Newlines: nl								\
 Newlines: Newlines nl							\
 \
+Snl: nl									\
+Snl: spaces_nl								\
+\
 OptParagraphs:								\
 OptParagraphs: OptNewlines Paragraphs					\
 \
 Paragraphs: Para							\
-Paragraphs: Paragraphs nl nl OptNewlines Para		? paragraphs	\
+Paragraphs: Paragraphs Snl nl OptNewlines Para		? paragraphs	\
 Paragraphs: CodeParagraphs						\
 Paragraphs: CodeParagraphs OptNewlines Para				\
 \
@@ -64,7 +67,7 @@ UListItem: OptSpaces '-' Paragraphs2					\
 NListItem: OptSpaces number Paragraphs2					\
 \
 Paragraphs2: Para2							\
-Paragraphs2: Paragraphs2 nl OptNewlines nl_tab Para2	? paragraphs	\
+Paragraphs2: Paragraphs2 Snl OptNewlines nl_tab Para2	? paragraphs	\
 \
 Para2: LineList2					? paragraph1	\
 Para2: Para2 nl_tab LineList2				? paragraph2	\
@@ -86,7 +89,7 @@ UListItem2: OptSpaces '-' Paragraphs3					\
 NListItem2: OptSpaces number Paragraphs3				\
 \
 Paragraphs3: Para3							\
-Paragraphs3: Paragraphs3 nl OptNewlines nl_tab_tab Para3 ? paragraphs	\
+Paragraphs3: Paragraphs3 Snl OptNewlines nl_tab_tab Para3 ? paragraphs	\
 \
 Para3: LineList3					? paragraph1	\
 Para3: Para3 nl_tab_tab LineList3			? paragraph2	\
