@@ -1,5 +1,7 @@
 # include "markdown.h"
 
+inherit "blockquote";
+
 
 private object *elements;	/* elements of the paragraph */
 
@@ -33,15 +35,17 @@ void addWithBreak(object element)
 string html()
 {
     int sz, i;
-    string *strs;
+    string str, *strs;
 
+    startLevel();
     sz = sizeof(elements);
     strs = allocate(sz);
     for (i = 0; i < sz; i++) {
 	strs[i] = (elements[i]) ? elements[i]->html() : "<BR>\n";
     }
 
-    return "<P STYLE=\"clear: left\">" + implode(strs, " ") + "\n";
+    return "<P STYLE=\"clear: left\">" + implode(strs, " ") + setLevel(0) +
+	   "\n";
 }
 
 

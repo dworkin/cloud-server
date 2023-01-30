@@ -14,8 +14,9 @@ spaces_nl_tab = /   *\n(\t|    )/					\
 spaces_nl_tab_tab = /   *\n(\t\t|        )/				\
 code = /\n```\n(([^\n]?[^\n]?|[^`\n][^\n]*|`[^`\n][^\n]*|``[^`\n][^\n]*)\n)*```\n/									\
 header = /#|##|###|####|#####|######/					\
+blockquote = />+/							\
 number = /[0-9]+\\./							\
-text = /[^-#0-9\\\\ \t\n]([^\\\\ \t\n]+|\\\\.)*/			\
+text = /[^-#>0-9\\\\ \t\n]([^\\\\ \t\n]+|\\\\.)*/			\
 text = /--+([^\\\\ \t\n]+|\\\\.)*/					\
 text = /#######([^\\\\ \t\n]+|\\\\.)*/					\
 text = /[0-9]+/								\
@@ -103,8 +104,11 @@ OptSpaces:								\
 OptSpaces: spaces					? null		\
 \
 Line: OptSpaces header OptSpaces OptWords		? header	\
-Line: OptSpaces LimitedWords				? line		\
+Line: blockquote OptWordsSpace				? blockquote	\
+Line: LimitedWords					? line		\
 Line: Spaces						? line		\
+Line: Spaces blockquote OptWordsSpace			? line		\
+Line: Spaces LimitedWords				? line		\
 \
 OptWords:								\
 OptWords: Words								\
@@ -114,6 +118,7 @@ Words: Words WordSpace							\
 \
 Word: text								\
 Word: header								\
+Word: blockquote							\
 Word: '-'								\
 Word: number								\
 \
@@ -219,6 +224,16 @@ static mixed *nlist(mixed *parsed)
 static mixed *header(mixed *parsed)
 {
     return ({ new MarkdownLine(implode(parsed[1 ..], ""), strlen(parsed[0])) });
+}
+
+/*
+ * line with blockquote
+ */
+static mixed *blockquote(mixed *parsed)
+{
+    return ({
+	new MarkdownLine(implode(parsed[1 ..], ""), 0, strlen(parsed[0]))
+    });
 }
 
 /*

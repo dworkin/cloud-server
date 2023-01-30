@@ -1,21 +1,25 @@
 # include "markdown.h"
 # include <type.h>
 
+inherit "blockquote";
+
 
 # define LINE	"/usr/HTML/sys/line"
 
 private int header;		/* header level */
+private int blockquote;		/* blockquote level */
 private string id;		/* header ID */
 private mixed *elements;	/* elements of the line */
 
 /*
  * create a line
  */
-static void create(string line, varargs int header)
+static void create(string line, varargs int header, int blockquote)
 {
     string str, name, remainder;
 
     ::header = header;
+    ::blockquote = blockquote;
     if (header && sscanf(line, "%s {#%s}%s", str, name, remainder) == 3 &&
 	strlen(remainder) == 0) {
 	line = str;
@@ -50,10 +54,11 @@ string html()
 	html = "<H" + header + ((id) ? " ID=\"" + id + "\">" : ">") + html +
 	       "</H" + header + ">";
     }
-    return html + "\n";
+    return setLevel(blockquote) + html + "\n";
 }
 
 
 int header()		{ return header; }
+int blockquote()	{ return blockquote; }
 string id()		{ return id; }
 mixed *elements()	{ return elements; }
