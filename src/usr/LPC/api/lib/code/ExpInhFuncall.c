@@ -9,10 +9,10 @@ private string label;	/* inherit label */
 /*
  * initialize inherited function call
  */
-static void create(string str, string name, LPCExpression *list,
+static void create(string str, string name, LPCExpression *list, int flag,
 		   varargs int line)
 {
-    ::create(name, list, line);
+    ::create(name, list, flag, line);
     label = str;
 }
 

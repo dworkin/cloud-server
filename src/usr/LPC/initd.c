@@ -39,5 +39,7 @@ static void create()
     compile_object(OBJECT_PATH(LPCType));
     compile_object(OBJECT_PATH(LPCVariable));
 
+    compile_object(LPC_STRING_PARSER);
+    compile_object(LPC_LINE_PARSER);
     compile_object(LPC_COMPILER);
 }
