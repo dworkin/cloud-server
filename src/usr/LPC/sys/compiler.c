@@ -46,40 +46,39 @@ newlines = /(\\/\\*([^*]*\\*+[^/*])*[^*]*\\*+\\/[ \t\v\f\r]*)+/		\
 line = /\n([ \t\v\f\r]|\\/\\*([^*\n]*\\*+[^/*\n])*[^*\n]*\\*+\\/)*#[^\n]*/										\
 line = /(\\/\\*([^*]*\\*+[^/*])*[^*]*\\*+\\/[ \t\v\f\r]*)+#[^\n]*/	" +
 "\
-Program: Inherits _ TopLevelDecls			? program	\
+Program: Inherits TopLevelDecls _			? program	\
 Inherits: InheritList					? list		\
 InheritList:								\
-InheritList: InheritList _ Inherit					\
-Inherit: OptPrivate _ 'inherit' _ OptLabel _ OptObject _ StringExp _ ';'\
+InheritList: InheritList Inherit					\
+Inherit: OptPrivate _ 'inherit' OptLabel OptObject StringExp _ ';'	\
 							? inh		\
 OptPrivate:						? false		\
-OptPrivate: 'private'					? true		\
+OptPrivate: _ 'private'					? true		\
 OptLabel:						? opt		\
-OptLabel: ident								\
+OptLabel: _ ident							\
 OptObject:								\
-OptObject: 'object'					? empty		\
-TopLevelDecls:						? list		\
-TopLevelDecls: TopLevelDeclList _			? list		\
-TopLevelDeclList: TopLevelDecl						\
-TopLevelDeclList: TopLevelDeclList _ TopLevelDecl			\
+OptObject: _ 'object'					? empty		\
+TopLevelDecls: TopLevelDeclList				? list		\
+TopLevelDeclList:							\
+TopLevelDeclList: TopLevelDeclList TopLevelDecl				\
 TopLevelDecl: DataDecl							\
 TopLevelDecl: FuncDecl							" +
 "\
-DataDecl: ClassType _ Dcltrs _ ';'			? dataDecl	\
-FuncDecl: ClassType _ FunctionDcltr _ CompoundStmt	? functionDecl	\
-FuncDecl: Class _ FunctionName _ '(' _ Formals _ ')' _ CompoundStmt	\
+DataDecl: ClassType Dcltrs _ ';'			? dataDecl	\
+FuncDecl: ClassType FunctionDcltr CompoundStmt		? functionDecl	\
+FuncDecl: Class FunctionName _ '(' Formals _ ')' CompoundStmt		\
 							? voidDecl	\
 Formals:						? noArguments	\
-Formals: 'void'						? noArguments	\
+Formals: _ 'void'					? noArguments	\
 Formals: FormalList					? arguments	\
 Formals: FormalList _ '...'				? ellipsis	\
 FormalList: Formal							\
-FormalList: FormalList _ ',' _ Formal					\
-Formal: ClassType _ DataDcltr				? formal	\
-Formal: ident						? formalMixed	" +
+FormalList: FormalList _ ',' Formal					\
+Formal: ClassType DataDcltr				? formal	\
+Formal: _ ident						? formalMixed	" +
 "\
 ClassType: ClassSpecList _ TypeSpec			? classType	\
-ClassType: ClassSpecList _ 'object' _ ListExp		? classTypeName	\
+ClassType: ClassSpecList _ 'object' ListExp		? classTypeName	\
 Class: ClassSpecList					? classType	\
 ClassSpecList:								\
 ClassSpecList: ClassSpecList _ ClassSpec				\
@@ -100,8 +99,8 @@ Stars: StarList						? count		\
 StarList:								\
 StarList: StarList _ '*'						" +
 "\
-FunctionName: ident							\
-FunctionName: Operator					? concat	\
+FunctionName: _ ident							\
+FunctionName: _ Operator				? concat	\
 Operator: 'operator' _ '+'						\
 Operator: 'operator' _ '-'						\
 Operator: 'operator' _ '*'						\
@@ -123,169 +122,166 @@ Operator: 'operator' _ '[' _ ']'					\
 Operator: 'operator' _ '[' _ ']' _ '='					\
 Operator: 'operator' _ '[' _ '..' _ ']'					" +
 "\
-FunctionDcltr: Stars _ FunctionName _ '(' _ Formals _ ')'		\
+FunctionDcltr: Stars FunctionName _ '(' Formals _ ')'			\
 Dcltr: DataDcltr					? list		\
 Dcltr: FunctionDcltr					? list		\
 Dcltrs: ListDcltr					? noCommaList	\
 ListDcltr: Dcltr							\
-ListDcltr: ListDcltr _ ',' _ Dcltr					\
+ListDcltr: ListDcltr _ ',' Dcltr					\
 Locals: ListLocal					? list		\
 ListLocal:								\
+ListLocal: ListLocal DataDecl						\
 Exception: ident							\
 Exception: '...'							\
-ListLocal: ListLocal _ DataDecl						\
 ListStmt:								\
-ListStmt: ListStmt _ Stmt				? listStmt	" +
+ListStmt: ListStmt Stmt					? listStmt	" +
 "\
-IfStmt: 'if' _ '(' _ ListExp _ ')' _ Stmt		? ifStmt	\
+IfStmt: _ 'if' _ '(' ListExp _ ')' Stmt			? ifStmt	\
 Stmt: BStmt								\
 Stmt: IfStmt								\
-Stmt: Entries _ IfStmt					? entryStmt	\
+Stmt: Entries IfStmt					? entryStmt	\
 BStmt: EStmt								\
-BStmt: Entries _ EStmt					? entryStmt	\
+BStmt: Entries EStmt					? entryStmt	\
 EStmt: ListExp _ ';'					? expStmt	\
 EStmt: CompoundStmt							\
-EStmt: 'if' _ '(' _ ListExp _ ')' _ BStmt _ 'else' _ Stmt		\
-							? ifElseStmt	\
-EStmt: 'do' _ Stmt _ 'while' _ '(' _ ListExp _ ')' _ ';'		\
-							? doWhileStmt	\
-EStmt: 'while' _ '(' _ ListExp _ ')' _ Stmt		? whileStmt	\
-EStmt: 'for' _ '(' _ OptListExp _ ';'					\
-		   _ OptListExp _ ';'					\
-		   _ OptListExp _ ')' _ Stmt		? forStmt	\
-EStmt: 'rlimits' _ '(' _ ListExp _ ';'					\
-		       _ ListExp _ ')' _ CompoundStmt	? rlimitsStmt	\
-EStmt: 'try' _ CompoundStmt _						\
-       'catch' _ '(' _ Exception _ ')' _ CompoundStmt	? tryCatchStmt	\
-EStmt: 'catch' _ CompoundStmt _ ':' _ Stmt		? catchErrStmt	\
-EStmt: 'catch' _ CompoundStmt				? catchStmt	" +
+EStmt: _ 'if' _ '(' ListExp _ ')' BStmt _ 'else' Stmt	? ifElseStmt	\
+EStmt: _ 'do' Stmt _ 'while' _ '(' ListExp _ ')' _ ';'	? doWhileStmt	\
+EStmt: _ 'while' _ '(' ListExp _ ')' Stmt		? whileStmt	\
+EStmt: _ 'for' _ '(' OptListExp _ ';'					\
+		     OptListExp _ ';'					\
+		     OptListExp _ ')' Stmt		? forStmt	\
+EStmt: _ 'rlimits' _ '(' ListExp _ ';'					\
+			 ListExp _ ')' CompoundStmt	? rlimitsStmt	\
+EStmt: _ 'try' CompoundStmt						\
+       _ 'catch' _ '(' _ Exception _ ')' CompoundStmt	? tryCatchStmt	\
+EStmt: _ 'catch' CompoundStmt _ ':' Stmt		? catchErrStmt	\
+EStmt: _ 'catch' CompoundStmt				? catchStmt	" +
 "\
-EStmt: 'switch' _ '(' _ ListExp _ ')' _ CompoundStmt	? switchStmt	\
-EStmt: 'goto' _ ident _ ';'				? gotoStmt	\
-EStmt: 'break' _ ';'					? breakStmt	\
-EStmt: 'continue' _ ';'					? continueStmt	\
-EStmt: 'return' _ ListExp _ ';'				? returnExpStmt	\
-EStmt: 'return' _ ';'					? returnStmt	\
-EStmt: ';'						? emptyStmt	\
-Entries: Entry								\
+EStmt: _ 'switch' _ '(' ListExp _ ')' CompoundStmt	? switchStmt	\
+EStmt: _ 'goto' _ ident _ ';'				? gotoStmt	\
+EStmt: _ 'break' _ ';'					? breakStmt	\
+EStmt: _ 'continue' _ ';'				? continueStmt	\
+EStmt: _ 'return' ListExp _ ';'				? returnExpStmt	\
+EStmt: _ 'return' _ ';'					? returnStmt	\
+EStmt: _ ';'						? emptyStmt	\
+Entries: _ Entry							\
 Entries: Entries _ Entry						\
-Entry: 'case' _ Exp _ ':'				? caseEntry	\
-Entry: 'case' _ Exp _ '..' _ Exp _ ':'			? rangeEntry	\
+Entry: 'case' Exp _ ':'					? caseEntry	\
+Entry: 'case' Exp _ '..' Exp _ ':'			? rangeEntry	\
 Entry: 'default' _ ':'					? defaultEntry	\
 Entry: ident _ ':'					? labelEntry	\
-CompoundStmt: '{' _ Locals _ ListStmt _ '}'		? compoundStmt	" +
+CompoundStmt: _ '{' Locals ListStmt _ '}'		? compoundStmt	" +
 "\
 FunctionCall: FunctionName						\
-FunctionCall: '::' _ FunctionName					\
-FunctionCall: ident _ '::' _ FunctionName				\
-String: simple_string					? simpleString	\
-String:	complex_string					? complexString	\
+FunctionCall: _ '::' FunctionName					\
+FunctionCall: _ ident _ '::' FunctionName				\
+String: _ simple_string					? simpleString	\
+String: _ complex_string				? complexString	\
 CompositeString: StringExp						\
-CompositeString: CompositeString _ '+' _ StringExp	? stringExp	\
-StringExp : String							\
-StringExp: '(' _ CompositeString _ ')'			? parsed_1_	" +
+CompositeString: CompositeString _ '+' StringExp	? stringExp	\
+StringExp: String							\
+StringExp: _ '(' CompositeString _ ')'			? parsed_1_	" +
 "\
-Exp1: decimal						? expIntDec	\
-Exp1: octal						? expIntOct	\
-Exp1: hexadecimal					? expIntHex	\
-Exp1: simple_char					? simpleChar	\
-Exp1: complex_char					? complexChar	\
-Exp1: float						? expFloat	\
-Exp1: 'nil'						? expNil	\
+Exp1: _ decimal						? expIntDec	\
+Exp1: _ octal						? expIntOct	\
+Exp1: _ hexadecimal					? expIntHex	\
+Exp1: _ simple_char					? simpleChar	\
+Exp1: _ complex_char					? complexChar	\
+Exp1: _ float						? expFloat	\
+Exp1: _ 'nil'						? expNil	\
 Exp1: String								\
-Exp1: '(' _ '{' _ OptArgListComma _ '}' _ ')'		? expArray	\
-Exp1: '(' _ '[' _ OptAssocListComma _ ']' _ ')'		? expMapping	\
-Exp1: ident						? expVar	\
-Exp1: '::' _ ident					? expGlobalVar	\
-Exp1: '(' _ ListExp _ ')'				? parsed_1_	\
-Exp1: FunctionCall _ '(' _ OptArgList _ ')'		? expFuncall	\
-Exp1: 'catch' _ '(' _ ListExp _ ')'			? expCatch	\
-Exp1: 'new' _ OptObject _ StringExp			? expNew1	\
-Exp1: 'new' _ OptObject _ StringExp _ '(' _ OptArgList _ ')'		\
-							? expNew2	\
-Exp1: Exp2 _ '->' _ ident _ '(' _ OptArgList _ ')'	? expCallOther	\
-Exp1: Exp2 '<-' _ StringExp				? expInstance	" +
+Exp1: _ '(' _ '{' OptArgListComma _ '}' _ ')'		? expArray	\
+Exp1: _ '(' _ '[' OptAssocListComma _ ']' _ ')'		? expMapping	\
+Exp1: _ ident						? expVar	\
+Exp1: _ '::' _ ident					? expGlobalVar	\
+Exp1: _ '(' _ ListExp _ ')'				? parsed_1_	\
+Exp1: FunctionCall _ '(' OptArgList _ ')'		? expFuncall	\
+Exp1: _ 'catch' _ '(' ListExp _ ')'			? expCatch	\
+Exp1: _ 'new' OptObject StringExp			? expNew1	\
+Exp1: _ 'new' OptObject StringExp _ '(' OptArgList _ ')'? expNew2	\
+Exp1: Exp2 _ '->' _ ident _ '(' OptArgList _ ')'	? expCallOther	\
+Exp1: Exp2 _ '<-' StringExp				? expInstance	" +
 "\
 Exp2: Exp1								\
-Exp2: Exp2 _ '[' _ ListExp _ ']'			? expIndex	\
-Exp2: Exp2 _ '[' _ ListExp _ '..' _ ListExp _ ']'	? expRange	" +
+Exp2: Exp2 _ '[' ListExp _ ']'				? expIndex	\
+Exp2: Exp2 _ '[' ListExp _ '..' ListExp _ ']'		? expRange	" +
 "\
 PostfixExp: Exp2							\
 PostfixExp: PostfixExp _ '++'				? expPostIncr	\
 PostfixExp: PostfixExp _ '--'				? expPostDecr	" +
 "\
 PrefixExp: PostfixExp							\
-PrefixExp: '++' _ CastExp				? expPreIncr	\
-PrefixExp: '--' _ CastExp				? expPreDecr	\
-PrefixExp: '+' _ CastExp				? expPlus	\
-PrefixExp: '-' _ CastExp				? expMinus	\
-PrefixExp: '!' _ CastExp				? expNot	\
-PrefixExp: '~' _ CastExp				? expNegate	" +
+PrefixExp: _ '++' CastExp				? expPreIncr	\
+PrefixExp: _ '--' CastExp				? expPreDecr	\
+PrefixExp: _ '+' CastExp				? expPlus	\
+PrefixExp: _ '-' CastExp				? expMinus	\
+PrefixExp: _ '!' CastExp				? expNot	\
+PrefixExp: _ '~' CastExp				? expNegate	" +
 "\
 CastExp: PrefixExp							\
-CastExp: '(' _ ClassType _ Stars _ ')' _ CastExp	? expCast	" +
+CastExp: _ '(' ClassType Stars _ ')' CastExp		? expCast	" +
 "\
 MultExp: CastExp							\
-MultExp: MultExp _ '*' _ CastExp			? expMult	\
-MultExp: MultExp _ '/' _ CastExp			? expDiv	\
-MultExp: MultExp _ '%' _ CastExp			? expMod	" +
+MultExp: MultExp _ '*' CastExp				? expMult	\
+MultExp: MultExp _ '/' CastExp				? expDiv	\
+MultExp: MultExp _ '%' CastExp				? expMod	" +
 "\
 AddExp: MultExp								\
-AddExp: AddExp _ '+' _ MultExp				? expAdd	\
-AddExp: AddExp _ '-' _ MultExp				? expSub	" +
+AddExp: AddExp _ '+' MultExp				? expAdd	\
+AddExp: AddExp _ '-' MultExp				? expSub	" +
 "\
 ShiftExp: AddExp							\
-ShiftExp: ShiftExp _ '<<' _ AddExp			? expLShift	\
-ShiftExp: ShiftExp _ '>>' _ AddExp			? expRShift	" +
+ShiftExp: ShiftExp _ '<<' AddExp			? expLShift	\
+ShiftExp: ShiftExp _ '>>' AddExp			? expRShift	" +
 "\
 RelExp: ShiftExp							\
-RelExp: RelExp _ '<' _ ShiftExp				? expLess	\
-RelExp: RelExp _ '>' _ ShiftExp				? expGreater	\
-RelExp: RelExp _ '<=' _ ShiftExp			? expLessEq	\
-RelExp: RelExp _ '>=' _ ShiftExp			? expGreaterEq	" +
+RelExp: RelExp _ '<' ShiftExp				? expLess	\
+RelExp: RelExp _ '>' ShiftExp				? expGreater	\
+RelExp: RelExp _ '<=' ShiftExp				? expLessEq	\
+RelExp: RelExp _ '>=' ShiftExp				? expGreaterEq	" +
 "\
 EquExp: RelExp								\
-EquExp: EquExp _ '==' _ RelExp				? expEqual	\
-EquExp: EquExp _ '!=' _ RelExp				? expUnequal	" +
+EquExp: EquExp _ '==' RelExp				? expEqual	\
+EquExp: EquExp _ '!=' RelExp				? expUnequal	" +
 "\
 BitandExp: EquExp							\
-BitandExp: BitandExp _ '&' _ EquExp			? expAnd	" +
+BitandExp: BitandExp _ '&' EquExp			? expAnd	" +
 "\
 BitxorExp: BitandExp							\
-BitxorExp: BitxorExp _ '^' _ BitandExp			? expXor	" +
+BitxorExp: BitxorExp _ '^' BitandExp			? expXor	" +
 "\
 BitorExp: BitxorExp							\
-BitorExp: BitorExp _ '|' _ BitxorExp			? expOr		" +
+BitorExp: BitorExp _ '|' BitxorExp			? expOr		" +
 "\
 AndExp: BitorExp							\
-AndExp: AndExp _ '&&' _ BitorExp			? expLand	" +
+AndExp: AndExp _ '&&' BitorExp				? expLand	" +
 "\
 OrExp: AndExp								\
-OrExp: OrExp _ '||' _ AndExp				? expLor	" +
+OrExp: OrExp _ '||' AndExp				? expLor	" +
 "\
 CondExp: OrExp								\
-CondExp: OrExp _ '?' _ ListExp _ ':' _ CondExp		? expQuest	" +
+CondExp: OrExp _ '?' ListExp _ ':' CondExp		? expQuest	" +
 "\
 Exp: CondExp								\
-Exp: CondExp _ '=' _ Exp				? expAssign	\
-Exp: CondExp _ '+=' _ Exp				? expAsgnAdd	\
-Exp: CondExp _ '-=' _ Exp				? expAsgnSub	\
-Exp: CondExp _ '*=' _ Exp				? expAsgnMult	\
-Exp: CondExp _ '/=' _ Exp				? expAsgnDiv	\
-Exp: CondExp _ '%=' _ Exp				? expAsgnMod	\
-Exp: CondExp _ '<<=' _ Exp				? expAsgnLShift	\
-Exp: CondExp _ '>>=' _ Exp				? expAsgnRShift	\
-Exp: CondExp _ '&=' _ Exp				? expAsgnAnd	\
-Exp: CondExp _ '^=' _ Exp				? expAsgnXor	\
-Exp: CondExp _ '|=' _ Exp				? expAsgnOr	" +
+Exp: CondExp _ '=' Exp					? expAssign	\
+Exp: CondExp _ '+=' Exp					? expAsgnAdd	\
+Exp: CondExp _ '-=' Exp					? expAsgnSub	\
+Exp: CondExp _ '*=' Exp					? expAsgnMult	\
+Exp: CondExp _ '/=' Exp					? expAsgnDiv	\
+Exp: CondExp _ '%=' Exp					? expAsgnMod	\
+Exp: CondExp _ '<<=' Exp				? expAsgnLShift	\
+Exp: CondExp _ '>>=' Exp				? expAsgnRShift	\
+Exp: CondExp _ '&=' Exp					? expAsgnAnd	\
+Exp: CondExp _ '^=' Exp					? expAsgnXor	\
+Exp: CondExp _ '|=' Exp					? expAsgnOr	" +
 "\
 ListExp: Exp								\
-ListExp: ListExp _ ',' _ Exp				? expComma	\
+ListExp: ListExp _ ',' Exp				? expComma	\
 OptListExp:						? opt		\
 OptListExp: ListExp							" +
 "\
 ArgList: Exp								\
-ArgList: ArgList _ ',' _ Exp						\
+ArgList: ArgList _ ',' Exp						\
 OptArgList:						? noArguments	\
 OptArgList: ArgList					? arguments	\
 OptArgList: ArgList _ '...'				? ellipsis	\
@@ -293,9 +289,9 @@ OptArgListComma:					? list		\
 OptArgListComma: ArgList				? noCommaList	\
 OptArgListComma: ArgList _ ','				? noCommaList	" +
 "\
-AssocPair: Exp _ ':' _ Exp				? parsed_0_2_	\
+AssocPair: Exp _ ':' Exp				? parsed_0_2_	\
 AssocList: AssocPair							\
-AssocList: AssocList _ ',' _ AssocPair					\
+AssocList: AssocList _ ',' AssocPair					\
 OptAssocListComma:					? list		\
 OptAssocListComma: AssocList				? noCommaList	\
 OptAssocListComma: AssocList _ ','			? noCommaList	" +
