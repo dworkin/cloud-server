@@ -34,7 +34,9 @@ static void set_mode(int newmode)
 	(newmode != mode || blocked)) {
 	rlimits (-1; -1) {
 	    if (newmode == MODE_DISCONNECT) {
-		send_close();
+		if (conntype != "datagram") {
+		    send_close();
+		}
 		if (timeout != 0) {
 		    remove_call_out(timeout);
 		}
