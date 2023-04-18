@@ -1837,6 +1837,56 @@ static string list_resources(string name, string *names, mixed *resources)
 }
 
 /*
+ * NAME:	list_ticks()
+ * DESCRIPTION:	create a listing of tick quotas
+ */
+private string list_ticks(string *names, mixed *resources, mixed *maxusage)
+{
+    int i, n;
+    mixed *rsrc;
+    string str, unit;
+
+    for (i = sizeof(names); --i >= 0; ) {
+	rsrc = resources[i];
+	str = (names[i] + "                ")[.. 15] + " " +
+	      ntoa(rsrc[RSRC_USAGE], 13) + " " + ntoa(maxusage[i], 12) + " " +
+	      ntoa(rsrc[RSRC_MAX], 12);
+	if ((int) rsrc[RSRC_DECAY] != 0) {
+	    str += ralign(rsrc[RSRC_DECAY], 6) + "%";
+	}
+	if ((int) rsrc[RSRC_PERIOD] != 0) {
+	    switch (n = rsrc[RSRC_PERIOD]) {
+	    case 1 .. 60 - 1:
+		unit = "second";
+		break;
+
+	    case 60 .. 60 * 60 - 1:
+		n /= 60;
+		unit = "minute";
+		break;
+
+	    case 60 * 60 .. 24 * 60 * 60 - 1:
+		n /= 60 * 60;
+		unit = "hour";
+		break;
+
+	    default:
+		n /= 24 * 60 * 60;
+		unit = "day";
+		break;
+	    }
+	    str += " per " + ((n == 1) ? unit : n + " " + unit + "s");
+	}
+	resources[i] = str;
+    }
+
+    return
+"owner                    usage    max usage          max  decay  period\n" +
+"----------------+-------------+------------+------------+------+---------\n" +
+	   implode(resources, "\n") + "\n";
+}
+
+/*
  * NAME:	cmd_quota()
  * DESCRIPTION:	resource quota command
  */
@@ -1844,6 +1894,7 @@ static void cmd_quota(object user, string cmd, string str)
 {
     int limit, i;
     string who, rsrc, *names;
+    float maxusage;
     mixed **resources;
 
     if (!str) {
@@ -1858,6 +1909,14 @@ static void cmd_quota(object user, string cmd, string str)
 	    return;
 	}
 
+	if (sscanf(str, "ticks usage %f", maxusage) == 1) {
+	    try {
+		rsrc_set_maxtickusage(who, maxusage);
+	    } catch (err) {
+		message(err + ".\n");
+	    }
+	    return;
+	}
 	if (sscanf(str, "%s%d%s", rsrc, limit, str) == 0) {
 	    /* show single resource */
 	    if (sizeof(query_resources() & ({ str })) == 0) {
@@ -1917,7 +1976,7 @@ static void cmd_rsrc(object user, string cmd, string str)
 {
     int i, sz, limit;
     string *names, name;
-    mixed **resources, *rsrc;
+    mixed **resources, *maxusage, *rsrc;
 
     if (!str) {
 	names = query_resources();
@@ -1926,6 +1985,18 @@ static void cmd_rsrc(object user, string cmd, string str)
 	    resources[i] = query_rsrc(names[i]);
 	}
 	message(list_resources("resources", names, resources));
+    } else if (str == "ticks") {
+	names = query_owners();
+	resources = allocate(i = sz = sizeof(names));
+	maxusage = allocate(sz);
+	while (--i >= 0) {
+	    resources[i] = rsrc_get(names[i], str);
+	    maxusage[i] = rsrc_get_maxtickusage(names[i]);
+	}
+	if (sz != 0 && !names[0]) {
+	    names[0] = "Ecru";
+	}
+	message(list_ticks(names, resources, maxusage));
     } else if (sscanf(str, "%s%d%s", name, limit, str) != 0) {
 	if (strlen(str) != 0 || (i=strlen(name)) == 0 || name[i - 1] != ' ') {
 	    message("Usage: " + cmd + " [<resource> [<limit>]]\n");
