@@ -182,12 +182,20 @@ private string *preregister_includes(string path)
 	    "/include/type.h"
 	});
 
-    case RSRCD:
     case API_RSRC:
 	return ({
 	    "/include/config.h",
 	    "/include/kernel/kernel.h",
 	    "/include/kernel/rsrc.h",
+	    "/include/type.h"
+	});
+
+    case RSRCD:
+	return ({
+	    "/include/config.h",
+	    "/include/kernel/kernel.h",
+	    "/include/kernel/rsrc.h",
+	    "/include/status.h",
 	    "/include/type.h"
 	});
 

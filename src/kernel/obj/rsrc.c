@@ -63,19 +63,15 @@ private void decay_rsrc(mixed *rsrc, int *grsrc, int time)
     usage = rsrc[RSRC_USAGE];
     decay = (float) (100 - grsrc[GRSRC_DECAY]) / 100.0;
     period = grsrc[GRSRC_PERIOD];
-    time -= period;
-    t = rsrc[RSRC_DECAYTIME];
 
-    do {
-	usage *= decay;
-	if (usage < 0.5) {
-	    t = time + period;
-	    break;
-	}
-	t += period;
-    } while (time >= t);
+    t = (time - (int) rsrc[RSRC_DECAYTIME]) / period;
+    usage *= pow(decay, (float) t);
 
-    rsrc[RSRC_DECAYTIME] = t;
+    if (usage < 0.5) {
+	rsrc[RSRC_DECAYTIME] = time;
+    } else {
+	rsrc[RSRC_DECAYTIME] += t * period;
+    }
     rsrc[RSRC_USAGE] = floor(usage + 0.5);
 }
 
@@ -152,7 +148,7 @@ mixed *rsrc_get(string name, int *grsrc)
 		   grsrc[GRSRC_DECAY .. GRSRC_PERIOD];
 	} else {
 	    if ((int) grsrc[GRSRC_DECAY] != 0 &&
-		(time=time()) - (int) rsrc[RSRC_DECAYTIME] >=
+		(time=status(ST_UPTIME)) - (int) rsrc[RSRC_DECAYTIME] >=
 							grsrc[GRSRC_PERIOD]) {
 		rlimits (-1; -1) {
 		    /* decay resource */
@@ -233,7 +229,7 @@ static void delayed_incr(mapping map)
 	rsrc = resources[name];
 
 	if (grsrc[GRSRC_DECAY] != 0) {
-	    time = time();
+	    time = status(ST_UPTIME);
 	    if (!rsrc) {
 		/* new resource */
 		rsrc = resources[name] = ({ 0.0, -1, time });
@@ -299,7 +295,7 @@ static void incr_ticks(int ticks, int *grsrc)
     int time;
 
     rsrc = resources["ticks"];
-    time = time();
+    time = status(ST_UPTIME);
     if (time - (int) rsrc[RSRC_DECAYTIME] >= grsrc[GRSRC_PERIOD]) {
 	/* decay resource */
 	decay_rsrc(rsrc, grsrc, time);
@@ -308,25 +304,4 @@ static void incr_ticks(int ticks, int *grsrc)
 
     rsrc[RSRC_USAGE] += (float) ticks;
     set_rlimits(rsrc, time == 0);
-}
-
-/*
- * NAME:	reboot()
- * DESCRIPTION:	recover from a reboot
- */
-void reboot(int downtime)
-{
-    if (previous_object() == rsrcd) {
-	mixed **rsrcs, *rsrc;
-	int i;
-
-	rsrcs = map_values(resources);
-	for (i = sizeof(rsrcs); --i >= 0; ) {
-	    rsrc = rsrcs[i];
-	    if (typeof(rsrc[RSRC_DECAYTIME]) == T_INT &&
-		(int) rsrc[RSRC_DECAYTIME] != 0) {
-		rsrc[RSRC_DECAYTIME] += downtime;
-	    }
-	}
-    }
 }

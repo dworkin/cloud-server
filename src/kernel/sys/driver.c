@@ -408,7 +408,6 @@ void prepare_reboot()
 	if (initd) {
 	    initd->prepare_reboot();
 	}
-	rsrcd->prepare_reboot();
 	userd->prepare_reboot();
     }
 }
@@ -424,7 +423,6 @@ private void _restored(mapping tls, int hotboot)
 	    initd->hotboot();
 	}
     } else {
-	rsrcd->reboot();
 	userd->reboot();
 	if (initd) {
 	    initd->reboot();

@@ -1,6 +1,7 @@
 # include <kernel/kernel.h>
 # include <kernel/rsrc.h>
 # include <type.h>
+# include <status.h>
 
 
 mapping resources;	/* registered resources */
@@ -40,7 +41,7 @@ void add_owner(string owner)
 	    obj = clone_object(RSRCOBJ);
 	    try {
 		owners[owner] = obj;
-		obj->init(owner, time = time());
+		obj->init(owner, time = status(ST_UPTIME));
 		owners["System"]->rsrc_incr("objects", 1, resources["objects"]);
 		olimits[owner] = ({ -1, -1, time });
 	    } catch (...) {
@@ -302,12 +303,11 @@ mixed *call_limits(mixed *previous, string owner, int stack, int ticks)
 	maxticks = limits[LIM_MAX_TICKS];
 	if (maxticks < 0) {
 	    maxticks = rsrc[GRSRC_MAX];
-	} else {
-	    if ((time=time()) - limits[LIM_MAX_TIME] >= rsrc[GRSRC_PERIOD]) {
-		/* decay ticks */
-		owners[owner]->decay_ticks(limits, time, rsrc);
-		maxticks = limits[LIM_MAX_TICKS];
-	    }
+	} else if ((time=status(ST_UPTIME)) - limits[LIM_MAX_TIME] >=
+							rsrc[GRSRC_PERIOD]) {
+	    /* decay ticks */
+	    owners[owner]->decay_ticks(limits, time, rsrc);
+	    maxticks = limits[LIM_MAX_TICKS];
 	}
 	if (maxticks > ticks - 25 && ticks >= 0) {
 	    maxticks = ticks - 25;
@@ -362,34 +362,5 @@ object initd()
 {
     if (previous_program() == DRIVER) {
 	return compile_object("/usr/System/initd");
-    }
-}
-
-/*
- * NAME:	prepare_reboot()
- * DESCRIPTION:	prepare for a reboot
- */
-void prepare_reboot()
-{
-    if (previous_program() == DRIVER) {
-	downtime = time();
-    }
-}
-
-/*
- * NAME:	reboot()
- * DESCRIPTION:	recover from a reboot
- */
-void reboot()
-{
-    if (previous_program() == DRIVER) {
-	object *objects;
-	int i;
-
-	downtime = time() - downtime;
-	objects = map_values(owners);
-	for (i = sizeof(objects); --i >= 0; ) {
-	    objects[i]->reboot(downtime);
-	}
     }
 }
