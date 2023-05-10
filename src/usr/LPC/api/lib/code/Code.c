@@ -60,7 +60,7 @@ static void emit(string code, varargs int line)
     line = tls_get(LINE);
     if (lineNumber != 0 && lineNumber != line) {
 	if (lineNumber < line || lineNumber  - line > 10) {
-	    code = "#line " + lineNumber + "\n" + code;
+	    code = "\n#line " + lineNumber + "\n" + code;
 	} else {
 	    code = "\n\n\n\n\n\n\n\n\n\n"[.. lineNumber - line - 1] + code;
 	}

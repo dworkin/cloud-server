@@ -326,7 +326,7 @@ static mixed *inh(mixed *parsed)
  */
 static mixed *classType(mixed *parsed)
 {
-    return ({ implode(parsed, " "), nil });
+    return ({ implode(parsed, " "), nil, tls_get(LINE) });
 }
 
 /*
@@ -337,7 +337,7 @@ static mixed *classTypeName(mixed *parsed)
     int sz;
 
     sz = sizeof(parsed);
-    return ({ implode(parsed[.. sz - 2], " "), parsed[sz - 1] });
+    return ({ implode(parsed[.. sz - 2], " "), parsed[sz - 1], tls_get(LINE) });
 }
 
 /*
@@ -349,7 +349,7 @@ static mixed *noCommaList(mixed *parsed)
 }
 
 /*
- * ({ "private int", nil, ({ ({ 0, "a" }), ({ 1, "b" }) }) })
+ * ({ "private int", nil, 100, ({ ({ 0, "a" }), ({ 1, "b" }) }) })
  */
 static mixed *dataDecl(mixed *parsed)
 {
@@ -357,9 +357,9 @@ static mixed *dataDecl(mixed *parsed)
     int i, sz;
     LPCType type;
 
-    decls = parsed[2];
+    decls = parsed[3];
     for (i = 0, sz = sizeof(decls); i < sz; i++) {
-	type = new LPCType(parsed[0], parsed[1], decls[i][0]);
+	type = new LPCType(parsed[0], parsed[1], decls[i][0], parsed[2]);
 	decls[i] = (sizeof(decls[i]) == 2) ?
 		    new LPCVariable(type, decls[i][1]) :
 		    new LPCFunction(type, decls[i][1], decls[i][3], decls[i][4],
@@ -393,13 +393,14 @@ static mixed *ellipsis(mixed *parsed)
 }
 
 /*
- * ({ "private int", nil, 0, "a" })
+ * ({ "private int", nil, 100, 0, "a" })
  */
 static mixed *formal(mixed *parsed)
 {
     return ({
-	new LPCDeclaration(new LPCType(parsed[0], parsed[1], parsed[2]),
-			   parsed[3])
+	new LPCDeclaration(new LPCType(parsed[0], parsed[1], parsed[3],
+				       parsed[2]),
+			   parsed[4])
     });
 }
 
@@ -408,28 +409,30 @@ static mixed *formal(mixed *parsed)
  */
 static mixed *formalMixed(mixed *parsed)
 {
-    return ({ new LPCDeclaration(new LPCType("mixed", nil, 0), parsed[0]) });
-}
-
-/*
- * ({ "private int", nil, 0, "func", ({ }), FALSE, LPCStmtBlock })
- */
-static mixed *functionDecl(mixed *parsed)
-{
     return ({
-	new LPCFunction(new LPCType(parsed[0], parsed[1], parsed[2]),
-			parsed[3], parsed[5], parsed[6], parsed[8])
+	new LPCDeclaration(new LPCType("mixed", nil, 0, tls_get(LINE)), parsed[0])
     });
 }
 
 /*
- * ({ "private", nil, "func", ({ }), FALSE, LPCStmtBlock })
+ * ({ "private int", nil, 100, 0, "func", '(' ({ }), FALSE, ')', LPCStmtBlock })
+ */
+static mixed *functionDecl(mixed *parsed)
+{
+    return ({
+	new LPCFunction(new LPCType(parsed[0], parsed[1], parsed[3], parsed[2]),
+			parsed[4], parsed[6], parsed[7], parsed[9])
+    });
+}
+
+/*
+ * ({ "private", nil, 100, "func", '(', ({ }), FALSE, ')', LPCStmtBlock })
  */
 static mixed *voidDecl(mixed *parsed)
 {
     return ({
-	new LPCFunction(new LPCType(parsed[0], parsed[1], 0),
-			parsed[2], parsed[4], parsed[5], parsed[7])
+	new LPCFunction(new LPCType(parsed[0], parsed[1], 0, parsed[2]),
+			parsed[3], parsed[5], parsed[6], parsed[8])
     });
 }
 
@@ -747,13 +750,13 @@ static mixed *expNegate(mixed *parsed)
 }
 
 /*
- * ({ "(", "private int", nil, 0, ")", LPCExpression })
+ * ({ "(", "private int", nil, 100, 0, ")", LPCExpression })
  */
 static mixed *expCast(mixed *parsed)
 {
     return ({
-	new LPCExpCast(new LPCType(parsed[1], parsed[2], parsed[3]),
-		       parsed[5])
+	new LPCExpCast(new LPCType(parsed[1], parsed[2], parsed[4], parsed[3]),
+		       parsed[6])
     });
 }
 
