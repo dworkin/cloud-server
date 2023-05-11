@@ -204,7 +204,7 @@ Exp1: Exp2 _ '<-' StringExp				? expInstance	" +
 "\
 Exp2: Exp1								\
 Exp2: Exp2 _ '[' ListExp _ ']'				? expIndex	\
-Exp2: Exp2 _ '[' ListExp _ '..' ListExp _ ']'		? expRange	" +
+Exp2: Exp2 _ '[' OptListExp _ '..' OptListExp _ ']'	? expRange	" +
 "\
 PostfixExp: Exp2							\
 PostfixExp: PostfixExp _ '++'				? expPostIncr	\
