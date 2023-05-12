@@ -94,13 +94,13 @@ TypeSpec: 'object'							\
 TypeSpec: 'mapping'							\
 TypeSpec: 'mixed'							\
 TypeSpec: 'void'							\
-DataDcltr: Stars _ ident						\
+DataDcltr: Stars _ ident				? addLine	\
 Stars: StarList						? count		\
 StarList:								\
 StarList: StarList _ '*'						" +
 "\
-FunctionName: _ ident							\
-FunctionName: _ Operator				? concat	\
+FunctionName: _ ident					? addLine	\
+FunctionName: _ Operator				? opLine	\
 Operator: 'operator' _ '+'						\
 Operator: 'operator' _ '-'						\
 Operator: 'operator' _ '*'						\
@@ -341,6 +341,22 @@ static mixed *classTypeName(mixed *parsed)
 }
 
 /*
+ * add line to data or function declaration
+ */
+static mixed *addLine(mixed *parsed)
+{
+    return parsed + ({ tls_get(LINE) });
+}
+
+/*
+ * add line to operator function declaration
+ */
+static mixed *opLine(mixed *parsed)
+{
+    return ({ implode(parsed, ""), tls_get(LINE) });
+}
+
+/*
  * ({ parsed1, ",", parsed2 })
  */
 static mixed *noCommaList(mixed *parsed)
@@ -349,7 +365,7 @@ static mixed *noCommaList(mixed *parsed)
 }
 
 /*
- * ({ "private int", nil, 100, ({ ({ 0, "a" }), ({ 1, "b" }) }) })
+ * ({ "private int", nil, 100, ({ ({ 0, "a", 100 }), ({ 1, "b", 100 }) }) })
  */
 static mixed *dataDecl(mixed *parsed)
 {
@@ -360,10 +376,10 @@ static mixed *dataDecl(mixed *parsed)
     decls = parsed[3];
     for (i = 0, sz = sizeof(decls); i < sz; i++) {
 	type = new LPCType(parsed[0], parsed[1], decls[i][0], parsed[2]);
-	decls[i] = (sizeof(decls[i]) == 2) ?
-		    new LPCVariable(type, decls[i][1]) :
-		    new LPCFunction(type, decls[i][1], decls[i][3], decls[i][4],
-				    nil);
+	decls[i] = (sizeof(decls[i]) == 3) ?
+		    new LPCVariable(type, decls[i][1], decls[i][2]) :
+		    new LPCFunction(type, decls[i][1], decls[i][4], decls[i][5],
+				    nil, decls[i][2]);
     }
     return decls;
 }
@@ -393,14 +409,14 @@ static mixed *ellipsis(mixed *parsed)
 }
 
 /*
- * ({ "private int", nil, 100, 0, "a" })
+ * ({ "private int", nil, 100, 0, "a", 100 })
  */
 static mixed *formal(mixed *parsed)
 {
     return ({
 	new LPCDeclaration(new LPCType(parsed[0], parsed[1], parsed[3],
 				       parsed[2]),
-			   parsed[4])
+			   parsed[4], parsed[5])
     });
 }
 
@@ -409,30 +425,36 @@ static mixed *formal(mixed *parsed)
  */
 static mixed *formalMixed(mixed *parsed)
 {
+    int line;
+
+    line = tls_get(LINE);
     return ({
-	new LPCDeclaration(new LPCType("mixed", nil, 0, tls_get(LINE)), parsed[0])
+	new LPCDeclaration(new LPCType("mixed", nil, 0, line), parsed[0], line)
     });
 }
 
 /*
- * ({ "private int", nil, 100, 0, "func", '(' ({ }), FALSE, ')', LPCStmtBlock })
+ * ({
+ *    "private int", nil, 100, 0, "func", 100, '(' ({ }), FALSE, ')',
+ *    LPCStmtBlock
+ * })
  */
 static mixed *functionDecl(mixed *parsed)
 {
     return ({
 	new LPCFunction(new LPCType(parsed[0], parsed[1], parsed[3], parsed[2]),
-			parsed[4], parsed[6], parsed[7], parsed[9])
+			parsed[4], parsed[7], parsed[8], parsed[10], parsed[5])
     });
 }
 
 /*
- * ({ "private", nil, 100, "func", '(', ({ }), FALSE, ')', LPCStmtBlock })
+ * ({ "private", nil, 100, "func", 100, '(', ({ }), FALSE, ')', LPCStmtBlock })
  */
 static mixed *voidDecl(mixed *parsed)
 {
     return ({
 	new LPCFunction(new LPCType(parsed[0], parsed[1], 0, parsed[2]),
-			parsed[3], parsed[5], parsed[6], parsed[8])
+			parsed[3], parsed[6], parsed[7], parsed[9], parsed[4])
     });
 }
 
@@ -599,23 +621,29 @@ static mixed *expGlobalVar(mixed *parsed)
 }
 
 /*
- * ({ "func", "(", ({ }), FALSE, ")" })
+ * ({ "func", 100, "(", ({ }), FALSE, ")" })
  */
 static mixed *expFuncall(mixed *parsed)
 {
     switch (sizeof(parsed)) {
-    case 5:
-	/* func() */
-	return ({ new LPCExpFuncall(parsed[0], parsed[2], parsed[3]) });
-
     case 6:
-	/* ::func() */
-	return ({ new LPCExpInhFuncall(nil, parsed[1], parsed[3], parsed[4]) });
+	/* func() */
+	return ({
+	    new LPCExpFuncall(parsed[0], parsed[3], parsed[4], parsed[1])
+	});
 
     case 7:
+	/* ::func() */
+	return ({
+	    new LPCExpInhFuncall(nil, parsed[1], parsed[4], parsed[5],
+				 parsed[2])
+	});
+
+    case 8:
 	/* label::func() */
 	return ({
-	    new LPCExpInhFuncall(parsed[0], parsed[2], parsed[4], parsed[5])
+	    new LPCExpInhFuncall(parsed[0], parsed[2], parsed[5], parsed[6],
+				 parsed[3])
 	});
     }
 }
