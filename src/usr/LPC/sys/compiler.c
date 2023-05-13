@@ -194,7 +194,7 @@ Exp1: _ '(' _ '{' OptArgListComma _ '}' _ ')'		? expArray	\
 Exp1: _ '(' _ '[' OptAssocListComma _ ']' _ ')'		? expMapping	\
 Exp1: _ ident						? expVar	\
 Exp1: _ '::' _ ident					? expGlobalVar	\
-Exp1: _ '(' _ ListExp _ ')'				? parsed_1_	\
+Exp1: _ '(' ListExp _ ')'				? parsed_1_	\
 Exp1: FunctionCall _ '(' OptArgList _ ')'		? expFuncall	\
 Exp1: _ 'catch' _ '(' ListExp _ ')'			? expCatch	\
 Exp1: _ 'new' OptObject StringExp			? expNew1	\
@@ -501,7 +501,7 @@ static mixed *compoundStmt(mixed *parsed)
  */
 static mixed *expIntDec(mixed *parsed)
 {
-    return ({ new LPCExpression((int) parsed[0]) });
+    return ({ new LPCExpression((int) parsed[0], tls_get(LINE)) });
 }
 
 /*
@@ -509,7 +509,9 @@ static mixed *expIntDec(mixed *parsed)
  */
 static mixed *expIntOct(mixed *parsed)
 {
-    return ({ new LPCExpression(stringParser->octalInt(parsed[0])) });
+    return ({
+	new LPCExpression(stringParser->octalInt(parsed[0]), tls_get(LINE))
+    });
 }
 
 /*
@@ -517,7 +519,10 @@ static mixed *expIntOct(mixed *parsed)
  */
 static mixed *expIntHex(mixed *parsed)
 {
-    return ({ new LPCExpression(stringParser->hexadecimalInt(parsed[0])) });
+    return ({
+	new LPCExpression(stringParser->hexadecimalInt(parsed[0]),
+			  tls_get(LINE))
+    });
 }
 
 /*
@@ -525,7 +530,7 @@ static mixed *expIntHex(mixed *parsed)
  */
 static mixed *expFloat(mixed *parsed)
 {
-    return ({ new LPCExpression((float) parsed[0]) });
+    return ({ new LPCExpression((float) parsed[0], tls_get(LINE)) });
 }
 
 /*
@@ -537,7 +542,7 @@ static mixed *simpleString(mixed *parsed)
 
     str = parsed[0];
     str = str[1 .. strlen(str) - 2];
-    return ({ new LPCExpression(str) });
+    return ({ new LPCExpression(str, tls_get(LINE)) });
 }
 
 /*
@@ -549,7 +554,7 @@ static mixed *complexString(mixed *parsed)
 
     str = parsed[0];
     str = str[1 .. strlen(str) - 2];
-    return ({ new LPCExpression(stringParser->parse(str)) });
+    return ({ new LPCExpression(stringParser->parse(str), tls_get(LINE)) });
 }
 
 /*
@@ -557,7 +562,10 @@ static mixed *complexString(mixed *parsed)
  */
 static mixed *stringExp(mixed *parsed)
 {
-    return ({ new LPCExpression(parsed[0]->value() + parsed[2]->value()) });
+    return ({
+	new LPCExpression(parsed[0]->value() + parsed[2]->value(),
+			  tls_get(LINE))
+    });
 }
 
 /*
@@ -565,7 +573,7 @@ static mixed *stringExp(mixed *parsed)
  */
 static mixed *simpleChar(mixed *parsed)
 {
-    return ({ new LPCExpression(parsed[0][1]) });
+    return ({ new LPCExpression(parsed[0][1], tls_get(LINE)) });
 }
 
 /*
@@ -577,7 +585,7 @@ static mixed *complexChar(mixed *parsed)
 
     str = parsed[0];
     str = str[1 .. strlen(str) - 2];
-    return ({ new LPCExpression(stringParser->parse(str)[0]) });
+    return ({ new LPCExpression(stringParser->parse(str)[0], tls_get(LINE)) });
 }
 
 /*
@@ -585,7 +593,7 @@ static mixed *complexChar(mixed *parsed)
  */
 static mixed *expNil(mixed *parsed)
 {
-    return ({ new LPCExpression(nil) });
+    return ({ new LPCExpression(nil, tls_get(LINE)) });
 }
 
 /*
