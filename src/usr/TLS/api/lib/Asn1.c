@@ -131,5 +131,6 @@ static string transport()
 }
 
 
+int class()		{ return class; }
 int tag()		{ return tag; }
 mixed contents()	{ return contents; }

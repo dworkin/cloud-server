@@ -6,13 +6,12 @@ inherit Asn1;
 /*
  * parse ASN1
  */
-private mixed *parse(string str)
+private mixed *parse(string str, int offset)
 {
-    int c, offset, flags, tag, length;
+    int c, flags, tag, length;
 
-    c = str[0];
+    c = str[offset++];
     flags = c;
-    offset = 1;
 
     /*
      * tag
@@ -56,29 +55,54 @@ private mixed *parse(string str)
 	} while (--c != 0);
     }
 
-    return ({ flags, tag, length, str[offset ..] });
+    return ({ flags, tag, length, offset });
 }
 
 /*
  * parse ASN1 sequence
  */
-private Asn1 *parseSequence(string str)
+private Asn1 *parseSequence(string str, int offset, int end)
 {
     Asn1 *list;
     int flags, tag, length;
     mixed contents;
 
     list = ({ });
-    while (strlen(str) != 0) {
-	({ flags, tag, length, str }) = parse(str);
-	contents = str[.. length - 1];
-	str = str[length ..];
+    while (offset < end) {
+	({ flags, tag, length, offset }) = parse(str, offset);
 
 	if (flags & 0x20) {
-	    contents = parseSequence(contents);
+	    contents = parseSequence(str, offset, offset + length);
+	} else {
+	    contents = str[offset .. offset + length - 1];
 	}
+	offset += length;
 
 	list += ({ new Asn1(tag, contents, flags >> 6) });
+    }
+    if (offset != end) {
+	error("Bad length");
+    }
+
+    return list;
+}
+
+/*
+ * parse flat ASN1 sequence
+ */
+private string *parseFlatSequence(string str, int offset, int end)
+{
+    string *list, tail;
+    int dummy, length, start;
+
+    list = ({ });
+    while (offset < end) {
+	({ dummy, dummy, length, start }) = parse(str, offset);
+	list += ({ str[offset .. start + length - 1] });
+	offset = start + length;
+    }
+    if (offset != end) {
+	error("Bad length");
     }
 
     return list;
@@ -87,18 +111,24 @@ private Asn1 *parseSequence(string str)
 /*
  * create ASN1 from DER
  */
-static void create(string str)
+static void create(string str, varargs int flat)
 {
-    int flags, tag, length;
+    int flags, tag, length, offset;
     mixed contents;
 
-    ({ flags, tag, length, contents }) = parse(str);
-    if (strlen(contents) != length) {
+    ({ flags, tag, length, offset }) = parse(str, 0);
+    if (offset + length != strlen(str)) {
 	error("Bad length");
     }
 
     if (flags & 0x20) {
-	contents = parseSequence(contents);
+	if (flat) {
+	    contents = parseFlatSequence(str, offset, offset + length);
+	} else {
+	    contents = parseSequence(str, offset, offset + length);
+	}
+    } else {
+	contents = str[offset ..];
     }
 
     ::create(tag, contents, flags >> 6);

@@ -1,4 +1,10 @@
 # define Asn1			object "/usr/TLS/api/lib/Asn1"
+# define Asn1Der		object "/usr/TLS/api/lib/Asn1Der"
+
+# define CLASS_UNIVERSAL	0
+# define CLASS_APPLICATION	1
+# define CLASS_CONTEXTUAL	2
+# define CLASS_PRIVATE		3
 
 # define ASN1_BOOLEAN		 1
 # define ASN1_INTEGER		 2
