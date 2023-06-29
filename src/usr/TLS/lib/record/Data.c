@@ -78,10 +78,11 @@ static int int4Restore(String str, int offset)
 	   (str[offset + 2] << 8) | str[offset + 3];
 }
 
-static Extension *extRestore(String str, int offset, int end)
+static Extension *extRestore(String str, int offset, int end,
+			     varargs int client)
 {
     Extension *extensions;
-    int extEnd;
+    int next;
 
     if (end != len2Offset(str, offset)) {
 	error("Decode error");
@@ -89,12 +90,11 @@ static Extension *extRestore(String str, int offset, int end)
     offset += 2;
     extensions = ({ });
     while (offset < end) {
-	extEnd = len2Offset(str, offset + 2);
+	next = len2Offset(str, offset + 2);
 	extensions += ({
-	    new Extension((str[offset] << 8) | str[offset + 1],
-			  substring(str, offset + 4, extEnd - 1))
+	    new RemoteExtension(str, offset, next, client)
 	});
-	offset = extEnd;
+	offset = next;
     }
     if (offset != end) {
 	error("Decode error");

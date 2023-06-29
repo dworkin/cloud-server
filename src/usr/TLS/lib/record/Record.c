@@ -24,7 +24,7 @@ void protect(string algorithm, string key, string iv, string aad, int pad)
     string padding;
 
     padding = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
-    while (strlen(padding) < pad) {
+    while (strlen(padding) <= pad) {
 	padding += padding;
     }
     padding = padding[.. pad];

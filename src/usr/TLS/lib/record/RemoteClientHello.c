@@ -18,6 +18,6 @@ static void create(String blob, int offset, int end)
     ({ compressionMethods, offset }) = len1Restore(blob, offset);
 
     ::create(random, sessionId, cipherSuite, compressionMethods,
-	     (offset != end) ? extRestore(blob, offset, end) : ({ }),
+	     (offset != end) ? extRestore(blob, offset, end, TRUE) : ({ }),
 	     version);
 }

@@ -9,7 +9,7 @@ static void create(String blob, int offset, int end)
 {
     string context, certificate;
     mixed **certificates;
-    int extEnd;
+    int next;
 
     ({ context, offset }) = len1Restore(blob, offset);
     certificates = ({ });
@@ -19,11 +19,11 @@ static void create(String blob, int offset, int end)
     offset += 3;
     while (offset < end) {
 	({ certificate, offset }) = len3Restore(blob, offset);
-	extEnd = len2Offset(blob, offset);
+	next = len2Offset(blob, offset);
 	certificates += ({
-	    ({ certificate, extRestore(blob, offset, extEnd) })
+	    ({ certificate, extRestore(blob, offset, next) })
 	});
-	offset = extEnd;
+	offset = next;
     }
     if (offset != end) {
 	error("Decode error");
