@@ -67,13 +67,22 @@ int query_mode()
 
 
 /*
+ * NAME:	login()
+ * DESCRIPTION:	call login in user
+ */
+static int login(string str)
+{
+    return user->login(str);
+}
+
+/*
  * NAME:	open()
  * DESCRIPTION:	open the connection
  */
 static void open(mapping tls)
 {
     if (user) {
-	set_mode(user->login(nil));
+	set_mode(login(nil));
     } else {
 	int mode, delay;
 	string banner;
@@ -192,12 +201,12 @@ int query_port()
  * NAME:	set_user()
  * DESCRIPTION:	set or change the user object directly
  */
-void set_user(object obj, string str)
+void set_user(object LIB_USER obj, varargs string str)
 {
-    if (KERNEL()) {
+    if (KERNEL() || SYSTEM()) {
 	user = obj;
 	if (str) {
-	    set_mode(obj->login(str));
+	    set_mode(login(str));
 	}
     }
 }
@@ -227,16 +236,17 @@ static void timeout(mapping tls)
  * NAME:	receive_message()
  * DESCRIPTION:	forward a message to user object
  */
-static void receive_message(mapping tls, string str)
+static int receive_message(mapping tls, string str)
 {
     if (mode != MODE_DISCONNECT) {
 	if (!user) {
 	    user = call_other(userd, conntype + "_user", port, str);
-	    set_mode(user->login(str));
+	    return login(str);
 	} else {
-	    set_mode(user->receive_message(str));
+	    return user->receive_message(str);
 	}
     }
+    return MODE_NOCHANGE;
 }
 
 /*
@@ -245,41 +255,41 @@ static void receive_message(mapping tls, string str)
  */
 int message(string str)
 {
-    if (previous_object() == user) {
+    if (previous_object() == user && !buffer) {
 	rlimits (-1; -1) {
 	    int len;
 
 	    len = send_message(str);
-	    if (len != strlen(str)) {
-		/*
-		 * string couldn't be sent completely; buffer the remainder
-		 */
-		buffer = str[len ..];
-		return FALSE;
-	    } else {
-		if (buffer) {
-		    buffer = nil;
-		}
+	    if (len == strlen(str)) {
 		return TRUE;
 	    }
+
+	    /*
+	     * string couldn't be sent completely; buffer the remainder
+	     */
+	    buffer = str[len ..];
 	}
     }
+    return FALSE;
 }
 
 /*
  * NAME:	message_done()
  * DESCRIPTION:	called when output is completed
  */
-static void message_done(mapping tls)
+static int message_done(mapping tls)
 {
     if (mode != MODE_DISCONNECT) {
 	if (buffer) {
-	    send_message(buffer);
-	    buffer = nil;
+	    int len;
+
+	    len = send_message(buffer);
+	    buffer = (len != strlen(buffer)) ? buffer[len ..] : nil;
 	} else if (user) {
-	    set_mode(user->message_done());
+	    return user->message_done();
 	}
     }
+    return MODE_NOCHANGE;
 }
 
 /*

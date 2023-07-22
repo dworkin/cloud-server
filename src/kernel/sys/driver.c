@@ -419,6 +419,7 @@ void prepare_reboot()
 private void _restored(mapping tls, int hotboot)
 {
     if (hotboot) {
+	userd->hotboot();
 	if (initd) {
 	    initd->hotboot();
 	}

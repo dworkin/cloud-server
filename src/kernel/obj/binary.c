@@ -4,7 +4,6 @@
 inherit LIB_CONN;	/* basic connection object */
 
 
-object driver;		/* driver object */
 string buffer;		/* buffered input */
 int length;		/* length of message to receive */
 int noline;		/* no full line in input buffer */
@@ -17,7 +16,6 @@ int input;		/* input_message handle */
 static void create()
 {
     ::create("binary", MODE_RAW);
-    driver = find_object(DRIVER);
     buffer = "";
 }
 
@@ -29,7 +27,7 @@ void connect(object user, string address, int port)
 {
     if (previous_program() == LIB_USER) {
 	::connect(address, port);
-	set_user(user, nil);
+	set_user(user);
     }
 }
 
@@ -128,7 +126,7 @@ private void receive_buffer(mapping tls)
 		    }
 		}
 
-		::receive_message(tls, str);
+		set_mode(::receive_message(tls, str));
 	    } else {
 		noline = TRUE;
 		break;
@@ -149,7 +147,7 @@ private void receive_buffer(mapping tls)
 		    str = buffer;
 		    buffer = "";
 		}
-		::receive_message(tls, str);
+		set_mode(::receive_message(tls, str));
 	    }
 	    break;
 	}
@@ -220,7 +218,7 @@ static void input_message()
  */
 static void message_done()
 {
-    ::message_done(([ ]));
+    set_mode(::message_done(([ ])));
 }
 
 /*

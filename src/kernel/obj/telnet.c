@@ -20,10 +20,9 @@ static void create()
  * NAME:	open()
  * DESCRIPTION:	open the connection
  */
-static int open()
+static void open()
 {
     ::open(([ ]));
-    return FALSE;
 }
 
 /*
@@ -50,7 +49,7 @@ static void timeout()
  */
 static void receive_message(string str)
 {
-    ::receive_message(([ ]), str);
+    set_mode(::receive_message(([ ]), str));
 }
 
 /*
@@ -77,5 +76,5 @@ void set_mode(int newmode)
  */
 static void message_done()
 {
-    ::message_done(([ ]));
+    set_mode(::message_done(([ ])));
 }

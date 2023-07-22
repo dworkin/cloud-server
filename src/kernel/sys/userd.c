@@ -411,7 +411,6 @@ object *query_editors()
 void prepare_reboot()
 {
     if (previous_program() == DRIVER) {
-	editors = ([ ]);
 	catch {
 	    connections = users();
 	}
@@ -436,5 +435,20 @@ void reboot()
 
 	users = ({ });
 	names = ([ ]);
+	editors = ([ ]);
+    }
+}
+
+/*
+ * NAME:	hotboot()
+ * DESCRIPTION:	handle a hotboot
+ */
+void hotboot()
+{
+    if (previous_program() == DRIVER) {
+	connections = nil;
+# ifndef __HYDRA__
+	editors = ([ ]);	/* DGD does not preserve editor sessions */
+# endif
     }
 }

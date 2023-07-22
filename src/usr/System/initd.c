@@ -119,16 +119,6 @@ static void create()
 }
 
 /*
- * NAME:	prepare_reboot()
- * DESCRIPTION:	called from the driver object before a snapshot is made
- */
-void prepare_reboot()
-{
-    if (previous_program() == DRIVER) {
-    }
-}
-
-/*
  * NAME:	reboot()
  * DESCRIPTION:	get file quotas right after a reboot
  */

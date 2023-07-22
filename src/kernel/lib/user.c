@@ -126,7 +126,7 @@ int message(string str)
     if (connection) {
 	return connection->message(str);
     }
-    return 0;
+    return FALSE;
 }
 
 /*
@@ -164,5 +164,5 @@ int datagram(string str)
     if (connection) {
 	return connection->datagram(str);
     }
-    return 0;
+    return FALSE;
 }

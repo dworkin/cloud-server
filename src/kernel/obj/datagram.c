@@ -24,7 +24,7 @@ void connect_datagram(object user, int dgram, string address, int port)
 {
     if (previous_program() == LIB_USER) {
 	::connect_datagram(dgram, address, port);
-	set_user(user, nil);
+	set_user(user);
     }
 }
 
@@ -71,7 +71,7 @@ static void timeout()
 static void receive_datagram(string str)
 {
     if (this_object()) {
-	::receive_message(([ ]), str);
+	set_mode(::receive_message(([ ]), str));
     }
 }
 
