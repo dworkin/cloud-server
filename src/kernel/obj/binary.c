@@ -1,5 +1,6 @@
 # include <kernel/kernel.h>
 # include <kernel/user.h>
+# include <status.h>
 
 inherit LIB_CONN;	/* basic connection object */
 
@@ -28,6 +29,18 @@ void connect(object user, string address, int port)
     if (previous_program() == LIB_USER) {
 	::connect(address, port);
 	set_user(user);
+	call_out("connecting", 0);
+    }
+}
+
+/*
+ * NAME:	connecting()
+ * DESCRIPTION:	pending connection?
+ */
+static void connecting()
+{
+    if (!status(this_object(), O_SPECIAL)) {
+	::unconnected(([ ]), -1);
     }
 }
 

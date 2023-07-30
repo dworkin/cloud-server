@@ -226,14 +226,21 @@ private string *preregister_includes(string path)
     case API_USER:
     case LIB_CONN:
     case LIB_USER:
-    case BINARY_CONN:
     case TELNET_CONN:
-    case DATAGRAM_CONN:
     case DEFAULT_WIZTOOL:
 	return ({
 	    "/include/config.h",
 	    "/include/kernel/kernel.h",
 	    "/include/kernel/user.h"
+	});
+
+    case BINARY_CONN:
+    case DATAGRAM_CONN:
+	return ({
+	    "/include/config.h",
+	    "/include/kernel/kernel.h",
+	    "/include/kernel/user.h",
+	    "/include/status.h"
 	});
 
     case LIB_WIZTOOL:
