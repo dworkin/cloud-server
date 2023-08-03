@@ -4,6 +4,9 @@
 inherit ServerName;
 
 
+/*
+ * initialize ServerName from a blob
+ */
 static void create(String blob, int offset, int end)
 {
     string *names, name;

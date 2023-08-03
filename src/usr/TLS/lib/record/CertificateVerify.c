@@ -3,9 +3,12 @@
 inherit Data;
 
 
-private string algorithm;
-private string signature;
+private string algorithm;	/* signature algorithm */
+private string signature;	/* signature */
 
+/*
+ * initialize CertificateVerify
+ */
 static void create(string algorithm, string signature)
 {
     ::create(HANDSHAKE_CERTIFICATE_VERIFY);
@@ -13,6 +16,9 @@ static void create(string algorithm, string signature)
     ::signature = signature;
 }
 
+/*
+ * export as a blob
+ */
 string transport()
 {
     return algorithm +

@@ -5,6 +5,9 @@
 inherit ServerHello;
 
 
+/*
+ * initialize ServerHello from a blob
+ */
 static void create(String blob, int offset, int end)
 {
     string version, random, sessionId, cipherSuite;

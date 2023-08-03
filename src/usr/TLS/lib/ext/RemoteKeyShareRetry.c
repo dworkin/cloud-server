@@ -4,6 +4,9 @@
 inherit KeyShareRetry;
 
 
+/*
+ * initialize KeyShare for HelloRetryRequest from a blob
+ */
 static void create(String blob, int offset, int end)
 {
     if (offset != end - 2) {

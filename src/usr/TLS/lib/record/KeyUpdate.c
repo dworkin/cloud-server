@@ -3,13 +3,19 @@
 inherit Data;
 
 
-private int updateRequested;
+private int updateRequested;	/* remote update requested? */
 
+/*
+ * initialize KeyUpate
+ */
 static void create(int updateRequested)
 {
     ::updateRequested = updateRequested;
 }
 
+/*
+ * export as a blob
+ */
 string transport()
 {
     string str;
@@ -21,4 +27,4 @@ string transport()
 }
 
 
-int updateRwquested()	{ return updateRequested; }
+int updateRequested()	{ return updateRequested; }

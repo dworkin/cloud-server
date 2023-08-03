@@ -20,6 +20,8 @@
 # define RemoteKeyShareRetry	   object "/usr/TLS/lib/ext/RemoteKeyShareRetry"
 # define UnknownExtension	   object "/usr/TLS/lib/ext/UnknownExtension"
 
+# define EXPLODE2		"/usr/TLS/sys/explode2"
+
 
 # define EXT_SERVER_NAME				0
 # define EXT_MAX_FRAGMENT_LENGTH			1

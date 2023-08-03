@@ -3,13 +3,19 @@
 inherit Data;
 
 
-private string *names;
+private string *names;		/* list of names */
 
+/*
+ * initialize ServerName
+ */
 static void create(string *names)
 {
     ::names = names;
 }
 
+/*
+ * export as a blob
+ */
 string transport()
 {
     int sz, i;

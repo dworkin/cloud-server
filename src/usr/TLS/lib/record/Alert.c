@@ -3,9 +3,12 @@
 inherit Data;
 
 
-private int level;
-private int description;
+private int level;		/* ALERT_WARNING, ALERT_FATAL */
+private int description;	/* description of the alert condition */
 
+/*
+ * initialize alert
+ */
 static void create(int level, int description)
 {
     ::create(RECORD_ALERT);
@@ -13,6 +16,9 @@ static void create(int level, int description)
     ::description = description;
 }
 
+/*
+ * export as a blob
+ */
 string transport()
 {
     string str;

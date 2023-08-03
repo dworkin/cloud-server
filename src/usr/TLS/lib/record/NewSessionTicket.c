@@ -4,23 +4,29 @@
 inherit Data;
 
 
-private int ticketLifetime;
-private int ticketAgeAdd;
-private string ticketNonce;
-private string ticket;
-private Extension *extensions;
+private int ticketLifetime;		/* ticket lifetime */
+private int ticketAgeAdd;		/* ticket added age */
+private string ticketNonce;		/* ticket nonce */
+private string ticket;			/* actual ticket */
+private Extension *extensions;		/* extensions */
 
+/*
+ * initialize NewSessionTicket
+ */
 static void create(int ticketLifetime, int ticketAgeAdd, string ticketNonce,
 		   string ticket, Extensions *extensions)
 {
     ::create(HANDSHAKE_NEW_SESSION_TICKET);
     ::ticketLifetime = ticketLifetime;
     ::ticketAgeAdd = ticketAgeAdd;
-    ::ticketNonce = ticketNonce,
+    ::ticketNonce = ticketNonce;
     ::ticket = ticket;
     ::extensions = extensions;
 }
 
+/*
+ * export as a blob
+ */
 string transport()
 {
     return int4Save(ticketLifetime) +

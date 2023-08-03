@@ -3,36 +3,54 @@
 # include <type.h>
 
 
-private int type;
+private int type;	/* type of data */
 
+/*
+ * initialize TLS data
+ */
 static void create(int type)
 {
     ::type = type;
 }
 
-static string substring(mixed str, int offset, int end)
+/*
+ * subrange of string or String
+ */
+static string substring(mixed str, int from, int to)
 {
     return (typeof(str) == T_STRING) ?
-	    str[offset .. end] :
-	    str->bufferRange(offset, end)->chunk();
+	    str[from .. to] :
+	    str->bufferRange(from, to)->chunk();
 }
 
+/*
+ * offset after length-1-encoded string
+ */
 static int len1Offset(mixed str, int offset)
 {
     return offset + 1 + str[offset];
 }
 
+/*
+ * offset after length-2-encoded string
+ */
 static int len2Offset(mixed str, int offset)
 {
     return offset + 2 + ((str[offset] << 8) | str[offset + 1]);
 }
 
+/*
+ * offset after length-3-encoded string
+ */
 static int len3Offset(String str, int offset)
 {
     return offset + 3 +
 	   ((str[offset] << 16) | (str[offset + 1] << 8) | str[offset + 2]);
 }
 
+/*
+ * ({ length-1-encoded string, offset })
+ */
 static mixed *len1Restore(mixed str, int offset)
 {
     int end;
@@ -46,6 +64,9 @@ static mixed *len1Restore(mixed str, int offset)
     });
 }
 
+/*
+ * ({ length-2-encoded string, end })
+ */
 static mixed *len2Restore(mixed str, int offset)
 {
     int end;
@@ -59,6 +80,9 @@ static mixed *len2Restore(mixed str, int offset)
     });
 }
 
+/*
+ * ({ length-3-encoded string, end })
+ */
 static mixed *len3Restore(mixed str, int offset)
 {
     int end;
@@ -72,12 +96,18 @@ static mixed *len3Restore(mixed str, int offset)
     });
 }
 
+/*
+ * 4-byte big-endian integer
+ */
 static int int4Restore(String str, int offset)
 {
     return (str[offset] << 24) | (str[offset + 1] << 16) |
 	   (str[offset + 2] << 8) | str[offset + 3];
 }
 
+/*
+ * list of client/server extensions
+ */
 static Extension *extRestore(String str, int offset, int end,
 			     varargs int client)
 {
@@ -103,6 +133,9 @@ static Extension *extRestore(String str, int offset, int end,
     return extensions;
 }
 
+/*
+ * save as length-1-encoded string
+ */
 static string len1Save(string str)
 {
     int length;
@@ -115,6 +148,9 @@ static string len1Save(string str)
     return len + str;
 }
 
+/*
+ * save as length-2-encoded string
+ */
 static string len2Save(string str)
 {
     int length;
@@ -128,6 +164,9 @@ static string len2Save(string str)
     return len + str;
 }
 
+/*
+ * save as length-3-encoded string
+ */
 static string len3Save(string str)
 {
     int length;
@@ -142,6 +181,23 @@ static string len3Save(string str)
     return len + str;
 }
 
+/*
+ * save as 2-byte bigendian integer
+ */
+static string int2Save(int i)
+{
+    string str;
+
+    str = "..";
+    str[0] = i >> 8;
+    str[1] = i;
+
+    return str;
+}
+
+/*
+ * save as 4-byte bigendian integer
+ */
 static string int4Save(int i)
 {
     string str;
@@ -155,6 +211,9 @@ static string int4Save(int i)
     return str;
 }
 
+/*
+ * save list of extensions
+ */
 static string extSave(Extension *extensions)
 {
     string *ext;
@@ -167,7 +226,10 @@ static string extSave(Extension *extensions)
     return len2Save(implode(ext, ""));
 }
 
-static string typeHeader()
+/*
+ * save type
+ */
+string typeHeader()
 {
     string str;
 

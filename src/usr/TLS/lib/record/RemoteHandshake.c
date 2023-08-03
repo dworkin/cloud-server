@@ -4,6 +4,9 @@
 inherit Handshake;
 
 
+/*
+ * initialize Handshake from a blob
+ */
 static create(String blob, int offset, int end)
 {
     int type;

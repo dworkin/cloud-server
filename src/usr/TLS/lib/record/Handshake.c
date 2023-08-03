@@ -3,14 +3,20 @@
 inherit Data;
 
 
-private Data message;
+private Data message;	/* handshake message */
 
+/*
+ * initialize Handshake
+ */
 static void create(Data message)
 {
     ::create(RECORD_HANDSHAKE);
     ::message = message;
 }
 
+/*
+ * export as a blob
+ */
 string transport()
 {
     string str;

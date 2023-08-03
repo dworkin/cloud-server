@@ -25,8 +25,9 @@
 # define RemoteKeyUpdate	  object "/usr/TLS/lib/record/RemoteKeyUpdate"
 
 
-# define VERSION_TLS_10					"\x03\x01"
-# define VERSION_TLS_12					"\x03\x03"
+# define TLS_VERSION_10					"\x03\x01"
+# define TLS_VERSION_12					"\x03\x03"
+# define TLS_VERSION_13					"\x03\x04"
 
 # define RECORD_CHANGE_CIPHER_SPEC			20
 # define RECORD_ALERT					21

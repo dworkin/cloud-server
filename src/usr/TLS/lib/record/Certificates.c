@@ -4,9 +4,12 @@
 inherit Data;
 
 
-private string context;
-private mixed **certificates;
+private string context;		/* Certificate Request identifier */
+private mixed **certificates;	/* list of ({ certificate, extensions }) */
 
+/*
+ * initialize Certificates
+ */
 static void create(string context, mixed **certificates)
 {
     ::create(HANDSHAKE_CERTIFICATES);
@@ -14,6 +17,9 @@ static void create(string context, mixed **certificates)
     ::certificates = certificates;
 }
 
+/*
+ * export as a blob
+ */
 string transport()
 {
     int sz, i, j;

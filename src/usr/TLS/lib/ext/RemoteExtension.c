@@ -5,6 +5,9 @@
 inherit Extension;
 
 
+/*
+ * initialize Extension from a blob
+ */
 static void create(String blob, int offset, int end, varargs int client)
 {
     int type;

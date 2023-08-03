@@ -4,6 +4,9 @@
 inherit SupportedGroups;
 
 
+/*
+ * initialize SupportedGroups from a blob
+ */
 static void create(String blob, int offset, int end)
 {
     string groups;
@@ -12,5 +15,5 @@ static void create(String blob, int offset, int end)
     if (offset != end) {
 	error("Decode error");
     }
-    ::create(groups);
+    ::create(EXPLODE2->explode2(groups));
 }

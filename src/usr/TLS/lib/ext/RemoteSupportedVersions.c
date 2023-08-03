@@ -4,6 +4,9 @@
 inherit SupportedVersions;
 
 
+/*
+ * initialize SupportedVersions from a blob
+ */
 static create(String blob, int offset, int end)
 {
     string versions;
@@ -13,5 +16,5 @@ static create(String blob, int offset, int end)
     if (next != end) {
 	error("Decode error");
     }
-    ::create(versions);
+    ::create(EXPLODE2->explode2(versions));
 }

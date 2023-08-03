@@ -4,6 +4,9 @@
 inherit Version;
 
 
+/*
+ * initialize Version from a blob
+ */
 static create(String blob, int offset, int end)
 {
     if (offset != end - 2) {

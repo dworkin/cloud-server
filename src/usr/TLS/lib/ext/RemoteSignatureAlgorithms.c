@@ -4,6 +4,9 @@
 inherit SignatureAlgorithms;
 
 
+/*
+ * initialize SignatureAlgorithms from a blob
+ */
 static void create(String blob, int offset, int end)
 {
     string algorithms;
@@ -12,5 +15,5 @@ static void create(String blob, int offset, int end)
     if (offset != end) {
 	error("Decode error");
     }
-    ::create(algorithms);
+    ::create(EXPLODE2->explode2(algorithms));
 }

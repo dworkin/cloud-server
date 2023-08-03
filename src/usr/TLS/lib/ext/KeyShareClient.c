@@ -3,13 +3,19 @@
 inherit Data;
 
 
-private string **keyShares;
+private string **keyShares;	/* list of ({ group, key }) pairs */
 
+/*
+ * initialize KeyShare for client
+ */
 static void create(string **keyShares)
 {
     ::keyShares = keyShares;
 }
 
+/*
+ * export as a blob
+ */
 string transport()
 {
     int sz, i, j;

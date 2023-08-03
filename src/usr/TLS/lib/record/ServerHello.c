@@ -4,19 +4,22 @@
 inherit Data;
 
 
-private string version;
-private string random;
-private string sessionId;
-private string cipherSuite;
-private int compressionMethod;
-private Extension *extensions;
+private string version;			/* legacy version */
+private string random;			/* 32 secure random bytes */
+private string sessionId;		/* legacy session ID */
+private string cipherSuite;		/* selected cipherSuite */
+private int compressionMethod;		/* "\0" */
+private Extension *extensions;		/* extensions */
 
+/*
+ * initialize ServerHello
+ */
 static void create(string random, string sessionId, string cipherSuite,
 		   int compressionMethod, Extension *extensions,
 		   varargs string version)
 {
     ::create(HANDSHAKE_SERVER_HELLO);
-    ::version = (version) ? version : VERSION_TLS_12;
+    ::version = (version) ? version : TLS_VERSION_12;
     ::random = random;
     ::sessionId = sessionId;
     ::cipherSuite = cipherSuite;
@@ -24,6 +27,9 @@ static void create(string random, string sessionId, string cipherSuite,
     ::extensions = extensions;
 }
 
+/*
+ * export as a blob
+ */
 string transport()
 {
     string str;

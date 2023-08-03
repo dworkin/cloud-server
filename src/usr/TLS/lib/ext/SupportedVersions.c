@@ -4,17 +4,23 @@
 inherit Data;
 
 
-private string versions;
+private string *versions;	/* list of supported versions */
 
-static create(string versions)
+/*
+ * initialize SupportedVersions
+ */
+static create(string *versions)
 {
     ::versions = versions;
 }
 
+/*
+ * export as a blob
+ */
 string transport()
 {
-    return len1Save(versions);
+    return len1Save(implode(versions, ""));
 }
 
 
-string versions()	{ return versions; }
+string *versions()	{ return versions; }

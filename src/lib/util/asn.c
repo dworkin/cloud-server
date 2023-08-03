@@ -141,3 +141,21 @@ static int decode(string str)
 	error("Number too big");
     }
 }
+
+/*
+ * extend an ASN
+ */
+string extend(string str, int length)
+{
+    string pad;
+
+    if (strlen(str) < length) {
+	pad = "\0\0\0\0\0\0\0\0";
+	while (strlen(pad) + strlen(str) < length) {
+	    pad += pad;
+	}
+	str = (pad + str)[strlen(pad) + strlen(str) - length ..];
+    }
+
+    return str;
+}

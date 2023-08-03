@@ -4,6 +4,9 @@
 inherit KeyShareClient;
 
 
+/*
+ * initialize KeyShare for ClientHello from a blob
+ */
 static void create(String blob, int offset, int end)
 {
     string **keyShare, group, keyExchange;

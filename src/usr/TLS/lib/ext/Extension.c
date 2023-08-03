@@ -3,14 +3,20 @@
 inherit Data;
 
 
-private Data data;
+private Data data;	/* extension contained herein */
 
+/*
+ * initialize Extension
+ */
 static void create(int type, Data data)
 {
     ::create(type);
     ::data = data;
 }
 
+/*
+ * export as a blob
+ */
 string transport()
 {
     int type;

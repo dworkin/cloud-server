@@ -3,17 +3,23 @@
 inherit Data;
 
 
-private string groups;
+private string *groups;		/* list of supported groups */
 
-static void create(string groups)
+/*
+ * initialize SupportedGroups
+ */
+static void create(string *groups)
 {
     ::groups = groups;
 }
 
+/*
+ * export as a blob
+ */
 string transport()
 {
-    return len2Save(groups);
+    return len2Save(implode(groups, ""));
 }
 
 
-string groups()		{ return groups; }
+string *groups()		{ return groups; }

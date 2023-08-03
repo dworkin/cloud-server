@@ -5,6 +5,9 @@
 inherit Certificates;
 
 
+/*
+ * initialize Certificates from a blob
+ */
 static void create(String blob, int offset, int end)
 {
     string context, certificate;

@@ -5,6 +5,9 @@
 inherit CertificateVerify;
 
 
+/*
+ * initialize CertificateVerify from a blob
+ */
 static void create(String blob, int offset, int end)
 {
     string algorithm, signature;
