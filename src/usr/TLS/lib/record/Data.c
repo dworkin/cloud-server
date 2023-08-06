@@ -88,12 +88,7 @@ static mixed *len3Restore(mixed str, int offset)
     int end;
 
     end = len3Offset(str, offset);
-    return ({
-	(typeof(str) == T_STRING) ?
-	 str[offset + 3 .. end - 1] :
-	 str->bufferRange(offset + 3, end - 1)->chunk(),
-	end
-    });
+    return ({ str[offset + 3 .. end - 1], end });
 }
 
 /*
@@ -167,18 +162,21 @@ static string len2Save(string str)
 /*
  * save as length-3-encoded string
  */
-static string len3Save(string str)
+static StringBuffer len3Save(StringBuffer str)
 {
     int length;
     string len;
+    StringBuffer buffer;
 
-    length = strlen(str);
+    length = str->length();
     len = "...";
     len[0] = length >> 16;
     len[1] = length >> 8;
     len[2] = length;
 
-    return len + str;
+    buffer = new StringBuffer(len);
+    buffer->append(str);
+    return buffer;
 }
 
 /*

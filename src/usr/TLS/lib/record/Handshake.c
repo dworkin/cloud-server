@@ -1,4 +1,7 @@
+# include <String.h>
 # include "Record.h"
+# include <type.h>
+# include <status.h>
 
 inherit Data;
 
@@ -14,14 +17,23 @@ static void create(Data message)
     ::message = message;
 }
 
+mixed transport();	/* override inherited prototype */
+
 /*
  * export as a blob
  */
-string transport()
+mixed transport()
 {
-    string str;
+    StringBuffer buffer;
+    mixed str;
 
-    return message->typeHeader() + len3Save(message->transport());
+    buffer = new StringBuffer(message->typeHeader());
+    str = message->transport();
+    if (typeof(str) == T_STRING) {
+	str = new StringBuffer(str);
+    }
+    buffer->append(len3Save(str));
+    return (buffer->length() <= status(ST_STRSIZE)) ? buffer->chunk() : buffer;
 }
 
 

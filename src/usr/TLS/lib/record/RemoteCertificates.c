@@ -10,7 +10,8 @@ inherit Certificates;
  */
 static void create(String blob, int offset, int end)
 {
-    string context, certificate;
+    string context;
+    String certificate;
     mixed **certificates;
     int next;
 
