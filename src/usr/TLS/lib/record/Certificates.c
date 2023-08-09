@@ -25,15 +25,20 @@ StringBuffer transport();	/* override inherited prototype */
  */
 StringBuffer transport()
 {
+    StringBuffer certbuf, buffer;
     int sz, i;
-    StringBuffer buffer;
 
-    buffer = new StringBuffer(len1Save(context));
+    certbuf = new StringBuffer;
     sz = sizeof(certificates);
     for (i = 0; i < sz; i++) {
-	buffer->append(len3Save(certificates[i][0]->buffer()));
-	buffer->append(extSave(certificates[i][1]));
+	buffer = certificates[i][0]->buffer();
+	certbuf->append(len3(buffer));
+	certbuf->append(buffer);
+	certbuf->append(extSave(certificates[i][1]));
     }
+    buffer = new StringBuffer(len1Save(context));
+    buffer->append(len3(certbuf));
+    buffer->append(certbuf);
 
     return buffer;
 }

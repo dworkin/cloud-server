@@ -160,13 +160,12 @@ static string len2Save(string str)
 }
 
 /*
- * save as length-3-encoded string
+ * save as 3 byte length
  */
-static StringBuffer len3Save(StringBuffer str)
+static string len3(StringBuffer str)
 {
     int length;
     string len;
-    StringBuffer buffer;
 
     length = str->length();
     len = "...";
@@ -174,9 +173,7 @@ static StringBuffer len3Save(StringBuffer str)
     len[1] = length >> 8;
     len[2] = length;
 
-    buffer = new StringBuffer(len);
-    buffer->append(str);
-    return buffer;
+    return len;
 }
 
 /*

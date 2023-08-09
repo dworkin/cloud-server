@@ -32,7 +32,8 @@ mixed transport()
     if (typeof(str) == T_STRING) {
 	str = new StringBuffer(str);
     }
-    buffer->append(len3Save(str));
+    buffer->append(len3(str));
+    buffer->append(str);
     return (buffer->length() <= status(ST_STRSIZE)) ? buffer->chunk() : buffer;
 }
 

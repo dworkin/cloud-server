@@ -11,13 +11,11 @@ private StringBuffer receiveBuffer;	/* partial handshake buffer */
 private string receiveKey;		/* receive key */
 private string receiveIV;		/* receive IV */
 private int receiveSequence;		/* receive sequence number */
-private string receiveCipher;		/* receive cipher */
-private int receiveTaglen;		/* receive tag length */
+private string cipher;			/* cipher */
+private int taglen;			/* tag length */
 private string sendKey;			/* send key */
 private string sendIV;			/* send IV */
 private int sendSequence;		/* send sequence number */
-private string sendCipher;		/* send cipher */
-private int sendTaglen;			/* send tag length */
 
 /*
  * initialize TLS library
@@ -72,7 +70,7 @@ private string HKDF_Expand_Label(string secret, string label, string context,
 }
 
 /*
- * Derive-Secret (RFC 8446)
+ * Derive-Secret (RFC 8446, but 3rd argument is not hashed)
  */
 private string Derive_Secret(string secret, string label, string transcriptHash,
 			     string hash)
@@ -96,10 +94,10 @@ private string Derive_Secret(string secret, string label, string transcriptHash,
 }
 
 /*
- * determine key schedule
+ * determine handshake secrets
  */
-static string *keySchedule(string sharedSecret, string *messages,
-			   string algorithm)
+static string *handshakeSecrets(string sharedSecret, string *messages,
+				string algorithm)
 {
     string hash, zeroKey, earlySecret, emptyHash, transcriptHash, derivedSecret,
 	   handshakeSecret, serverSecret, clientSecret, masterSecret;
@@ -126,6 +124,34 @@ static string *keySchedule(string sharedSecret, string *messages,
     masterSecret = HKDF_Extract(zeroKey, hash, derivedSecret);
 
     return ({ serverSecret, clientSecret, masterSecret });
+}
+
+/*
+ * hash based on secret and transcript
+ */
+static string verifyData(string secret, string *messages, string algorithm)
+{
+    string hash;
+
+    hash = cipherInfo(algorithm)[3];
+    return HMAC(Derive_Secret(secret, "finished", "", hash),
+		hash_string(hash, messages...), hash);
+}
+
+/*
+ * determine application secrets
+ */
+static string *applicationSecrets(string masterSecret, string *messages,
+				  string algorithm)
+{
+    string hash, transcriptHash;
+
+    hash = cipherInfo(algorithm)[3];
+    transcriptHash = hash_string(hash, messages...);
+    return ({
+	Derive_Secret(masterSecret, "s ap traffic", transcriptHash, hash),
+	Derive_Secret(masterSecret, "c ap traffic", transcriptHash, hash)
+    });
 }
 
 /*
@@ -158,8 +184,8 @@ static void setReceiveKey(string key, string IV, string cipherSuite)
     receiveIV = IV;
     receiveSequence = 0;
     info = cipherInfo(cipherSuite);
-    receiveCipher = info[0];
-    receiveTaglen = info[2];
+    cipher = info[0];
+    taglen = info[2];
 }
 
 /*
@@ -173,8 +199,8 @@ static void setSendKey(string key, string IV, string cipherSuite)
     sendIV = IV;
     sendSequence = 0;
     info = cipherInfo(cipherSuite);
-    sendCipher = info[0];
-    sendTaglen = info[2];
+    cipher = info[0];
+    taglen = info[2];
 }
 
 /*
@@ -247,11 +273,11 @@ static Data *receiveRecord(Record record)
 	if (!receiveKey) {
 	    error("No key");
 	}
-	if (!record->unprotect(receiveCipher,
+	if (!record->unprotect(cipher,
 			       receiveKey,
 			       asn_xor(receiveIV,
 				       asn::encode(receiveSequence++)),
-			       receiveTaglen)) {
+			       taglen)) {
 	    error("Unprotect failed");
 	}
     }
@@ -335,4 +361,44 @@ static Data *receiveRecord(Record record)
     default:
 	error("ALERT_UNEXPECTED_MESSAGE");	/* XXX what alert type? */
     }
+}
+
+/*
+ * send a record
+ */
+private void sendRecord(StringBuffer output, Record record)
+{
+    record->protect(cipher,
+		    sendKey,
+		    asn_xor(sendIV,
+			    asn::encode(sendSequence++)),
+		    taglen);
+    output->append(record->transport());
+}
+
+/*
+ * send data (handshake or alert)
+ */
+static void sendData(StringBuffer output, Data data)
+{
+    sendRecord(output, new Record(data->type(), data->transport()));
+}
+
+/*
+ * send a message
+ */
+static void sendMessage(StringBuffer output, string str, varargs int type)
+{
+    if (type == 0) {
+	type = RECORD_APPLICATION_DATA;
+    }
+    sendRecord(output, new Record(type, str));
+}
+
+/*
+ * send fake ChangeCipherSpec (unprotected)
+ */
+static void sendChangeCipherSpec(StringBuffer output)
+{
+    output->append("\24\3\3\0\1\1");
 }
