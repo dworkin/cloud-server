@@ -38,6 +38,7 @@
 # define ALERT_WARNING					1
 # define ALERT_FATAL					2
 
+# define ALERT_CLOSE_NOTIFY				0
 # define ALERT_UNEXPECTED_MESSAGE			10
 # define ALERT_BAD_RECORD_MAC				20
 # define ALERT_RECORD_OVERFLOW				22

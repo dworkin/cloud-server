@@ -8,7 +8,7 @@ inherit LIB_CONN;	/* basic connection object */
 string buffer;		/* buffered input */
 int length;		/* length of message to receive */
 int noline;		/* no full line in input buffer */
-int input;		/* input_message handle */
+int restart;		/* restart_input handle */
 
 /*
  * NAME:	create()
@@ -175,9 +175,9 @@ static void receive_message(string str)
 {
     mapping tls;
 
-    if (input != 0) {
-	remove_call_out(input);
-	input = 0;
+    if (restart != 0) {
+	remove_call_out(restart);
+	restart = 0;
     }
     add_to_buffer(tls = ([ ]), str);
     receive_buffer(tls);
@@ -189,40 +189,59 @@ static void receive_message(string str)
  */
 void set_mode(int mode)
 {
+    int oldmode;
+    object user;
+
     if (KERNEL()) {
+	oldmode = query_mode();
 	::set_mode(mode);
-	if (input == 0 && strlen(buffer) != 0) {
-	    switch (mode) {
-	    case MODE_LINE:
-	    case MODE_EDIT:
-		if (!noline) {
+	if (oldmode == MODE_BLOCK && mode != MODE_DISCONNECT &&
+	    mode != MODE_BLOCK && restart == 0) {
+	    if (strlen(buffer) != 0) {
+		switch (mode) {
+		case MODE_LINE:
+		case MODE_EDIT:
+		    if (!noline) {
+			break;
+		    }
+		    /* fall through */
+		default:
+		    if (!(user=query_user()) || !user->buffered_input()) {
+			return;
+		    }
+		    /* fall through */
+		case MODE_RAW:
 		    break;
 		}
-		/* fall through */
-	    default:
+	    } else if (!(user=query_user()) || !user->buffered_input()) {
 		return;
-
-	    case MODE_RAW:
-		break;
 	    }
 
-	    input = call_out("input_message", 0);
+	    restart = call_out("restart_input", 0);
 	}
     }
 }
 
 /*
- * NAME:	input_message()
+ * NAME:	restart_input()
  * DESCRIPTION:	reprocess the input buffer
  */
-static void input_message()
+static void restart_input()
 {
+    int mode;
     mapping tls;
+    object user;
 
-    input = 0;
-    tls = ([ ]);
-    TLSVAR(tls, TLS_USER) = this_object();
-    receive_buffer(tls);
+    restart = 0;
+    if ((mode=query_mode()) != MODE_BLOCK && mode != MODE_DISCONNECT) {
+	tls = ([ ]);
+	TLSVAR(tls, TLS_USER) = this_object();
+	user = query_user();
+	if (user) {
+	    user->restart_input();
+	}
+	receive_buffer(tls);
+    }
 }
 
 /*

@@ -162,12 +162,12 @@ static string len2Save(string str)
 /*
  * save as 3 byte length
  */
-static string len3(StringBuffer str)
+static string len3(mixed str)
 {
     int length;
     string len;
 
-    length = str->length();
+    length = (typeof(str) == T_STRING) ? strlen(str) : str->length();
     len = "...";
     len[0] = length >> 16;
     len[1] = length >> 8;

@@ -3,9 +3,8 @@
 # include "HttpRequest.h"
 # include "HttpField.h"
 # include "HttpResponse.h"
-# include "HttpConnection.h"
 
-inherit Http1Connection;
+inherit "~/lib/Connection1";
 
 
 object server;		/* associated server object */
@@ -156,6 +155,36 @@ int login(string str)
     }
 
     return MODE_LINE;
+}
+
+/*
+ * receive a message
+ */
+int receive_message(string str)
+{
+    if (previous_program() == LIB_CONN) {
+	return ::receive_message(str);
+    }
+}
+
+/*
+ * terminate connection
+ */
+void logout(int quit)
+{
+    if (previous_program() == LIB_CONN) {
+	::logout(quit);
+    }
+}
+
+/*
+ * send remainder of message
+ */
+int message_done()
+{
+    if (previous_program() == LIB_CONN) {
+	return ::message_done();
+    }
 }
 
 /*

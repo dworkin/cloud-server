@@ -1,6 +1,7 @@
 # include "asn1.h"
 # include "Record.h"
 # include "Extension.h"
+# include "tls.h"
 
 
 static void create()
@@ -30,4 +31,5 @@ static void create()
     compile_object(OBJECT_PATH(RemoteKeyShareServer));
     compile_object(OBJECT_PATH(RemoteKeyShareRetry));
     compile_object(OBJECT_PATH(UnknownExtension));
+    compile_object(OBJECT_PATH(TlsClientSession));
 }

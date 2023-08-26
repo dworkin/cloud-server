@@ -1,12 +1,11 @@
 # include <kernel/user.h>
 # include <String.h>
-# include "HttpConnection.h"
 # include "HttpRequest.h"
 # include "HttpResponse.h"
 # include "HttpField.h"
 # include <kfun.h>
 
-inherit HttpConnection;
+inherit "Connection";
 private inherit hex "/lib/util/hex";
 
 # define HTTP_TOKENPARAM	"/usr/HTTP/sys/tokenparam"
@@ -20,6 +19,7 @@ private string transform;	/* compression or masking */
 private StringBuffer inbuf;	/* entity included in request/response */
 private int length;		/* length of entity to receive */
 private StringBuffer outbuf;	/* output buffer */
+private int quiet;		/* quiet output? */
 private int persistent;		/* is connection persistent? */
 private int webSocket;		/* WebSocket enabled? */
 
@@ -320,121 +320,119 @@ void expectWsFrame()
 /*
  * receive (part of) message
  */
-int receive_message(string str)
+static int receive_message(string str)
 {
-    if (previous_program() == LIB_CONN) {
-	StringBuffer chunk;
+    StringBuffer chunk;
 
-	if (webSocket) {
-	    try {
-		if (frame) {
-		    str = frame + str;
-		    frame = nil;
+    if (webSocket) {
+	try {
+	    if (frame) {
+		str = frame + str;
+		frame = nil;
 
-		    frame = call_limited("receiveWsFrame", str);
-		} else {
-		    inbuf->append(str);
-		    length -= strlen(str);
-		    if (length == 0) {
-			chunk = inbuf;
-			inbuf = nil;
+		frame = call_limited("receiveWsFrame", str);
+	    } else {
+		inbuf->append(str);
+		length -= strlen(str);
+		if (length == 0) {
+		    chunk = inbuf;
+		    inbuf = nil;
 
-			call_limited("receiveWsChunk", chunk);
-		    }
+		    call_limited("receiveWsChunk", chunk);
 		}
+	    }
+	    return MODE_NOCHANGE;
+	} catch (err) {
+	    call_limited("receiveError", err);
+	    return MODE_DISCONNECT;
+	}
+    } else if (frame) {
+	/*
+	 * headers or trailers
+	 */
+	if (strlen(str) != 0) {
+	    frame += str + "\n";
+	    return MODE_NOCHANGE;
+	}
+	str = frame;
+	frame = nil;
+
+	set_mode(MODE_BLOCK);
+	if (!inchunk) {
+	    /*
+	     * headers
+	     */
+	    return call_limited("receiveHeaders", str);
+	} else {
+	    /*
+	     * chunk trailers
+	     */
+	    try {
+		call_limited("receiveChunk", nil,
+			     (strlen(str) != 0) ?
+			      new_object(trailersPath, str) : nil);
 		return MODE_NOCHANGE;
 	    } catch (err) {
 		call_limited("receiveError", err);
 		return MODE_DISCONNECT;
 	    }
-	} else if (frame) {
+	}
+    } else if (inbuf) {
+	/*
+	 * entity/chunk
+	 */
+	if (length == 0) {
 	    /*
-	     * headers or trailers
+	     * end of chunk
 	     */
 	    if (strlen(str) != 0) {
-		frame += str + "\n";
-		return MODE_NOCHANGE;
+		/* \r\n expected */
+		call_limited("receiveError", "HTTP protocol error");
+		return MODE_DISCONNECT;
 	    }
-	    str = frame;
-	    frame = nil;
+
+	    chunk = inbuf;
+	    inbuf = nil;
 
 	    set_mode(MODE_BLOCK);
-	    if (!inchunk) {
-		/*
-		 * headers
-		 */
-		return call_limited("receiveHeaders", str);
-	    } else {
-		/*
-		 * chunk trailers
-		 */
-		try {
-		    call_limited("receiveChunk", nil,
-				 (strlen(str) != 0) ?
-				  new_object(trailersPath, str) : nil);
-		    return MODE_NOCHANGE;
-		} catch (err) {
-		    call_limited("receiveError", err);
-		    return MODE_DISCONNECT;
-		}
+	    try {
+		call_limited("receiveChunk", chunk);
+	    } catch (err) {
+		call_limited("receiveError", err);
+		return MODE_DISCONNECT;
 	    }
-	} else if (inbuf) {
-	    /*
-	     * entity/chunk
-	     */
+	} else {
+	    inbuf->append(str);
+	    length -= strlen(str);
 	    if (length == 0) {
-		/*
-		 * end of chunk
-		 */
-		if (strlen(str) != 0) {
-		    /* \r\n expected */
-		    call_limited("receiveError", "HTTP protocol error");
-		    return MODE_DISCONNECT;
+		if (inchunk) {
+		    return MODE_LINE;	/* followed by \r\n */
 		}
 
 		chunk = inbuf;
 		inbuf = nil;
 
 		set_mode(MODE_BLOCK);
-		try {
-		    call_limited("receiveChunk", chunk);
-		} catch (err) {
-		    call_limited("receiveError", err);
-		    return MODE_DISCONNECT;
-		}
-	    } else {
-		inbuf->append(str);
-		length -= strlen(str);
-		if (length == 0) {
-		    if (inchunk) {
-			return MODE_LINE;	/* followed by \r\n */
-		    }
-
-		    chunk = inbuf;
-		    inbuf = nil;
-
-		    set_mode(MODE_BLOCK);
-		    call_limited("receiveEntity", chunk);
-		}
+		call_limited("receiveEntity", chunk);
 	    }
-
-	    return MODE_NOCHANGE;
-	} else if (inchunk) {
-	    /*
-	     * chunk line
-	     */
-	    try {
-		return call_limited("receiveChunkLine", str);
-	    } catch (err) {
-		call_limited("receiveError", err);
-		return MODE_DISCONNECT;
-	    }
-	} else {
-	    /*
-	     * request/response
-	     */
-	    return call_limited("receiveMessage", str);
 	}
+
+	return MODE_NOCHANGE;
+    } else if (inchunk) {
+	/*
+	 * chunk line
+	 */
+	try {
+	    return call_limited("receiveChunkLine", str);
+	} catch (err) {
+	    call_limited("receiveError", err);
+	    return MODE_DISCONNECT;
+	}
+    } else {
+	/*
+	 * request/response
+	 */
+	return call_limited("receiveMessage", str);
     }
 }
 
@@ -442,35 +440,48 @@ int receive_message(string str)
 /*
  * send (a chunk of) a message
  */
-static void messageChunk(StringBuffer buffer)
+static void messageChunk()
 {
     string str;
 
-    str = buffer->chunk();
-    if (!str) {
-	relay->doneChunk();
+    if (!outbuf || !(str=outbuf->chunk())) {
+	outbuf = nil;
+	if (!quiet) {
+	    relay->doneChunk();
+	}
     } else {
-	message(str);
+	while (message(str)) {
+	    str = outbuf->chunk();
+	    if (!str) {
+		outbuf = nil;
+		break;
+	    }
+	}
     }
 }
 
 /*
  * output remainder of message
  */
-int message_done()
+static int message_done()
 {
-    if (previous_program() == LIB_CONN) {
-	call_limited("messageChunk", outbuf);
-    }
+    call_limited("messageChunk");
     return MODE_NOCHANGE;
 }
 
 /*
  * send a message
  */
-static void sendMessage(StringBuffer chunk)
+static void sendMessage(StringBuffer chunk, varargs int quiet)
 {
-    messageChunk(outbuf = chunk);
+    if (outbuf) {
+	outbuf->append(chunk);
+	::quiet &= quiet;
+    } else {
+	outbuf = chunk;
+	::quiet = quiet;
+	messageChunk();
+    }
 }
 
 /*
@@ -575,16 +586,14 @@ static void _logout()
 /*
  * connection terminated
  */
-void logout(int quit)
+static void logout(int quit)
 {
-    if (previous_program() == LIB_CONN) {
-	if (quit) {
-	    relay->disconnect();
-	} else {
-	    call_limited("_logout");
-	}
-	destruct_object(this_object());
+    if (quit) {
+	relay->disconnect();
+    } else {
+	call_limited("_logout");
     }
+    destruct_object(this_object());
 }
 
 /*

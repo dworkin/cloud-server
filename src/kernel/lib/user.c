@@ -118,7 +118,7 @@ static void set_message_length(int len)
  * NAME:	message()
  * DESCRIPTION:	forward a message to the connection object
  */
-int message(string str)
+static int message(string str)
 {
     if (!str) {
 	error("Bad argument 1 for function message");

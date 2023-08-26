@@ -245,6 +245,10 @@ void append(mixed str)
 
     switch (typeof(str)) {
     case T_STRING:
+	while (strlen(str) > strMax) {
+	    appendString(str[.. strMax - 1]);
+	    str = str[strMax ..];
+	}
 	appendString(str);
 	break;
 
@@ -313,6 +317,9 @@ mixed chunk()
     } while (!chunk);
 
     length -= (typeof(chunk) == T_STRING) ? strlen(chunk) : sizeof(chunk);
+    if (length == 0) {
+	chunkFilled = chunkBuffered = chunkIndex = 0;
+    }
     return chunk;
 }
 
@@ -327,10 +334,10 @@ int length()
 /*
  * create StringBuffer
  */
-static void create(varargs mixed str)
+static void create(varargs mixed str, int max)
 {
     bufMax = status(ST_ARRAYSIZE);
-    strMax = status(ST_STRSIZE);
+    strMax = (max != 0) ? max : status(ST_STRSIZE);
     ringBuffer = allocate(INITIAL_SIZE);
     ringStart = 0;
     ringEnd = -1;

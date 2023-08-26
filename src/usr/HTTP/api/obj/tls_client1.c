@@ -1,16 +1,19 @@
 # include <kernel/user.h>
 # include <String.h>
+# include "~TLS/tls.h"
 # include "HttpRequest.h"
 # include "HttpField.h"
 # include "HttpResponse.h"
 
-inherit "~/lib/Connection1";
+inherit "~/lib/BufferedConnection1";
 
 
-object client;		/* assocated client object */
-string responsePath;	/* HttpResponse object path */
-string headersPath;	/* HttpFields object path */
-HttpResponse response;	/* HTTP response */
+object client;			/* assocated client object */
+string responsePath;		/* HttpResponse object path */
+string headersPath;		/* HttpFields object path */
+string host;			/* remote host */
+TlsClientSession session;	/* TLS session */
+HttpResponse response;		/* HTTP response */
 
 /*
  * initialize connection object
@@ -23,6 +26,7 @@ static void create(object client, string host, int port,
 		      responsePath : OBJECT_PATH(RemoteHttpResponse);
     headersPath = (fieldsPath) ?
 		   fieldsPath : OBJECT_PATH(RemoteHttpFields);
+    ::host = host;
     ::create(client, headersPath);
     connect(host, port);
 }
@@ -41,8 +45,8 @@ static void connected()
 int login(string str)
 {
     if (previous_program() == LIB_CONN) {
-	set_mode(MODE_BLOCK);
-	call_limited("connected");
+	session = new TlsClientSession;
+	::sendMessage(session->connect(TRUE, host), TRUE);
     }
     return MODE_NOCHANGE;
 }
@@ -71,8 +75,24 @@ void connect_failed(int errorcode)
  */
 int receive_message(string str)
 {
+    StringBuffer input, output;
+    string alert;
+    int mode;
+
     if (previous_program() == LIB_CONN) {
-	return ::receive_message(str);
+	({ input, output, alert }) = session->receiveMessage(str);
+	if (output) {
+	    ::sendMessage(output, TRUE);
+	}
+	if (!alert && host) {
+	    host = nil;
+	    set_mode(MODE_BLOCK);
+	    call_limited("connected");
+	}
+	if (input) {
+	    ::receive_message(input);
+	}
+	return (alert == "EOF") ? MODE_DISCONNECT : MODE_NOCHANGE;
     }
 }
 
@@ -84,6 +104,14 @@ void logout(int quit)
     if (previous_program() == LIB_CONN) {
 	::logout(quit);
     }
+}
+
+/*
+ * send an encrypted message
+ */
+static void sendMessage(StringBuffer str)
+{
+    ::sendMessage(session->sendMessage(str));
 }
 
 /*

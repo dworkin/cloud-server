@@ -1,6 +1,5 @@
 # include <String.h>
 # include "Record.h"
-# include <type.h>
 # include <status.h>
 
 inherit Data;
@@ -29,9 +28,6 @@ mixed transport()
 
     buffer = new StringBuffer(message->typeHeader());
     str = message->transport();
-    if (typeof(str) == T_STRING) {
-	str = new StringBuffer(str);
-    }
     buffer->append(len3(str));
     buffer->append(str);
     return (buffer->length() <= status(ST_STRSIZE)) ? buffer->chunk() : buffer;
