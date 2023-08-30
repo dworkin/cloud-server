@@ -593,7 +593,6 @@ static void logout(int quit)
     } else {
 	call_limited("_logout");
     }
-    destruct_object(this_object());
 }
 
 /*

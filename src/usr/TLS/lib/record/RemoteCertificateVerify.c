@@ -15,7 +15,7 @@ static void create(String blob, int offset, int end)
     algorithm = substring(blob, offset, offset + 1);
     ({ signature, offset }) = len2Restore(blob, offset + 2);
     if (offset != end) {
-	error("Decode error");
+	error("DECODE_ERROR");
     }
     ::create(algorithm, signature);
 }

@@ -12,7 +12,7 @@ static void create(String blob, int offset, int end)
     string **keyShare, group, keyExchange;
 
     if (len2Offset(blob, offset) != end) {
-	error("Decode error");
+	error("DECODE_ERROR");
     }
 
     offset += 2;
@@ -25,7 +25,7 @@ static void create(String blob, int offset, int end)
 	});
     }
     if (offset != end) {
-	error("Decode error");
+	error("DECODE_ERROR");
     }
 
     ::create(keyShare);

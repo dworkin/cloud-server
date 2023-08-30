@@ -12,20 +12,20 @@ static void create(String blob, int offset, int end)
     string *names, name;
 
     if (len2Offset(blob, offset) != end) {
-	error("Decode error");
+	error("DECODE_ERROR");
     }
 
     offset += 2;
     names = ({ });
     while (offset < end) {
 	if (blob[offset] != '\0') {
-	    error("Decode error");
+	    error("DECODE_ERROR");
 	}
 	({ name, offset }) = len2Restore(blob, offset + 1);
 	names += ({ name });
     }
     if (offset != end) {
-	error("Decode error");
+	error("DECODE_ERROR");
     }
 
     ::create(names);

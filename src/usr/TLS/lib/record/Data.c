@@ -110,7 +110,7 @@ static Extension *extRestore(String str, int offset, int end,
     int next;
 
     if (end != len2Offset(str, offset)) {
-	error("Decode error");
+	error("DECODE_ERROR");
     }
     offset += 2;
     extensions = ({ });
@@ -122,7 +122,7 @@ static Extension *extRestore(String str, int offset, int end,
 	offset = next;
     }
     if (offset != end) {
-	error("Decode error");
+	error("DECODE_ERROR");
     }
 
     return extensions;

@@ -13,7 +13,7 @@ static void create(String blob, int offset, int end)
 
     ({ algorithms, offset }) = len2Restore(blob, offset);
     if (offset != end) {
-	error("Decode error");
+	error("DECODE_ERROR");
     }
     ::create(EXPLODE2->explode2(algorithms));
 }

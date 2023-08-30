@@ -13,7 +13,7 @@ static void create(String blob, int offset, int end)
 
     ({ cookie, offset }) = len2Restore(blob, offset);
     if (offset != end) {
-	error("Decode error");
+	error("DECODE_ERROR");
     }
     ::create(cookie);
 }

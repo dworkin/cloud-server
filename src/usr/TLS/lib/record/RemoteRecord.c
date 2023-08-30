@@ -14,5 +14,8 @@ static void create(string blob)
     type = blob[0];
     version = blob[1 .. 2];
     fragment = len2Restore(blob, 3)[0];
+    if (strlen(fragment) > 16384 + 256) {
+	error("RECORD_OVERFLOW");
+    }
     ::create(type, fragment, version);
 }

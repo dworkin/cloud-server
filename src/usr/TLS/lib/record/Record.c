@@ -57,6 +57,9 @@ int unprotect(string cipher, string key, string iv, int taglen)
     if (!str) {
 	return FALSE;
     }
+    if (strlen(str) > 16384 + 1) {
+	error("RECORD_OVERFLOW");
+    }
 
     for (len = strlen(str); str[--len] == '\0'; ) ;
     ::create(str[len]);

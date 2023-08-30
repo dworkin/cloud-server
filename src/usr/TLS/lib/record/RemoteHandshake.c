@@ -28,7 +28,7 @@ static create(String blob, int offset, int end)
 
     case HANDSHAKE_END_OF_EARLY_DATA:
 	if (offset + 4 != end) {
-	    error("Decode error");
+	    error("DECODE_ERROR");
 	}
 	break;
 
@@ -57,7 +57,7 @@ static create(String blob, int offset, int end)
 	break;
 
     default:
-	error("Unimplemented");
+	error("UNEXPECTED_MESSAGE");
     }
     ::create(data);
 }

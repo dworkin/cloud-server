@@ -174,6 +174,7 @@ void logout(int quit)
 {
     if (previous_program() == LIB_CONN) {
 	::logout(quit);
+	destruct_object(this_object());
     }
 }
 

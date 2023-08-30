@@ -18,7 +18,7 @@ static void create(String blob, int offset, int end)
     ({ context, offset }) = len1Restore(blob, offset);
     certificates = ({ });
     if (len3Offset(blob, offset) != end) {
-	error("Decode error");
+	error("DECODE_ERROR");
     }
     offset += 3;
     while (offset < end) {
@@ -30,7 +30,7 @@ static void create(String blob, int offset, int end)
 	offset = next;
     }
     if (offset != end) {
-	error("Decode error");
+	error("DECODE_ERROR");
     }
     ::create(context, certificates);
 }

@@ -10,7 +10,7 @@ inherit Version;
 static create(String blob, int offset, int end)
 {
     if (offset != end - 2) {
-	error("Decode error");
+	error("DECODE_ERROR");
     }
     ::create(substring(blob, offset, end - 1));
 }

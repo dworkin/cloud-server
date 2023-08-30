@@ -101,8 +101,15 @@ int receive_message(string str)
  */
 void logout(int quit)
 {
+    StringBuffer output;
+
     if (previous_program() == LIB_CONN) {
 	::logout(quit);
+	output = client->close();
+	if (output) {
+	    ::sendMessage(output, TRUE);
+	}
+	destruct_object(this_object());
     }
 }
 

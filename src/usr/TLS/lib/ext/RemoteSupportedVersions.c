@@ -14,7 +14,7 @@ static create(String blob, int offset, int end)
 
     ({ versions, next }) = len1Restore(blob, offset);
     if (next != end) {
-	error("Decode error");
+	error("DECODE_ERROR");
     }
     ::create(EXPLODE2->explode2(versions));
 }

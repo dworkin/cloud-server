@@ -16,6 +16,7 @@ inherit "~/lib/ffdhe";
 # define STATE_WAIT_CV		5	/* expecting CertVerify */
 # define STATE_WAIT_FINISHED	6	/* expecting Finished */
 # define STATE_CONNECTED	7	/* connection established */
+# define STATE_CLOSED		8	/* closed state */
 
 private int state;			/* client state */
 private string prime, pubKey, privKey;	/* FFDHE parameters */
@@ -125,7 +126,7 @@ private void receiveServerHello(ServerHello serverHello, StringBuffer output)
     int i;
 
     if (!alignedRecord()) {
-	error("Unaligned ServerHello");
+	error("UNEXPECTED_MESSAGE");
     }
     cipherSuite = serverHello->cipherSuite();
     extensions = serverHello->extensions();
@@ -245,156 +246,166 @@ mixed *receiveMessage(string str)
     string alert;
     StringBuffer input, output;
     Record *records, record;
-    Data *dataList, data;
+    Data *dataList, data, message;
     int rsize, i, dsize, j;
 
+    if (state == STATE_CLOSED) {
+	error("Connection closed");
+    }
     if (state != STATE_CONNECTED) {
 	alert = "connecting";
     }
     input = new StringBuffer;
     output = new StringBuffer;
-    records = ::receiveMessage(str);
-    for (rsize = sizeof(records), i = 0; i < rsize; i++) {
-	dataList = ::receiveRecord(records[i]);
-	for (dsize = sizeof(dataList), j = 0; j < dsize; j++) {
-	    data = dataList[j];
-	    switch (state) {
-	    case STATE_WAIT_SH:
-		if (data->type() != RECORD_HANDSHAKE) {
-		    error("Handshake expected");
-		}
-		transcribe(data->transport());
-		data = data->message();
-		if (data->type() != HANDSHAKE_SERVER_HELLO) {
-		    error("ServerHello expected");
-		}
-		receiveServerHello(data, output);
-		state = STATE_WAIT_EE;
-		break;
-
-	    case STATE_WAIT_EE:
-		if (data->type() == RECORD_CHANGE_CIPHER_SPEC &&
-		    !data->decrypted() && strlen(str=data->payload()) == 1 &&
-		    str[0] == '\1') {
-		    break;
-		}
-
-		if (data->type() != RECORD_HANDSHAKE) {
-		    error("Handshake expected");
-		}
-		transcribe(data->transport());
-		data = data->message();
-		if (data->type() != HANDSHAKE_EXTENSIONS) {
-		    error("EncryptedExtensions expected " + data->type());
-		}
-		receiveExtensions(data, output);
-		state = STATE_WAIT_CERT_CR;
-		break;
-
-	    case STATE_WAIT_CERT_CR:
-		if (data->type() != RECORD_HANDSHAKE) {
-		    error("Handshake expected");
-		}
-		transcribe(data->transport());
-		data = data->message();
-		switch (data->type()) {
-		case HANDSHAKE_CERTIFICATE_REQUEST:
-		    receiveCertificateRequest(data, output);
-		    state = STATE_WAIT_CERT;
-		    break;
-
-		case HANDSHAKE_CERTIFICATES:
-		    receiveCertificates(data, output);
-		    state = STATE_WAIT_CV;
-		    break;
-
-		default:
-		    error("CertificateRequest expected " + data->type());
-		}
-		break;
-
-	    case STATE_WAIT_CERT:
-		if (data->type() != RECORD_HANDSHAKE) {
-		    error("Handshake expected");
-		}
-		transcribe(data->transport());
-		data = data->message();
-		if (data->type() != HANDSHAKE_CERTIFICATES) {
-		    error("Certificates expected " + data->type());
-		}
-		receiveCertificates(data, output);
-		state = STATE_WAIT_CV;
-		break;
-
-	    case STATE_WAIT_CV:
-		if (data->type() != RECORD_HANDSHAKE) {
-		    error("Handshake expected");
-		}
-		transcribe(data->transport());
-		data = data->message();
-		if (data->type() != HANDSHAKE_CERTIFICATE_VERIFY) {
-		    error("CertificateVerify expected " + data->type());
-		}
-		receiveCertificateVerify(data, output);
-		state = STATE_WAIT_FINISHED;
-		break;
-
-	    case STATE_WAIT_FINISHED:
-		if (data->type() != RECORD_HANDSHAKE) {
-		    error("Handshake expected");
-		}
-		str = verifyData(serverSecret, messages, cipherSuite);
-		transcribe(data->transport());
-		data = data->message();
-		if (data->type() != HANDSHAKE_FINISHED) {
-		    error("Finished expected " + data->type());
-		}
-		if (str != data->hash()) {
-		    error("Verify finished hash failed");
-		}
-		receiveFinished(data, output);
-		state = STATE_CONNECTED;
-		alert = nil;
-		break;
-
-	    case STATE_CONNECTED:
-		switch (data->type()) {
-		case RECORD_ALERT:
-		    if (data->level() == ALERT_WARNING &&
-			data->description() == ALERT_CLOSE_NOTIFY) {
-			alert = "EOF";
+    try {
+	records = ::receiveMessage(str);
+	for (rsize = sizeof(records), i = 0; i < rsize; i++) {
+	    dataList = ::receiveRecord(records[i]);
+	    for (dsize = sizeof(dataList), j = 0; j < dsize; j++) {
+		data = dataList[j];
+		switch (state) {
+		case STATE_WAIT_SH:
+		    if (data->type() != RECORD_HANDSHAKE) {
+			error("UNEXPECTED_MESSAGE");
 		    }
+		    message = data->message();
+		    if (message->type() != HANDSHAKE_SERVER_HELLO) {
+			error("UNEXPECTED_MESSAGE");
+		    }
+		    transcribe(data->transport());
+		    receiveServerHello(message, output);
+		    state = STATE_WAIT_EE;
+		    continue;
+
+		case STATE_WAIT_EE:
+		    if (data->type() == RECORD_CHANGE_CIPHER_SPEC) {
+			continue;
+		    }
+		    if (data->type() != RECORD_HANDSHAKE) {
+			error("UNEXPECTED_MESSAGE");
+		    }
+		    message = data->message();
+		    if (message->type() != HANDSHAKE_EXTENSIONS) {
+			error("UNEXPECTED_MESSAGE");
+		    }
+		    receiveExtensions(message, output);
+		    state = STATE_WAIT_CERT_CR;
 		    break;
 
-		case RECORD_HANDSHAKE:
-		    data = data->message();
-		    switch (data->type()) {
-		    case HANDSHAKE_NEW_SESSION_TICKET:
-			receiveNewSessionTicket(data, output);
+		case STATE_WAIT_CERT_CR:
+		    if (data->type() != RECORD_HANDSHAKE) {
+			error("UNEXPECTED_MESSAGE");
+		    }
+		    message = data->message();
+		    switch (message->type()) {
+		    case HANDSHAKE_CERTIFICATE_REQUEST:
+			receiveCertificateRequest(message, output);
+			state = STATE_WAIT_CERT;
 			break;
 
-		    case HANDSHAKE_KEY_UPDATE:
-			receiveKeyUpdate(data, output);
+		    case HANDSHAKE_CERTIFICATES:
+			receiveCertificates(message, output);
+			state = STATE_WAIT_CV;
 			break;
 
 		    default:
-			/* no post_handshake_auth */
-			error("Unpexpected post-handshake handshake " + data->type());
-			break;
+			error("UNEXPECTED_MESSAGE");
 		    }
 		    break;
 
-		case RECORD_APPLICATION_DATA:
-		    input->append(data->payload());
+		case STATE_WAIT_CERT:
+		    if (data->type() != RECORD_HANDSHAKE) {
+			error("UNEXPECTED_MESSAGE");
+		    }
+		    message = data->message();
+		    if (message->type() != HANDSHAKE_CERTIFICATES) {
+			error("UNEXPECTED_MESSAGE");
+		    }
+		    receiveCertificates(message, output);
+		    state = STATE_WAIT_CV;
 		    break;
+
+		case STATE_WAIT_CV:
+		    if (data->type() != RECORD_HANDSHAKE) {
+			error("UNEXPECTED_MESSAGE");
+		    }
+		    message = data->message();
+		    if (message->type() != HANDSHAKE_CERTIFICATE_VERIFY) {
+			error("UNEXPECTED_MESSAGE");
+		    }
+		    transcribe(data->transport());
+		    receiveCertificateVerify(message, output);
+		    state = STATE_WAIT_FINISHED;
+		    continue;
+
+		case STATE_WAIT_FINISHED:
+		    if (data->type() != RECORD_HANDSHAKE) {
+			error("UNEXPECTED_MESSAGE");
+		    }
+		    str = verifyData(serverSecret, messages, cipherSuite);
+		    message = data->message();
+		    if (message->type() != HANDSHAKE_FINISHED) {
+			error("UNEXPECTED_MESSAGE");
+		    }
+		    if (str != message->hash()) {
+			error("DECRYPT_ERROR");
+		    }
+		    transcribe(data->transport());
+		    receiveFinished(message, output);
+		    alert = nil;
+		    state = STATE_CONNECTED;
+		    continue;
+
+		case STATE_CONNECTED:
+		    switch (data->type()) {
+		    case RECORD_ALERT:
+			if (data->level() == ALERT_WARNING &&
+			    data->description() == ALERT_CLOSE_NOTIFY) {
+			    alert = "EOF";
+			    state = STATE_CLOSED;
+			}
+			break;
+
+		    case RECORD_HANDSHAKE:
+			message = data->message();
+			switch (message->type()) {
+			case HANDSHAKE_NEW_SESSION_TICKET:
+			    receiveNewSessionTicket(message, output);
+			    break;
+
+			case HANDSHAKE_KEY_UPDATE:
+			    receiveKeyUpdate(message, output);
+			    break;
+
+			default:
+			    /* no post_handshake_auth */
+			    error("UNEXPECTED_MESSAGE");
+			    break;
+			}
+			break;
+
+		    case RECORD_APPLICATION_DATA:
+			input->append(data->payload());
+			break;
+		    }
+		    continue;
 		}
-		break;
+
+		transcribe(data->transport());
 	    }
 	}
+    } catch (err) {
+	int desc;
+
+	desc = alertDescription(err);
+	sendData(output, new Alert(ALERT_FATAL, desc));
+	alert = (desc == ALERT_INTERNAL_ERROR) ? "INTERNAL_ERROR" : err;
+	state = STATE_CLOSED;
     }
+
     return ({
-	(input->length()) ? input : nil,
-	(output->length()) ? output : nil,
+	(input->length() != 0) ? input : nil,
+	(output->length() != 0) ? output : nil,
 	alert
     });
 }
@@ -418,5 +429,28 @@ StringBuffer sendMessage(StringBuffer str)
     while ((chunk=str->chunk())) {
 	::sendMessage(output, chunk);
     }
+    return output;
+}
+
+/*
+ * close connection
+ */
+StringBuffer close()
+{
+    StringBuffer output;
+
+    if (state == STATE_INITIAL) {
+	error("Unconnected");
+    }
+
+    if (state != STATE_CLOSED) {
+	output = new StringBuffer;
+	if (state != STATE_CONNECTED) {
+	    sendData(output, new Alert(ALERT_WARNING, ALERT_USER_CANCELED));
+	}
+	sendData(output, new Alert(ALERT_WARNING, ALERT_CLOSE_NOTIFY));
+	state = STATE_CLOSED;
+    }
+
     return output;
 }

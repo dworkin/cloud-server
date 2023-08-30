@@ -75,22 +75,8 @@ private string HKDF_Expand_Label(string secret, string label, string context,
 private string Derive_Secret(string secret, string label, string transcriptHash,
 			     string hash)
 {
-    int length;
-
-    switch (hash) {
-    case "SHA256":
-	length = 32;
-	break;
-
-    case "SHA384":
-	length = 48;
-	break;
-
-    default:
-	error("Unsupported hash function");
-    }
-
-    return HKDF_Expand_Label(secret, label, transcriptHash, length, hash);
+    return HKDF_Expand_Label(secret, label, transcriptHash,
+			     (hash == "SHA256") ? 32 : 48, hash);
 }
 
 /*
@@ -204,6 +190,41 @@ static void setSendKey(string key, string IV, string cipherSuite)
 }
 
 /*
+ * translate error into alert description
+ */
+static int alertDescription(string error)
+{
+    switch (error) {
+    case "UNEXPECTED_MESSAGE":		return ALERT_UNEXPECTED_MESSAGE;
+    case "BAD_RECORD_MAC":		return ALERT_BAD_RECORD_MAC;
+    case "RECORD_OVERFLOW":		return ALERT_RECORD_OVERFLOW;
+    case "HANDSHAKE_FAILURE":		return ALERT_HANDSHAKE_FAILURE;
+    case "BAD_CERTIFICATE":		return ALERT_BAD_CERTIFICATE;
+    case "UNSUPPORTED_CERTIFICATE":	return ALERT_UNSUPPORTED_CERTIFICATE;
+    case "CERTIFICATE_REVOKED":		return ALERT_CERTIFICATE_REVOKED;
+    case "CERTIFICATE_EXPIRED":		return ALERT_CERTIFICATE_EXPIRED;
+    case "CERTIFICATE_UNKNOWN":		return ALERT_CERTIFICATE_UNKNOWN;
+    case "ILLEGAL_PARAMETER":		return ALERT_ILLEGAL_PARAMETER;
+    case "UNKNOWN_CA":			return ALERT_UNKNOWN_CA;
+    case "ACCESS_DENIED":		return ALERT_ACCESS_DENIED;
+    case "DECODE_ERROR":		return ALERT_DECODE_ERROR;
+    case "DECRYPT_ERROR":		return ALERT_DECRYPT_ERROR;
+    case "PROTOCOL_VERSION":		return ALERT_PROTOCOL_VERSION;
+    case "INSUFFICIENT_SECURITY":	return ALERT_INSUFFICIENT_SECURITY;
+    case "INAPPROPRIATE_FALLBACK":	return ALERT_INAPPROPRIATE_FALLBACK;
+    case "MISSING_EXTENSION":		return ALERT_MISSING_EXTENSION;
+    case "UNSUPPORTED_EXTENSION":	return ALERT_UNSUPPORTED_EXTENSION;
+    case "UNRECOGNIZED_NAME":		return ALERT_UNRECOGNIZED_NAME;
+    case "BAD_CERTIFICATE_STATUS_RESPONSE":
+	return ALERT_BAD_CERTIFICATE_STATUS_RESPONSE;
+    case "UNKNOWN_PSK_IDENTITY":	return ALERT_UNKNOWN_PSK_IDENTITY;
+    case "CERTIFICATE_REQUIRED":	return ALERT_CERTIFICATE_REQUIRED;
+    case "NO_APPLICATION_PROTOCOL":	return ALERT_NO_APPLICATION_PROTOCOL;
+    default:				return ALERT_INTERNAL_ERROR;
+    }
+}
+
+/*
  * receive a message
  */
 static Record *receiveMessage(string str)
@@ -271,54 +292,36 @@ static Data *receiveRecord(Record record)
 
     if (record->type() == RECORD_APPLICATION_DATA) {
 	if (!receiveKey) {
-	    error("No key");
+	    error("UNEXPECTED_MESSAGE");
 	}
 	if (!record->unprotect(cipher,
 			       receiveKey,
 			       asn_xor(receiveIV,
 				       asn::encode(receiveSequence++)),
 			       taglen)) {
-	    error("Unprotect failed");
+	    error("BAD_RECORD_MAC");
 	}
     }
 
     fragment = record->payload();
     switch (record->type()) {
     case RECORD_CHANGE_CIPHER_SPEC:
-	if (record->decrypted()) {
-	    error("ALERT_UNEXPECTED_MESSAGE");	/* XXX what alert type? */
-	}
-	if (receiveBuffer) {
-	    /* previously received partial handshake */
-	    error("ALERT_UNEXPECTED_MESSAGE");	/* XXX what alert type? */
-	}
-	if (strlen(fragment) != 1) {
-	    /* no partial or changes */
-	    error("ALERT_UNEXPECTED_MESSAGE");	/* XXX what alert type? */
+	if (record->decrypted() || receiveBuffer || strlen(fragment) != 1 ||
+	    fragment[0] != '\1') {
+	    error("UNEXPECTED_MESSAGE");
 	}
 	return ({ record });
 
     case RECORD_ALERT:
-	if (receiveKey && !record->decrypted()) {
-	    error("ALERT_UNEXPECTED_MESSAGE");	/* XXX what alert type? */
-	}
-	if (receiveBuffer) {
-	    /* previously received partial handshake */
-	    error("ALERT_UNEXPECTED_MESSAGE");	/* XXX what alert type? */
-	}
-	if (strlen(fragment) != 2) {
-	    /* no partial or coalesced alerts */
-	    error("ALERT_UNEXPECTED_MESSAGE");	/* XXX what alert type? */
+	if ((receiveKey && !record->decrypted()) || receiveBuffer ||
+	    strlen(fragment) != 2) {
+	    error("UNEXPECTED_MESSAGE");
 	}
 	return ({ new RemoteAlert(fragment) });
 
     case RECORD_HANDSHAKE:
-	if (receiveKey && !record->decrypted()) {
-	    error("ALERT_UNEXPECTED_MESSAGE");	/* XXX what alert type? */
-	}
-	if (strlen(fragment) == 0) {
-	    /* no empty handshakes */
-	    error("ALERT_UNEXPECTED_MESSAGE");	/* XXX what alert type? */
+	if ((receiveKey && !record->decrypted()) || strlen(fragment) == 0) {
+	    error("UNEXPECTED_MESSAGE");
 	}
 
 	list = ({ });
@@ -349,17 +352,13 @@ static Data *receiveRecord(Record record)
 	return list;
 
     case RECORD_APPLICATION_DATA:
-	if (!record->decrypted()) {
-	    error("ALERT_UNEXPECTED_MESSAGE");	/* XXX what alert type? */
-	}
 	if (receiveBuffer) {
-	    /* previously received partial handshake */
-	    error("ALERT_UNEXPECTED_MESSAGE");	/* XXX what alert type? */
+	    error("UNEXPECTED_MESSAGE");
 	}
 	return ({ record });
 
     default:
-	error("ALERT_UNEXPECTED_MESSAGE");	/* XXX what alert type? */
+	error("UNEXPECTED_MESSAGE");
     }
 }
 
