@@ -43,6 +43,15 @@ static create()
 }
 
 /*
+ * NAME:	message()
+ * DESCRIPTION:	send message to user
+ */
+int message(string str)
+{
+    return ::message(str);
+}
+
+/*
  * NAME:	find_object()
  * DESCRIPTION:	find_object wrapper
  */
