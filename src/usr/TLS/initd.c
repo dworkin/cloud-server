@@ -1,4 +1,5 @@
 # include "asn1.h"
+# include "x509.h"
 # include "Record.h"
 # include "Extension.h"
 # include "tls.h"
@@ -8,6 +9,7 @@ static void create()
 {
     compile_object("sys/explode2");
     compile_object(OBJECT_PATH(Asn1Der));
+    compile_object(OBJECT_PATH(Certificate));
     compile_object(OBJECT_PATH(RemoteRecord));
     compile_object(OBJECT_PATH(RemoteAlert));
     compile_object(OBJECT_PATH(RemoteHandshake));

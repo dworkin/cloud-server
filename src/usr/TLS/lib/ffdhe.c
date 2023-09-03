@@ -2,6 +2,10 @@ private inherit asn "/lib/util/asn";
 
 
 /*
+ * RFC 7919: Finite Field Diffie-Hellman Ephemeral parameters for TLS
+ */
+
+/*
  * Return the FFDHE2048 prime.  Strength 103 bits, key size >= 225 bits.
  */
 static string ffdhe2048p()

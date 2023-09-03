@@ -5,7 +5,6 @@
 # include <type.h>
 
 inherit "~/lib/tls";
-inherit "~/lib/ffdhe";
 
 
 # define STATE_INITIAL		0	/* initial state */
@@ -22,6 +21,7 @@ private int state;			/* client state */
 private string prime, pubKey, privKey;	/* FFDHE parameters */
 private string *messages;		/* transcript hash messages */
 private int compatible;			/* middlebox compatible? */
+private string serverCertificate;	/* server certificate */
 private string cipherSuite;		/* cipher algorithm suite */
 private string serverSecret;		/* server secret */
 private string clientSecret;		/* client secret */
@@ -172,6 +172,31 @@ private void receiveCertificateRequest(CertificateRequest request,
  */
 private void receiveCertificates(Certificates certificates, StringBuffer output)
 {
+    mixed *certs;
+    int sz, i;
+    string *check;
+
+    if (strlen(certificates->context()) != 0) {
+	error("ILLEGAL_PARAMETER");
+    }
+
+    certs = certificates->certificates();
+    sz = sizeof(certs);
+    if (sz == 0) {
+	error("ILLEGAL_PARAMETER");
+    }
+    check = allocate(sz);
+    for (i = 0; i < sz; i++) {
+	if (certs[i][0]->length() > 0xffff) {
+	    error("UNSUPPORTED_CERTIFICATE");
+	}
+	if (sizeof(certs[i][1]) != 0) {
+	    error("UNSUPPORTED_EXTENSION");
+	}
+	check[i] = certs[i][0]->buffer()->chunk();
+    }
+    checkCertificates("TLS server", check);
+    serverCertificate = check[0];
 }
 
 /*
@@ -180,6 +205,8 @@ private void receiveCertificates(Certificates certificates, StringBuffer output)
 private void receiveCertificateVerify(CertificateVerify verify,
 				      StringBuffer output)
 {
+    certificateVerify(serverCertificate, verify->signature(), messages,
+		      verify->algorithm());
 }
 
 /*
@@ -333,10 +360,9 @@ mixed *receiveMessage(string str)
 		    if (message->type() != HANDSHAKE_CERTIFICATE_VERIFY) {
 			error("UNEXPECTED_MESSAGE");
 		    }
-		    transcribe(data->transport());
 		    receiveCertificateVerify(message, output);
 		    state = STATE_WAIT_FINISHED;
-		    continue;
+		    break;
 
 		case STATE_WAIT_FINISHED:
 		    if (data->type() != RECORD_HANDSHAKE) {

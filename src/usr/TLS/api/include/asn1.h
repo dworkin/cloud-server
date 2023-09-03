@@ -1,10 +1,11 @@
 # define Asn1			object "/usr/TLS/api/lib/Asn1"
 # define Asn1Der		object "/usr/TLS/api/lib/Asn1Der"
 
-# define CLASS_UNIVERSAL	0
-# define CLASS_APPLICATION	1
-# define CLASS_CONTEXTUAL	2
-# define CLASS_PRIVATE		3
+
+# define ASN1_CLASS_UNIVERSAL	 0
+# define ASN1_CLASS_APPLICATION	 1
+# define ASN1_CLASS_CONTEXTUAL	 2
+# define ASN1_CLASS_PRIVATE	 3
 
 # define ASN1_BOOLEAN		 1
 # define ASN1_INTEGER		 2
@@ -27,6 +28,7 @@
 # define ASN1_NUMERIC_STRING	18
 # define ASN1_PRINTABLE_STRING	19
 # define ASN1_T61_STRING	20
+# define ASN1_TELETEX_STRING	20
 # define ASN1_VIDEOTEX_STRING	21
 # define ASN1_IA5_STRING	22
 # define ASN1_UTC_TIME		23

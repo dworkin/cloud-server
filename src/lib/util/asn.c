@@ -145,7 +145,7 @@ static int decode(string str)
 /*
  * extend an ASN
  */
-string extend(string str, int length)
+static string extend(string str, int length)
 {
     string pad;
 
@@ -158,4 +158,31 @@ string extend(string str, int length)
     }
 
     return str;
+}
+
+/*
+ * count bits in ASN
+ */
+static int bits(string str)
+{
+    int len, i, bits;
+
+    for (len = strlen(str), i = 0; i < len; i++) {
+	if (str[i] != '\0') {
+	    switch (str[i]) {
+	    case 0x01:		bits = 1; break;
+	    case 0x02 .. 0x03:	bits = 2; break;
+	    case 0x04 .. 0x07:	bits = 3; break;
+	    case 0x08 .. 0x0f:	bits = 4; break;
+	    case 0x10 .. 0x1f:	bits = 5; break;
+	    case 0x20 .. 0x3f:	bits = 6; break;
+	    case 0x40 .. 0x7f:	bits = 7; break;
+	    case 0x80 .. 0xff:	bits = 8; break;
+	    }
+
+	    return (len - i - 1) * 8 + bits;
+	}
+    }
+
+    return 0;
 }

@@ -1,8 +1,12 @@
 # include <String.h>
 # include "Record.h"
+# include "x509.h"
+# include "asn1.h"
 # include "tls.h"
 
 inherit "crypto";
+inherit "ffdhe";
+inherit emsa "emsa_pss";
 private inherit asn "/lib/util/asn";
 
 
@@ -122,6 +126,137 @@ static string verifyData(string secret, string *messages, string algorithm)
     hash = cipherInfo(algorithm)[3];
     return HMAC(Derive_Secret(secret, "finished", "", hash),
 		hash_string(hash, messages...), hash);
+}
+
+/*
+ * check stack of certificates, translate OpenSSL error to TLS error
+ */
+static void checkCertificates(string origin, string *certificates)
+{
+    string tlsError;
+
+    try {
+	switch (verify_certificate(origin, certificates...)) {
+	case nil:
+	    return;
+
+	case "certificate signature failure":
+	case "format error in certificate's notBefore field":
+	case "format error in certificate's notAfter field":
+	case "CA signature digest algorithm too weak":
+	    tlsError = "BAD_CERTIFICATE";
+	    break;
+
+	case "certificate revoked":
+	    tlsError = "CERTIFICATE_REVOKED";
+	    break;
+
+	case "certificate has expired":
+	case "certificate is not yet valid":
+	    tlsError = "CERTIFICATE_EXPIRED";
+	    break;
+
+	case "self-signed certificate":
+	case "unsuitable certificate purpose":
+	case "certificate not trusted":
+	case "certificate rejected":
+	    tlsError = "UNSUPPORTED_CERTIFICATE";
+	    break;
+
+	case "unable to get issuer certificate":
+	case "unable to get local issuer certificate":
+	    tlsError = "UNKNOWN_CA";
+	    break;
+
+	default:
+	    tlsError = "CERTIFICATE_UNKNOWN";
+	    break;
+	}
+    } catch (err) {
+	tlsError = (err == "Bad certificate" ||
+		    err == "Bad intermediate certificate") ?
+		    "BAD_CERTIFICATE" : "INTERNAL_ERROR";
+    }
+
+    error(tlsError);
+}
+
+/*
+ * verify RSA signature
+ */
+private void rsaVerify(string signature, string mHash, string modulus,
+		       string publicKey, string hash)
+{
+    string decrypted;
+
+    decrypted = asn_pow("\0" + signature, publicKey, modulus);
+    if (decrypted[0] == '\0') {
+	decrypted = decrypted[1 ..];
+    }
+    if (!emsa::decode(mHash, decrypted, asn::bits(modulus) - 1, hash)) {
+	error("DECRYPT_ERROR");
+    }
+}
+
+/*
+ * verify a signature made with a certificate
+ */
+static void certificateVerify(string certificate, string signature,
+			      string *messages, string algorithm)
+{
+    Certificate cert;
+    string hash, publicKey, modulus, mHash;
+    Asn1 node, node2;
+
+    try {
+	cert = new Certificate(certificate);
+    } catch (...) {
+	error("BAD_CERTIFICATE");
+    }
+
+    publicKey = cert->publicKey();
+    if (publicKey[0] != '\0') {
+	error("BAD_CERTIFICATE");
+    }
+
+    switch (cert->publicKeyType()) {
+    case OID_RSA_ENCRYPTION:
+	switch (algorithm) {
+	case TLS_RSA_PSS_RSAE_SHA256:	hash = "SHA256"; break;
+	case TLS_RSA_PSS_RSAE_SHA384:	hash = "SHA384"; break;
+	case TLS_RSA_PSS_RSAE_SHA512:	hash = "SHA512"; break;
+	default:
+	    error("BAD_CERTIFICATE");
+	}
+
+	try {
+	    node = new Asn1Der(publicKey[1 ..]);
+	} catch (...) {
+	    error("BAD_CERTIFICATE");
+	}
+	if (node->tag() != ASN1_SEQUENCE) {
+	    error("BAD_CERTIFICATE");
+	}
+	({ node, node2 }) = node->contents();
+	if (node->tag() != ASN1_INTEGER || node2->tag() != ASN1_INTEGER) {
+	    error("BAD_CERTIFICATE");
+	}
+	modulus = node->contents();
+	publicKey = node2->contents();
+	break;
+
+    case OID_RSASSA_PSS:
+    default:
+	error("BAD_CERTIFICATE");
+    }
+
+    mHash = hash_string(hash,
+			"                                " +
+			"                                " +
+			"TLS 1.3, server CertificateVerify\0" +
+			hash_string(hash, messages...));
+
+    rsaVerify(signature, mHash, modulus, publicKey, hash);
 }
 
 /*
