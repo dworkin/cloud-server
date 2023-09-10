@@ -1,26 +1,4 @@
 /*
- * return a pseudorandom string (not cryptographically secure)
- */
-static string random_string(int length)
-{
-    string str, *result;
-    int i, rand;
-
-    str = ".";
-    result = allocate(length);
-    for (i = 0; i < length; i++) {
-	if (rand == 0) {
-	    rand = random(0);
-	}
-	str[0] = rand;
-	rand >>= 8;
-	result[i] = str;
-    }
-
-    return implode(result, "");
-}
-
-/*
  * HMAC (RFC 2104)
  */
 static string HMAC(string key, string message, string hash)

@@ -17,7 +17,7 @@ static string MGF1(string seed, int len, string hash)
     i = 0;
     do {
 	C = "\0\0\0" + asn::encode(i++);
-	T += hash_string(hash, seed + C[strlen(C) - 4 ..]);
+	T += hash_string(hash, seed, C[strlen(C) - 4 ..]);
     } while (strlen(T) < len);
     return T[.. len - 1];
 }
@@ -37,7 +37,7 @@ static string encode(string mHash, int bits, string hash)
     }
 
     salt = secure_random(hlen);
-    H = hash_string(hash, "\0\0\0\0\0\0\0\0" + mHash + salt);
+    H = hash_string(hash, "\0\0\0\0\0\0\0\0", mHash, salt);
     maskedData = asn_xor("\1" + salt, MGF1(H, emLen - hlen - 1, hash));
     maskedData[0] &= 0xff >> ((8 - (bits & 7)) & 7);
 
@@ -45,14 +45,14 @@ static string encode(string mHash, int bits, string hash)
 }
 
 /*
- * EMSA-PSS decode, with M already hashed
+ * EMSA-PSS verify, with M already hashed
  */
-static int decode(string mHash, string EM, int bits, string hash)
+static int verify(string mHash, string EM, int bits, string hash)
 {
     int emLen, hlen, bitmask, i;
     string H, data;
 
-    emLen = (bits + 7) / 8;
+    EM = asn::extend(EM, emLen = (bits + 7) / 8);
     hlen = strlen(mHash);
     bitmask = 0xff >> ((8 - (bits & 7)) & 7);
     if (emLen < hlen + hlen + 2 || EM[emLen - 1] != '\xbc' ||
@@ -69,5 +69,5 @@ static int decode(string mHash, string EM, int bits, string hash)
     }
 
     return (H == hash_string(hash,
-			     "\0\0\0\0\0\0\0\0" + mHash + data[i + 1 ..]));
+			     "\0\0\0\0\0\0\0\0", mHash, data[i + 1 ..]));
 }

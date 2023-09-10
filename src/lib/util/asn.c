@@ -165,22 +165,19 @@ static string extend(string str, int length)
  */
 static int bits(string str)
 {
-    int len, i, bits;
+    int len, i, n;
 
     for (len = strlen(str), i = 0; i < len; i++) {
-	if (str[i] != '\0') {
-	    switch (str[i]) {
-	    case 0x01:		bits = 1; break;
-	    case 0x02 .. 0x03:	bits = 2; break;
-	    case 0x04 .. 0x07:	bits = 3; break;
-	    case 0x08 .. 0x0f:	bits = 4; break;
-	    case 0x10 .. 0x1f:	bits = 5; break;
-	    case 0x20 .. 0x3f:	bits = 6; break;
-	    case 0x40 .. 0x7f:	bits = 7; break;
-	    case 0x80 .. 0xff:	bits = 8; break;
-	    }
+	n = str[i];
+	if (n != '\0') {
+	    n |= n >> 1;
+	    n |= n >> 2;
+	    n |= n >> 4;
+	    n -= (n >> 1) & 0x55;
+	    n = (n & 0x33) + ((n >> 2) & 0x33);
+	    n = (n + (n >> 4)) & 0x0f;
 
-	    return (len - i - 1) * 8 + bits;
+	    return (len - i - 1) * 8 + n;
 	}
     }
 

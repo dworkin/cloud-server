@@ -64,7 +64,7 @@ private Handshake sendClientHello(string *hosts)
 
     random = secure_random(32);
     if (compatible) {
-	sessionId = hash_string("SHA256", asn_xor(random, random_string(32)));
+	sessionId = hash_string("SHA256", asn_xor(random, "\xff"));
     } else {
 	sessionId = "";
     }
@@ -125,9 +125,8 @@ private void receiveServerHello(ServerHello serverHello, StringBuffer output)
     Extension *extensions;
     int i;
 
-    if (!alignedRecord()) {
-	error("UNEXPECTED_MESSAGE");
-    }
+    alignedRecord();
+
     cipherSuite = serverHello->cipherSuite();
     extensions = serverHello->extensions();
     for (i = sizeof(extensions); --i >= 0; ) {
@@ -206,7 +205,7 @@ private void receiveCertificateVerify(CertificateVerify verify,
 				      StringBuffer output)
 {
     certificateVerify(serverCertificate, verify->signature(), messages,
-		      verify->algorithm());
+		      verify->algorithm(), cipherSuite);
 }
 
 /*
@@ -215,6 +214,8 @@ private void receiveCertificateVerify(CertificateVerify verify,
 private void receiveFinished(Finished verify, StringBuffer output)
 {
     string key, IV;
+
+    alignedRecord();
 
     sendData(output, sendFinished());
 

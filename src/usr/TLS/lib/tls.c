@@ -4,9 +4,9 @@
 # include "asn1.h"
 # include "tls.h"
 
-inherit "crypto";
+inherit "hkdf";
 inherit "ffdhe";
-inherit emsa "emsa_pss";
+inherit emsa_pss "emsa_pss";
 private inherit asn "/lib/util/asn";
 
 
@@ -184,16 +184,33 @@ static void checkCertificates(string origin, string *certificates)
 /*
  * verify RSA signature
  */
-private void rsaVerify(string signature, string mHash, string modulus,
-		       string publicKey, string hash)
+static void rsaVerify(string signature, string message, string publicKey,
+		      string hash)
 {
-    string decrypted;
+    Asn1 node, node2;
+    string modulus, decrypted;
 
+    try {
+	node = new Asn1Der(publicKey[1 ..]);
+    } catch (...) {
+	error("BAD_CERTIFICATE");
+    }
+    if (node->tag() != ASN1_SEQUENCE) {
+	error("BAD_CERTIFICATE");
+    }
+    ({ node, node2 }) = node->contents();
+    if (node->tag() != ASN1_INTEGER || node2->tag() != ASN1_INTEGER) {
+	error("BAD_CERTIFICATE");
+    }
+
+    modulus = node->contents();
+    publicKey = node2->contents();
     decrypted = asn_pow("\0" + signature, publicKey, modulus);
     if (decrypted[0] == '\0') {
 	decrypted = decrypted[1 ..];
     }
-    if (!emsa::decode(mHash, decrypted, asn::bits(modulus) - 1, hash)) {
+    if (!emsa_pss::verify(hash_string(hash, message), decrypted,
+			  asn::bits(modulus) - 1, hash)) {
 	error("DECRYPT_ERROR");
     }
 }
@@ -202,61 +219,58 @@ private void rsaVerify(string signature, string mHash, string modulus,
  * verify a signature made with a certificate
  */
 static void certificateVerify(string certificate, string signature,
-			      string *messages, string algorithm)
+			      string *messages, string scheme, string algorithm)
 {
+    string message, hash, publicKey;
     Certificate cert;
-    string hash, publicKey, modulus, mHash;
-    Asn1 node, node2;
 
-    try {
-	cert = new Certificate(certificate);
-    } catch (...) {
-	error("BAD_CERTIFICATE");
-    }
+    message = "                                " +
+	      "                                " +
+	      "TLS 1.3, server CertificateVerify\0" +
+	      hash_string(cipherInfo(algorithm)[3], messages...);
 
+    cert = new Certificate(certificate);
     publicKey = cert->publicKey();
     if (publicKey[0] != '\0') {
 	error("BAD_CERTIFICATE");
     }
 
     switch (cert->publicKeyType()) {
-    case OID_RSA_ENCRYPTION:
-	switch (algorithm) {
+    case "RSA":
+	switch (scheme) {
 	case TLS_RSA_PSS_RSAE_SHA256:	hash = "SHA256"; break;
 	case TLS_RSA_PSS_RSAE_SHA384:	hash = "SHA384"; break;
 	case TLS_RSA_PSS_RSAE_SHA512:	hash = "SHA512"; break;
 	default:
-	    error("BAD_CERTIFICATE");
+	    error("UNEXPECTED_MESSAGE");
 	}
 
-	try {
-	    node = new Asn1Der(publicKey[1 ..]);
-	} catch (...) {
-	    error("BAD_CERTIFICATE");
-	}
-	if (node->tag() != ASN1_SEQUENCE) {
-	    error("BAD_CERTIFICATE");
-	}
-	({ node, node2 }) = node->contents();
-	if (node->tag() != ASN1_INTEGER || node2->tag() != ASN1_INTEGER) {
-	    error("BAD_CERTIFICATE");
-	}
-	modulus = node->contents();
-	publicKey = node2->contents();
+	rsaVerify(signature, message, publicKey, hash);
 	break;
 
-    case OID_RSASSA_PSS:
+    case "RSA-PSS":
+	switch (scheme) {
+	case TLS_RSA_PSS_PSS_SHA256:	hash = "SHA256"; break;
+	case TLS_RSA_PSS_PSS_SHA384:	hash = "SHA384"; break;
+	case TLS_RSA_PSS_PSS_SHA512:	hash = "SHA512"; break;
+	default:
+	    error("UNEXPECTED_MESSAGE");
+	}
+	if (hash != cert->publicKeyParam() && cert->publicKeyParam()) {
+	    error("UNEXPECTED_MESSAGE");
+	}
+
+	rsaVerify(signature, message, publicKey, hash);
+	break;
+
+    case TLS_ECDSA_SECP256R1_SHA256:
+    case TLS_ECDSA_SECP384R1_SHA384:
+    case TLS_ECDSA_SECP521R1_SHA512:
+    case TLS_ED25519:
+    case TLS_ED448:
     default:
-	error("BAD_CERTIFICATE");
+	error("UNSUPPORTED_CERTIFICATE");
     }
-
-    mHash = hash_string(hash,
-			"                                " +
-			"                                " +
-			"TLS 1.3, server CertificateVerify\0" +
-			hash_string(hash, messages...));
-
-    rsaVerify(signature, mHash, modulus, publicKey, hash);
 }
 
 /*
@@ -399,11 +413,13 @@ static Record *receiveMessage(string str)
 }
 
 /*
- * return TRUE if the last message ends on a record boundary
+ * check that the message is at the end of a record
  */
-static int alignedRecord()
+static void alignedRecord()
 {
-    return (!receiveBuffer);
+    if (receiveBuffer) {
+	error("UNEXPECTED_MESSAGE");
+    }
 }
 
 /*
