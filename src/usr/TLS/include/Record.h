@@ -24,6 +24,13 @@
 # define KeyUpdate		  object "/usr/TLS/lib/record/KeyUpdate"
 # define RemoteKeyUpdate	  object "/usr/TLS/lib/record/RemoteKeyUpdate"
 
+# define HELLO_RETRY_REQUEST	("\xcf\x21\xad\x74\xe5\x9a\x61\x11" +	\
+				 "\xbe\x1d\x8c\x02\x1e\x65\xb8\x91" +	\
+				 "\xc2\xa2\x11\x16\x7a\xbb\x8c\x5e" +	\
+				 "\x07\x9e\x09\xe2\xc8\xa8\x33\x9c")
+
+# define SEND_LIMIT		2000000000
+
 
 # define TLS_VERSION_10					"\x03\x01"
 # define TLS_VERSION_12					"\x03\x03"

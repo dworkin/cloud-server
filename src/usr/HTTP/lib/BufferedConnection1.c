@@ -68,10 +68,17 @@ private void receiveBuffer()
     string str, head, pre;
 
     while (!blocked && mode != MODE_DISCONNECT) {
-	if (strlen(chunk) < 32767 && buffer->length() != 0) {
+	if (strlen(chunk) <= 32768 && buffer->length() != 0) {
 	    chunk += buffer->chunk();
+	    noline = FALSE;
+	} else if (strlen(chunk) == 0) {
+	    break;
 	}
+
 	if (mode != MODE_RAW) {
+	    if (noline) {
+		break;
+	    }
 	    if (sscanf(chunk, "%s\r\n%s", str, chunk) != 0 ||
 		sscanf(chunk, "%s\n%s", str, chunk) != 0) {
 		if (mode == MODE_EDIT) {
@@ -98,27 +105,23 @@ private void receiveBuffer()
 		set_mode(::receive_message(str));
 	    } else {
 		noline = TRUE;
-		break;
 	    }
-	} else {
-	    if (strlen(chunk) != 0) {
-		if (length > 0) {
-		    if (length < strlen(chunk)) {
-			str = chunk[.. length - 1];
-			chunk = chunk[length ..];
-			length = 0;
-		    } else {
-			length -= strlen(chunk);
-			str = chunk;
-			chunk = "";
-		    }
+	} else if (strlen(chunk) != 0) {
+	    if (length > 0) {
+		if (length < strlen(chunk)) {
+		    str = chunk[.. length - 1];
+		    chunk = chunk[length ..];
+		    length = 0;
 		} else {
+		    length -= strlen(chunk);
 		    str = chunk;
 		    chunk = "";
 		}
-		set_mode(::receive_message(str));
+	    } else {
+		str = chunk;
+		chunk = "";
 	    }
-	    break;
+	    set_mode(::receive_message(str));
 	}
     }
 }
@@ -129,7 +132,6 @@ private void receiveBuffer()
 static void receive_message(StringBuffer str)
 {
     buffer->append(str);
-    noline = FALSE;
     receiveBuffer();
 }
 
@@ -141,7 +143,7 @@ int buffered_input()
     if (strlen(chunk) == 0 && buffer->length() == 0) {
 	return FALSE;
     }
-    return (mode == MODE_LINE || mode == MODE_EDIT) ? !noline : TRUE;
+    return (mode == MODE_RAW) ? TRUE : !noline;
 }
 
 /*

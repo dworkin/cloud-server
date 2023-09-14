@@ -8,7 +8,7 @@ private string version;			/* legacy version */
 private string random;			/* 32 secure random bytes */
 private string sessionId;		/* legacy session ID */
 private string *cipherSuites;		/* ordered list of cipher suites */
-private string compressionMethods;	/* ({ "\0" }) */
+private string compressionMethods;	/* "\0" */
 private Extension *extensions;		/* extensions */
 
 /*

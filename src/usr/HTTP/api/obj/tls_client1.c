@@ -11,6 +11,7 @@ inherit "~/lib/BufferedConnection1";
 object client;			/* assocated client object */
 string responsePath;		/* HttpResponse object path */
 string headersPath;		/* HttpFields object path */
+string tlsClientSessionPath;	/* TlsClientSession object path */
 string host;			/* remote host */
 TlsClientSession session;	/* TLS session */
 HttpResponse response;		/* HTTP response */
@@ -19,13 +20,17 @@ HttpResponse response;		/* HTTP response */
  * initialize connection object
  */
 static void create(object client, string host, int port,
-		   varargs string responsePath, string fieldsPath)
+		   varargs string responsePath, string fieldsPath,
+		   string tlsClientSessionPath)
 {
     ::client = client;
     ::responsePath = (responsePath) ?
 		      responsePath : OBJECT_PATH(RemoteHttpResponse);
     headersPath = (fieldsPath) ?
 		   fieldsPath : OBJECT_PATH(RemoteHttpFields);
+    ::tlsClientSessionPath = (tlsClientSessionPath) ?
+			      tlsClientSessionPath :
+			      OBJECT_PATH(TlsClientSession);
     ::host = host;
     ::create(client, headersPath);
     connect(host, port);
@@ -45,7 +50,7 @@ static void connected()
 int login(string str)
 {
     if (previous_program() == LIB_CONN) {
-	session = new TlsClientSession;
+	session = new_object(tlsClientSessionPath);
 	::sendMessage(session->connect(TRUE, host), TRUE);
     }
     return MODE_NOCHANGE;
@@ -76,15 +81,15 @@ void connect_failed(int errorcode)
 int receive_message(string str)
 {
     StringBuffer input, output;
-    string alert;
+    string warning, status;
     int mode;
 
     if (previous_program() == LIB_CONN) {
-	({ input, output, alert }) = session->receiveMessage(str);
+	({ input, output, warning, status }) = session->receiveMessage(str);
 	if (output) {
 	    ::sendMessage(output, TRUE);
 	}
-	if (!alert && host) {
+	if (!status && host) {
 	    host = nil;
 	    set_mode(MODE_BLOCK);
 	    call_limited("connected");
@@ -92,7 +97,7 @@ int receive_message(string str)
 	if (input) {
 	    ::receive_message(input);
 	}
-	return (alert == "EOF") ? MODE_DISCONNECT : MODE_NOCHANGE;
+	return (status == "EOF") ? MODE_DISCONNECT : MODE_NOCHANGE;
     }
 }
 

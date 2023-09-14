@@ -3,14 +3,14 @@
 inherit Data;
 
 
-private string *names;		/* list of names */
+private string hostName;		/* host name */
 
 /*
  * initialize ServerName
  */
-static void create(string *names)
+static void create(string hostName)
 {
-    ::names = names;
+    ::hostName = hostName;
 }
 
 /*
@@ -18,15 +18,8 @@ static void create(string *names)
  */
 string transport()
 {
-    int sz, i;
-    string *list;
-
-    list = allocate(sz = sizeof(names));
-    for (i = 0; i < sz; i++) {
-	list[i] = len2Save(names[i]);
-    }
-    return len2Save("\0" + implode(list, "\0"));
+    return len2Save("\0" + len2Save(hostName));
 }
 
 
-string *names()		{ return names; }
+string hostName()	{ return hostName; }

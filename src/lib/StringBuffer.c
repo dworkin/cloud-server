@@ -189,9 +189,13 @@ private void appendString(string str)
     }
 
     chunks[chunkBuffered++] = str;
-    chunkSize += strlen(str);
-    if (chunkSize >= strMax) {
-	consolidateString(chunks);
+    if (chunkSize == 0 && strlen(str) == strMax) {
+	chunkFilled++;
+    } else {
+	chunkSize += strlen(str);
+	if (chunkSize >= strMax) {
+	    consolidateString(chunks);
+	}
     }
 
     ringBuffer[ringEnd] = chunks;
@@ -226,9 +230,13 @@ private void appendChars(int *chars)
     }
 
     chunks[chunkBuffered++] = chars;
-    chunkSize += sizeof(chars);
-    if (chunkSize >= bufMax) {
-	consolidateChars(chunks);
+    if (chunkSize == 0 && sizeof(chars) == bufMax) {
+	chunkFilled++;
+    } else {
+	chunkSize += sizeof(chars);
+	if (chunkSize >= bufMax) {
+	    consolidateChars(chunks);
+	}
     }
 
     ringBuffer[ringEnd] = chunks;
@@ -272,6 +280,10 @@ void append(mixed str)
 	    }
 
 	    if (typeof(chunk) == T_STRING) {
+		while (strlen(chunk) > strMax) {
+		    appendString(chunk[.. strMax - 1]);
+		    chunk = chunk[strMax ..];
+		}
 		appendString(chunk);
 	    } else {
 		appendChars(chunk);
@@ -318,7 +330,7 @@ mixed chunk()
 
     length -= (typeof(chunk) == T_STRING) ? strlen(chunk) : sizeof(chunk);
     if (length == 0) {
-	chunkFilled = chunkBuffered = chunkIndex = 0;
+	chunkFilled = chunkBuffered = chunkSize = chunkIndex = 0;
     }
     return chunk;
 }

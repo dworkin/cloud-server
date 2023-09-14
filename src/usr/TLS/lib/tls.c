@@ -3,13 +3,16 @@
 # include "x509.h"
 # include "asn1.h"
 # include "tls.h"
+# include <type.h>
 
 inherit "hkdf";
 inherit "ffdhe";
 inherit emsa_pss "emsa_pss";
 private inherit asn "/lib/util/asn";
+private inherit base64 "/lib/util/base64";
 
 
+private string *messages;		/* transcript hash messages */
 private string buffer;			/* record buffer */
 private StringBuffer receiveBuffer;	/* partial handshake buffer */
 private string receiveKey;		/* receive key */
@@ -26,11 +29,58 @@ private int sendSequence;		/* send sequence number */
  */
 static void create()
 {
+    messages = ({ });
     buffer = "";
 }
 
 /*
- * return information about a cipher suite
+ * default CipherSuites (RFC 8446 section B.4)
+ */
+static string *cipherSuites()
+{
+    return ({
+	TLS_AES_128_GCM_SHA256,
+	TLS_AES_256_GCM_SHA384,
+	TLS_CHACHA20_POLY1305_SHA256,
+	TLS_AES_128_CCM_SHA256,
+	TLS_AES_128_CCM_8_SHA256
+    });
+}
+
+/*
+ * default SupportedGroups (RFC 8446 section B.3.1.4)
+ */
+static string *supportedGroups()
+{
+    return ({
+	TLS_FFDHE3072,
+	TLS_FFDHE4096,
+	TLS_FFDHE6144,
+	TLS_FFDHE8192,
+	TLS_FFDHE2048
+    });
+}
+
+/*
+ * default SignatureAlgorithms (RFC 8446 section B.3.1.3)
+ */
+static string *signatureAlgorithms()
+{
+    return ({
+	TLS_RSA_PKCS1_SHA256,
+	TLS_RSA_PKCS1_SHA384,
+	TLS_RSA_PKCS1_SHA512,
+	TLS_RSA_PSS_RSAE_SHA256,
+	TLS_RSA_PSS_RSAE_SHA384,
+	TLS_RSA_PSS_RSAE_SHA512,
+	TLS_RSA_PSS_PSS_SHA256,
+	TLS_RSA_PSS_PSS_SHA384,
+	TLS_RSA_PSS_PSS_SHA512
+    });
+}
+
+/*
+ * return information about a cipher suite (RFC 8446 section B.4)
  */
 private mixed *cipherInfo(string algorithm)
 {
@@ -56,7 +106,7 @@ private mixed *cipherInfo(string algorithm)
 }
 
 /*
- * HKDF-Expand-Label (RFC 8446)
+ * HKDF-Expand-Label (RFC 8446 section 7.1)
  */
 private string HKDF_Expand_Label(string secret, string label, string context,
 				 int length, string hash)
@@ -74,7 +124,7 @@ private string HKDF_Expand_Label(string secret, string label, string context,
 }
 
 /*
- * Derive-Secret (RFC 8446, but 3rd argument is not hashed)
+ * Derive-Secret (RFC 8446 section 7.1, but 3rd argument is not hashed)
  */
 private string Derive_Secret(string secret, string label, string transcriptHash,
 			     string hash)
@@ -84,10 +134,44 @@ private string Derive_Secret(string secret, string label, string transcriptHash,
 }
 
 /*
- * determine handshake secrets
+ * transcribe a handshake message (RFC 8446 section 4.4.1)
  */
-static string *handshakeSecrets(string sharedSecret, string *messages,
-				string algorithm)
+static void transcribe(mixed str)
+{
+    string chunk;
+
+    if (typeof(str) == T_STRING) {
+	messages += ({ str });
+    } else {
+	while ((chunk=str->chunk())) {
+	    messages += ({ chunk });
+	}
+    }
+}
+
+/*
+ * retranscribe ClientHello before transcribing HelloRetryRequest
+ * (RFC 8446 section 4.4.1)
+ */
+static void reTranscribe(string algorithm)
+{
+    mixed *info;
+    string mHash, str;
+
+    info = cipherInfo(algorithm);
+    if (info) {
+	mHash = hash_string(info[3], messages...);
+	str = ".\0\0.";
+	str[0] = HANDSHAKE_MESSAGE_HASH;
+	str[3] = strlen(mHash);
+	messages = ({ str + mHash });
+    }
+}
+
+/*
+ * determine handshake secrets (RFC 8446 section 7.1)
+ */
+static string *handshakeSecrets(string sharedSecret, string algorithm)
 {
     string hash, zeroKey, earlySecret, emptyHash, transcriptHash, derivedSecret,
 	   handshakeSecret, serverSecret, clientSecret, masterSecret;
@@ -117,9 +201,9 @@ static string *handshakeSecrets(string sharedSecret, string *messages,
 }
 
 /*
- * hash based on secret and transcript
+ * hash based on secret and transcript (RFC 8446 section 4.4.4)
  */
-static string verifyData(string secret, string *messages, string algorithm)
+static string verifyData(string secret, string algorithm)
 {
     string hash;
 
@@ -140,10 +224,19 @@ static void checkCertificates(string origin, string *certificates)
 	case nil:
 	    return;
 
-	case "certificate signature failure":
+	case "CA certificate key too weak":
+	case "CA signature digest algorithm too weak":
+	case "certificate rejected":
+	case "certificate not trusted":
+	case "no matching DANE TLSA records":
+	case "EE certificate key too weak":
+	case "email address mismatch":
 	case "format error in certificate's notBefore field":
 	case "format error in certificate's notAfter field":
-	case "CA signature digest algorithm too weak":
+	case "format error in CRL's lastUpdate field":
+	case "format error in CRL's nextUpdate field":
+	case "hostname mismatch":
+	case "IP address mismatch":
 	    tlsError = "BAD_CERTIFICATE";
 	    break;
 
@@ -156,16 +249,33 @@ static void checkCertificates(string origin, string *certificates)
 	    tlsError = "CERTIFICATE_EXPIRED";
 	    break;
 
-	case "self-signed certificate":
 	case "unsuitable certificate purpose":
-	case "certificate not trusted":
-	case "certificate rejected":
 	    tlsError = "UNSUPPORTED_CERTIFICATE";
 	    break;
 
+	case "self-signed certificate":
+	case "certificate chain too long":
+	case "invalid CA certificate":
+	case "path length constraint exceeded":
+	case "self-signed certificate in certificate chain":
 	case "unable to get issuer certificate":
 	case "unable to get local issuer certificate":
+	case "unable to get certificate CRL":
+	case "unable to get CRL issuer certificate":
+	case "unable to verify the first certificate":
 	    tlsError = "UNKNOWN_CA";
+	    break;
+
+	case "certificate signature failure":
+	case "CRL signature failure":
+	    tlsError = "DECRYPT_ERROR";
+	    break;
+
+	case "invalid certificate verification context":
+	case "out of memory":
+	case "issuer certificate lookup error":
+	case "unspecified certificate verification error":
+	    tlsError = "INTERNAL_ERROR";
 	    break;
 
 	default:
@@ -182,7 +292,7 @@ static void checkCertificates(string origin, string *certificates)
 }
 
 /*
- * verify RSA signature
+ * verify RSA signature (RFC 8017 section 8.1.2)
  */
 static void rsaVerify(string signature, string message, string publicKey,
 		      string hash)
@@ -216,10 +326,10 @@ static void rsaVerify(string signature, string message, string publicKey,
 }
 
 /*
- * verify a signature made with a certificate
+ * verify a signature made with a certificate (RFC 8446 section 4.4.3)
  */
 static void certificateVerify(string certificate, string signature,
-			      string *messages, string scheme, string algorithm)
+			      string scheme, string algorithm)
 {
     string message, hash, publicKey;
     Certificate cert;
@@ -242,7 +352,7 @@ static void certificateVerify(string certificate, string signature,
 	case TLS_RSA_PSS_RSAE_SHA384:	hash = "SHA384"; break;
 	case TLS_RSA_PSS_RSAE_SHA512:	hash = "SHA512"; break;
 	default:
-	    error("UNEXPECTED_MESSAGE");
+	    error("ILLEGAL_PARAMETER");
 	}
 
 	rsaVerify(signature, message, publicKey, hash);
@@ -254,10 +364,10 @@ static void certificateVerify(string certificate, string signature,
 	case TLS_RSA_PSS_PSS_SHA384:	hash = "SHA384"; break;
 	case TLS_RSA_PSS_PSS_SHA512:	hash = "SHA512"; break;
 	default:
-	    error("UNEXPECTED_MESSAGE");
+	    error("ILLEGAL_PARAMETER");
 	}
 	if (hash != cert->publicKeyParam() && cert->publicKeyParam()) {
-	    error("UNEXPECTED_MESSAGE");
+	    error("ILLEGAL_PARAMETER");
 	}
 
 	rsaVerify(signature, message, publicKey, hash);
@@ -274,15 +384,15 @@ static void certificateVerify(string certificate, string signature,
 }
 
 /*
- * determine application secrets
+ * determine application secrets (RFC 8446 section 7.1)
  */
-static string *applicationSecrets(string masterSecret, string *messages,
-				  string algorithm)
+static string *applicationSecrets(string masterSecret, string algorithm)
 {
     string hash, transcriptHash;
 
     hash = cipherInfo(algorithm)[3];
     transcriptHash = hash_string(hash, messages...);
+    messages = nil;
     return ({
 	Derive_Secret(masterSecret, "s ap traffic", transcriptHash, hash),
 	Derive_Secret(masterSecret, "c ap traffic", transcriptHash, hash)
@@ -290,7 +400,15 @@ static string *applicationSecrets(string masterSecret, string *messages,
 }
 
 /*
- * determine key and IV
+ * update secret (RFC 8446 section 7.2)
+ */
+static string updateSecret(string secret, string algorithm)
+{
+    return Derive_Secret(secret, "traffic upd", "", cipherInfo(algorithm)[3]);
+}
+
+/*
+ * determine key and IV (RFC 8446 section 7.3)
  */
 static string *keyIV(string secret, string algorithm)
 {
@@ -374,7 +492,43 @@ static int alertDescription(string error)
 }
 
 /*
- * receive a message
+ * translate alert description into string
+ */
+static string alertString(int description)
+{
+    switch (description) {
+    case ALERT_UNEXPECTED_MESSAGE:	return "UNEXPECTED_MESSAGE";
+    case ALERT_BAD_RECORD_MAC:		return "BAD_RECORD_MAC";
+    case ALERT_RECORD_OVERFLOW:		return "RECORD_OVERFLOW";
+    case ALERT_HANDSHAKE_FAILURE:	return "HANDSHAKE_FAILURE";
+    case ALERT_BAD_CERTIFICATE:		return "BAD_CERTIFICATE";
+    case ALERT_UNSUPPORTED_CERTIFICATE:	return "UNSUPPORTED_CERTIFICATE";
+    case ALERT_CERTIFICATE_REVOKED:	return "CERTIFICATE_REVOKED";
+    case ALERT_CERTIFICATE_EXPIRED:	return "CERTIFICATE_EXPIRED";
+    case ALERT_CERTIFICATE_UNKNOWN:	return "CERTIFICATE_UNKNOWN";
+    case ALERT_ILLEGAL_PARAMETER:	return "ILLEGAL_PARAMETER";
+    case ALERT_UNKNOWN_CA:		return "UNKNOWN_CA";
+    case ALERT_ACCESS_DENIED:		return "ACCESS_DENIED";
+    case ALERT_DECODE_ERROR:		return "DECODE_ERROR";
+    case ALERT_DECRYPT_ERROR:		return "DECRYPT_ERROR";
+    case ALERT_PROTOCOL_VERSION:	return "PROTOCOL_VERSION";
+    case ALERT_INSUFFICIENT_SECURITY:	return "INSUFFICIENT_SECURITY";
+    case ALERT_INTERNAL_ERROR:		return "INTERNAL_ERROR";
+    case ALERT_INAPPROPRIATE_FALLBACK:	return "INAPPROPRIATE_FALLBACK";
+    case ALERT_MISSING_EXTENSION:	return "MISSING_EXTENSION";
+    case ALERT_UNSUPPORTED_EXTENSION:	return "UNSUPPORTED_EXTENSION";
+    case ALERT_UNRECOGNIZED_NAME:	return "UNRECOGNIZED_NAME";
+    case ALERT_BAD_CERTIFICATE_STATUS_RESPONSE:
+	return "BAD_CERTIFICATE_STATUS_RESPONSE";
+    case ALERT_UNKNOWN_PSK_IDENTITY:	return "UNKNOWN_PSK_IDENTITY";
+    case ALERT_CERTIFICATE_REQUIRED:	return "CERTIFICATE_REQUIRED";
+    case ALERT_NO_APPLICATION_PROTOCOL:	return "NO_APPLICATION_PROTOCOL";
+    default:				return "ALERT " + description;
+    }
+}
+
+/*
+ * receive a message (RFC 8446 section 5.1)
  */
 static Record *receiveMessage(string str)
 {
@@ -413,7 +567,7 @@ static Record *receiveMessage(string str)
 }
 
 /*
- * check that the message is at the end of a record
+ * check that the message is at the end of a record (RFC 8446 section 5.1)
  */
 static void alignedRecord()
 {
@@ -432,7 +586,7 @@ private int len3Offset(String str, int offset)
 }
 
 /*
- * from records to unencrypted messages
+ * from records to unencrypted messages (RFC 8446 section 5.2)
  */
 static Data *receiveRecord(Record record)
 {
@@ -518,11 +672,12 @@ static Data *receiveRecord(Record record)
  */
 private void sendRecord(StringBuffer output, Record record)
 {
-    record->protect(cipher,
-		    sendKey,
-		    asn_xor(sendIV,
-			    asn::encode(sendSequence++)),
-		    taglen);
+    if (sendKey) {
+	record->protect(cipher,
+			sendKey,
+			asn_xor(sendIV, asn::encode(sendSequence++)),
+			taglen);
+    }
     output->append(record->transport());
 }
 
@@ -537,12 +692,17 @@ static void sendData(StringBuffer output, Data data)
 /*
  * send a message
  */
-static void sendMessage(StringBuffer output, string str, varargs int type)
+static int sendMessage(StringBuffer output, string str, varargs int type)
 {
+    Record record;
+
     if (type == 0) {
 	type = RECORD_APPLICATION_DATA;
     }
-    sendRecord(output, new Record(type, str));
+    record = new Record(type, str);
+    sendRecord(output, record);
+
+    return strlen(record->payload());
 }
 
 /*

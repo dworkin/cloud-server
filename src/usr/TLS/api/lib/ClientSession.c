@@ -2,30 +2,35 @@
 # include "Record.h"
 # include "Extension.h"
 # include "tls.h"
-# include <type.h>
 
 inherit "~/lib/tls";
 
 
 # define STATE_INITIAL		0	/* initial state */
 # define STATE_WAIT_SH		1	/* expecting ServerHello */
-# define STATE_WAIT_EE		2	/* expecting encrypted Extensions */
-# define STATE_WAIT_CERT_CR	3	/* expecting Cert/CertRequest */
-# define STATE_WAIT_CERT	4	/* expecting Cert */
-# define STATE_WAIT_CV		5	/* expecting CertVerify */
-# define STATE_WAIT_FINISHED	6	/* expecting Finished */
-# define STATE_CONNECTED	7	/* connection established */
-# define STATE_CLOSED		8	/* closed state */
+# define STATE_WAIT_SH2		2	/* expecting 2nd ServerHello */
+# define STATE_WAIT_EE		3	/* expecting encrypted Extensions */
+# define STATE_WAIT_CERT_CR	4	/* expecting Cert/CertRequest */
+# define STATE_WAIT_CERT	5	/* expecting Cert */
+# define STATE_WAIT_CV		6	/* expecting CertVerify */
+# define STATE_WAIT_FINISHED	7	/* expecting Finished */
+# define STATE_CONNECTED	8	/* connection established */
 
 private int state;			/* client state */
+private int inClosed, outClosed;	/* input/output closed */
+private string warning;			/* last warning */
+private string group;			/* keyshare group */
 private string prime, pubKey, privKey;	/* FFDHE parameters */
-private string *messages;		/* transcript hash messages */
+private string host;			/* remote hostname */
 private int compatible;			/* middlebox compatible? */
+private string sessionId;		/* backward compatible session ID */
+private string cookie;			/* cookie from HelloRetryRequest */
 private string serverCertificate;	/* server certificate */
 private string cipherSuite;		/* cipher algorithm suite */
 private string serverSecret;		/* server secret */
 private string clientSecret;		/* client secret */
 private string masterSecret;		/* master secret */
+private int sendBytes;			/* encrypted bytes sent */
 
 /*
  * initialize TLS client session
@@ -33,147 +38,257 @@ private string masterSecret;		/* master secret */
 static void create(varargs string certificate, string key)
 {
     ::create();
-    prime = ffdhe3072p();
-    ({ pubKey, privKey }) = keyPair(prime);
-    messages = ({ });
+    group = TLS_FFDHE3072;
 }
 
 /*
- * transcribe a handshake message
+ * generate a KeyShare based on group
  */
-private void transcribe(mixed str)
+static string *keyShare()
 {
-    string chunk;
+    switch (group) {
+    case TLS_FFDHE2048:
+	prime = ffdhe2048p();
+	break;
 
-    if (typeof(str) == T_STRING) {
-	messages += ({ str });
-    } else {
-	while ((chunk=str->chunk())) {
-	    messages += ({ chunk });
-	}
+    case TLS_FFDHE3072:
+	prime = ffdhe3072p();
+	break;
+
+    case TLS_FFDHE4096:
+	prime = ffdhe4096p();
+	break;
+
+    case TLS_FFDHE6144:
+	prime = ffdhe6144p();
+	break;
+
+    case TLS_FFDHE8192:
+	prime = ffdhe8192p();
+	break;
     }
+
+    ({ pubKey, privKey }) = keyPair(prime);
+    return ({ group, pubKey });
 }
 
 /*
- * prepare to send a ClientHello message
+ * prepare to send a ClientHello message (RFC 8446 section 4.1.2)
  */
-private Handshake sendClientHello(string *hosts)
+static Handshake sendClientHello()
 {
-    string random, sessionId, *cipherSuites;
+    string random;
     Extension *extensions;
 
     random = secure_random(32);
-    if (compatible) {
-	sessionId = hash_string("SHA256", asn_xor(random, "\xff"));
-    } else {
-	sessionId = "";
-    }
-    cipherSuites = ({
-	TLS_AES_128_GCM_SHA256,
-	TLS_AES_256_GCM_SHA384,
-	TLS_CHACHA20_POLY1305_SHA256,
-	TLS_AES_128_CCM_SHA256,
-	TLS_AES_128_CCM_8_SHA256
-    });
-    extensions = ({
+    sessionId = (compatible) ? asn_xor(random, "\xff") : "";
+    extensions = ({	/* RFC 8446 section 4.1.1 */
 	new Extension(EXT_SUPPORTED_VERSIONS,
 		      new SupportedVersions(({ TLS_VERSION_13 }))),
-	new Extension(EXT_SUPPORTED_GROUPS, new SupportedGroups(({
-	    TLS_FFDHE3072,
-	    TLS_FFDHE4096,
-	    TLS_FFDHE6144,
-	    TLS_FFDHE8192,
-	    TLS_FFDHE2048
-	}))),
-	new Extension(EXT_SIGNATURE_ALGORITHMS, new SignatureAlgorithms(({
-	    TLS_RSA_PSS_RSAE_SHA256,
-	    TLS_RSA_PSS_RSAE_SHA384,
-	    TLS_RSA_PSS_RSAE_SHA512,
-	    TLS_RSA_PSS_PSS_SHA256,
-	    TLS_RSA_PSS_PSS_SHA384,
-	    TLS_RSA_PSS_PSS_SHA512
-	}))),
-	new Extension(EXT_KEY_SHARE, new KeyShareClient(({
-	    ({ TLS_FFDHE3072, pubKey })
-	})))
+	new Extension(EXT_SUPPORTED_GROUPS,
+		      new SupportedGroups(supportedGroups())),
+	new Extension(EXT_SIGNATURE_ALGORITHMS,
+		      new SignatureAlgorithms(signatureAlgorithms())),
+	new Extension(EXT_KEY_SHARE, new KeyShareClient(({ keyShare() })))
     });
-    if (sizeof(hosts) != 0) {
+    if (host) {
 	extensions += ({
-	    new Extension(EXT_SERVER_NAME, new ServerName(hosts))
+	    /* RFC 6066 section 3 */
+	    new Extension(EXT_SERVER_NAME, new ServerName(host))
 	});
     }
+    if (cookie) {
+	/* RFC 8446 section 4.2.2 */
+	extensions += ({ new Extension(EXT_COOKIE, new Cookie(cookie)) });
+    }
 
-    return new Handshake(new ClientHello(random, sessionId, cipherSuites, "\0",
-					 extensions));
+    return new Handshake(new ClientHello(random, sessionId, cipherSuites(),
+					 "\0", extensions));
 }
 
 /*
- * prepare to send a Finished message
+ * prepare to send a Finished message (RFC 8446 section 4.4.4)
  */
-private Handshake sendFinished()
+static Handshake sendFinished()
 {
-    return new Handshake(new Finished(verifyData(clientSecret, messages,
-						 cipherSuite)));
+    return new Handshake(new Finished(verifyData(clientSecret, cipherSuite)));
 }
 
 /*
- * process a ServerHello message
+ * process a ServerHello message (RFC 8446 section 4.1.3)
  */
-private void receiveServerHello(ServerHello serverHello, StringBuffer output)
+static void receiveServerHello(ServerHello serverHello, StringBuffer output)
 {
-    string secret, key, IV;
+    string str, *keyShare, secret, key, IV;
     Extension *extensions;
-    int i;
+    int version, i;
 
     alignedRecord();
 
-    cipherSuite = serverHello->cipherSuite();
+    if (serverHello->version() != TLS_VERSION_12 ||
+	serverHello->sessionId() != sessionId) {
+	error("ILLEGAL_PARAMETER");
+    }
+
+    str = serverHello->cipherSuite();
+    if (sizeof(cipherSuites() & ({ str })) == 0 ||
+	serverHello->compressionMethod() != 0) {
+	error("ILLEGAL_PARAMETER");
+    }
+    if (!cipherSuite) {
+	cipherSuite = str;
+    } else if (str != cipherSuite) {
+	error("ILLEGAL_PARAMETER");	/* RFC 8446 section 4.1.4 */
+    }
+
     extensions = serverHello->extensions();
     for (i = sizeof(extensions); --i >= 0; ) {
-	if (extensions[i]->type() == EXT_KEY_SHARE) {
-	    secret = sharedSecret(extensions[i]->data()->keyShare()[1],
-				  privKey,
-				  prime);
-	    privKey = nil;
+	switch (extensions[i]->type()) {
+	case EXT_SUPPORTED_VERSIONS:
+	    if (version || extensions[i]->data()->version() != TLS_VERSION_13) {
+		error("ILLEGAL_PARAMETER");
+	    }
+	    version = TRUE;
+	    break;
+
+	case EXT_KEY_SHARE:
+	    keyShare = extensions[i]->data()->keyShare();
+	    if (keyShare[0] != group || !privKey) {
+		error("ILLEGAL_PARAMETER");
+	    }
+	    secret = sharedSecret(keyShare[1], privKey, prime);
+	    group = prime = pubKey = privKey = nil;
 	    ({
 		serverSecret,
 		clientSecret,
 		masterSecret
-	    }) = handshakeSecrets(secret, messages, cipherSuite);
+	    }) = handshakeSecrets(secret, cipherSuite);
 	    ({ key, IV }) = keyIV(serverSecret, cipherSuite);
 	    setReceiveKey(key, IV, cipherSuite);
 	    ({ key, IV }) = keyIV(clientSecret, cipherSuite);
 	    setSendKey(key, IV, cipherSuite);
+	    break;
+
+	default:
+	    error("UNSUPPORTED_EXTENSION");
 	}
     }
+    if (!version || privKey) {
+	error("MISSING_EXTENSION");
+    }
+}
+
+/*
+ * process a HelloRetryRequest message (RFC 8446 section 4.1.4)
+ */
+static void receiveHelloRetryRequest(ServerHello helloRetry,
+				     StringBuffer output)
+{
+    string *keyShare, str, secret, key, IV;
+    Extension *extensions;
+    int version, i;
+    Handshake clientHello;
+
+    if (cipherSuite) {
+	error("UNEXPECTED_MESSAGE");	/* 2nd HelloRetryRequest */
+    }
+
+    if (helloRetry->version() != TLS_VERSION_12 ||
+	helloRetry->sessionId() != sessionId) {
+	error("ILLEGAL_PARAMETER");
+    }
+
+    cipherSuite = helloRetry->cipherSuite();
+    if (sizeof(cipherSuites() & ({ cipherSuite })) == 0 ||
+	helloRetry->compressionMethod() != 0) {
+	error("ILLEGAL_PARAMETER");
+    }
+
+    extensions = helloRetry->extensions();
+    for (i = sizeof(extensions); --i >= 0; ) {
+	switch (extensions[i]->type()) {
+	case EXT_SUPPORTED_VERSIONS:
+	    if (version || extensions[i]->data()->version() != TLS_VERSION_13) {
+		error("ILLEGAL_PARAMETER");
+	    }
+	    version = TRUE;
+	    break;
+
+	case EXT_KEY_SHARE:
+	    str = extensions[i]->data()->group();
+	    if (sizeof(supportedGroups() & ({ str })) == 0 ||
+		str == group || !privKey) {
+		error("ILLEGAL_PARAMETER");
+	    }
+	    group = str;
+	    privKey = nil;
+	    break;
+
+	case EXT_COOKIE:
+	    cookie = extensions[i]->data()->cookie();
+	    break;
+
+	default:
+	    error("UNSUPPORTED_EXTENSION");
+	}
+    }
+    if (!version || privKey) {
+	error("MISSING_EXTENSION");
+    }
+
     if (compatible) {
+	/* RFC 8446 section D.4 */
+	compatible = FALSE;
+	sendChangeCipherSpec(output);
+    }
+    clientHello = sendClientHello();
+    str = clientHello->transport();
+    transcribe(str);
+    ::sendMessage(output, str, clientHello->type());
+}
+
+/*
+ * process an Extensions message (RFC 8446 section 4.3.1)
+ */
+static void receiveExtensions(Extensions extensions, StringBuffer output)
+{
+    Extension *list;
+    int sz, i;
+
+    list = extensions->extensions();
+    for (sz = sizeof(list), i = 0; i < sz; i++) {
+	switch (list[i]->type()) {
+	case EXT_SUPPORTED_GROUPS:
+	case EXT_SIGNATURE_ALGORITHMS:
+	    break;
+
+	default:
+	    error("ILLEGAL_PARAMETER");
+	}
+    }
+}
+
+/*
+ * process a CertificateRequest message (RFC 8446 section 4.3.2)
+ */
+static void receiveCertificateRequest(CertificateRequest request,
+				      StringBuffer output)
+{
+    if (compatible) {
+	/* RFC 8446 section D.4 */
+	compatible = FALSE;
 	sendChangeCipherSpec(output);
     }
 }
 
 /*
- * process an Extensions message
+ * process a Certificates message (RFC 8446 section 4.4.2)
  */
-private void receiveExtensions(Extensions extensions, StringBuffer output)
-{
-}
-
-/*
- * process a CertificateRequest message
- */
-private void receiveCertificateRequest(CertificateRequest request,
-				       StringBuffer output)
-{
-}
-
-/*
- * process a Certificates message
- */
-private void receiveCertificates(Certificates certificates, StringBuffer output)
+static void receiveCertificates(Certificates certificates, StringBuffer output)
 {
     mixed *certs;
     int sz, i;
-    string *check;
+    string *stack;
 
     if (strlen(certificates->context()) != 0) {
 	error("ILLEGAL_PARAMETER");
@@ -182,47 +297,52 @@ private void receiveCertificates(Certificates certificates, StringBuffer output)
     certs = certificates->certificates();
     sz = sizeof(certs);
     if (sz == 0) {
-	error("ILLEGAL_PARAMETER");
+	error("DECODE_ERROR");
     }
-    check = allocate(sz);
+    stack = allocate(sz);
     for (i = 0; i < sz; i++) {
 	if (certs[i][0]->length() > 0xffff) {
-	    error("UNSUPPORTED_CERTIFICATE");
+	    error("UNSUPPORTED_CERTIFICATE");	/* alas */
 	}
 	if (sizeof(certs[i][1]) != 0) {
 	    error("UNSUPPORTED_EXTENSION");
 	}
-	check[i] = certs[i][0]->buffer()->chunk();
+	stack[i] = certs[i][0]->buffer()->chunk();
     }
-    checkCertificates("TLS server", check);
-    serverCertificate = check[0];
+    checkCertificates("TLS server", stack);
+    serverCertificate = stack[0];
 }
 
 /*
- * process a CertificateVerify message
+ * process a CertificateVerify message (RFC 8446 section 4.4.3)
  */
-private void receiveCertificateVerify(CertificateVerify verify,
-				      StringBuffer output)
+static void receiveCertificateVerify(CertificateVerify verify,
+				     StringBuffer output)
 {
-    certificateVerify(serverCertificate, verify->signature(), messages,
+    certificateVerify(serverCertificate, verify->signature(),
 		      verify->algorithm(), cipherSuite);
 }
 
 /*
- * process a Finished message
+ * process a Finished message (RFC 8446 section 4.4.4)
  */
-private void receiveFinished(Finished verify, StringBuffer output)
+static void receiveFinished(Finished verify, StringBuffer output)
 {
     string key, IV;
 
     alignedRecord();
+
+    if (compatible) {
+	/* RFC 8446 section D.4 */
+	sendChangeCipherSpec(output);
+    }
 
     sendData(output, sendFinished());
 
     ({
 	serverSecret,
 	clientSecret
-    }) = applicationSecrets(masterSecret, messages, cipherSuite);
+    }) = applicationSecrets(masterSecret, cipherSuite);
     masterSecret = nil;
     ({ key, IV }) = keyIV(serverSecret, cipherSuite);
     setReceiveKey(key, IV, cipherSuite);
@@ -231,25 +351,48 @@ private void receiveFinished(Finished verify, StringBuffer output)
 }
 
 /*
- * process a NewSessionTicket message
+ * process a NewSessionTicket message (RFC 8446 section 4.6.1)
  */
-private void receiveNewSessionTicket(NewSessionTicket ticket,
-				     StringBuffer output)
+static void receiveNewSessionTicket(NewSessionTicket ticket,
+				    StringBuffer output)
 {
 }
 
 /*
- * process a KeyUpdate message
+ * process a KeyUpdate message (RFC 8446 section 4.6.3)
  */
-private void receiveKeyUpdate(KeyUpdate keyUpdate, StringBuffer output)
+static void receiveKeyUpdate(KeyUpdate keyUpdate, StringBuffer output)
 {
+    string key, IV;
+
+    alignedRecord();
+
+    serverSecret = updateSecret(serverSecret, cipherSuite);
+    ({ key, IV }) = keyIV(serverSecret, cipherSuite);
+    setReceiveKey(key, IV, cipherSuite);
+
+    switch (keyUpdate->updateRequested()) {
+    case 0:
+	break;
+
+    case 1:
+	sendBytes = 0;
+	sendData(output, new KeyUpdate(FALSE));
+	clientSecret = updateSecret(clientSecret, cipherSuite);
+	({ key, IV }) = keyIV(clientSecret, cipherSuite);
+	setSendKey(key, IV, cipherSuite);
+	break;
+
+    default:
+	error("ILLEGAL_PARAMETER");
+    }
 }
 
 
 /*
  * establish a client TLS connection
  */
-StringBuffer connect(int compatible, string hosts...)
+StringBuffer connect(int compatible, varargs string host)
 {
     Handshake clientHello;
     string str;
@@ -258,10 +401,13 @@ StringBuffer connect(int compatible, string hosts...)
 	error("Already connected");
     }
     ::compatible = compatible;
-    clientHello = sendClientHello(hosts);
+    ::host = host;
+    clientHello = sendClientHello();
     str = clientHello->transport();
     transcribe(str);
     state = STATE_WAIT_SH;
+
+    /* RFC 8446 section 5.1 */
     str = new Record(clientHello->type(), str, TLS_VERSION_10)->transport();
     return new StringBuffer(str);
 }
@@ -271,17 +417,17 @@ StringBuffer connect(int compatible, string hosts...)
  */
 mixed *receiveMessage(string str)
 {
-    string alert;
+    string status;
     StringBuffer input, output;
     Record *records, record;
     Data *dataList, data, message;
     int rsize, i, dsize, j;
 
-    if (state == STATE_CLOSED) {
+    if (inClosed) {
 	error("Connection closed");
     }
     if (state != STATE_CONNECTED) {
-	alert = "connecting";
+	status = "connecting";
     }
     input = new StringBuffer;
     output = new StringBuffer;
@@ -291,6 +437,36 @@ mixed *receiveMessage(string str)
 	    dataList = ::receiveRecord(records[i]);
 	    for (dsize = sizeof(dataList), j = 0; j < dsize; j++) {
 		data = dataList[j];
+		if (data->type() == RECORD_CHANGE_CIPHER_SPEC) {
+		    if (state == STATE_CONNECTED) {
+			error("UNEXPECTED_MESSAGE");
+		    }
+		    continue;
+		}
+
+		if (data->type() == RECORD_ALERT) {
+		    /* RFC 8446 section 6 */
+		    if (data->level() == ALERT_WARNING) {
+			if (data->description() == ALERT_CLOSE_NOTIFY) {
+			    status = "EOF";
+			    inClosed = TRUE;
+			} else {
+			    warning = alertString(data->description());
+			    continue;
+			}
+		    } else {
+			status = "Remote " + alertString(data->description());
+			inClosed = outClosed = TRUE;
+		    }
+
+		    return ({
+			(input->length() != 0) ? input : nil,
+			(output->length() != 0) ? output : nil,
+			warning,
+			status
+		    });
+		}
+
 		switch (state) {
 		case STATE_WAIT_SH:
 		    if (data->type() != RECORD_HANDSHAKE) {
@@ -300,15 +476,35 @@ mixed *receiveMessage(string str)
 		    if (message->type() != HANDSHAKE_SERVER_HELLO) {
 			error("UNEXPECTED_MESSAGE");
 		    }
+		    if (message->random() != HELLO_RETRY_REQUEST) {
+			transcribe(data->transport());
+			receiveServerHello(message, output);
+			state = STATE_WAIT_EE;
+		    } else {
+			reTranscribe(message->cipherSuite());
+			transcribe(data->transport());
+			receiveHelloRetryRequest(message, output);
+			state = STATE_WAIT_SH2;
+		    }
+		    continue;
+
+		case STATE_WAIT_SH2:
+		    if (data->type() != RECORD_HANDSHAKE) {
+			error("UNEXPECTED_MESSAGE");
+		    }
+		    message = data->message();
+		    if (message->type() != HANDSHAKE_SERVER_HELLO) {
+			error("UNEXPECTED_MESSAGE");
+		    }
 		    transcribe(data->transport());
+		    if (message->random() == HELLO_RETRY_REQUEST) {
+			error("UNEXPECTED_MESSAGE");
+		    }
 		    receiveServerHello(message, output);
 		    state = STATE_WAIT_EE;
 		    continue;
 
 		case STATE_WAIT_EE:
-		    if (data->type() == RECORD_CHANGE_CIPHER_SPEC) {
-			continue;
-		    }
 		    if (data->type() != RECORD_HANDSHAKE) {
 			error("UNEXPECTED_MESSAGE");
 		    }
@@ -369,7 +565,7 @@ mixed *receiveMessage(string str)
 		    if (data->type() != RECORD_HANDSHAKE) {
 			error("UNEXPECTED_MESSAGE");
 		    }
-		    str = verifyData(serverSecret, messages, cipherSuite);
+		    str = verifyData(serverSecret, cipherSuite);
 		    message = data->message();
 		    if (message->type() != HANDSHAKE_FINISHED) {
 			error("UNEXPECTED_MESSAGE");
@@ -379,20 +575,12 @@ mixed *receiveMessage(string str)
 		    }
 		    transcribe(data->transport());
 		    receiveFinished(message, output);
-		    alert = nil;
+		    status = nil;
 		    state = STATE_CONNECTED;
 		    continue;
 
 		case STATE_CONNECTED:
 		    switch (data->type()) {
-		    case RECORD_ALERT:
-			if (data->level() == ALERT_WARNING &&
-			    data->description() == ALERT_CLOSE_NOTIFY) {
-			    alert = "EOF";
-			    state = STATE_CLOSED;
-			}
-			break;
-
 		    case RECORD_HANDSHAKE:
 			message = data->message();
 			switch (message->type()) {
@@ -414,6 +602,9 @@ mixed *receiveMessage(string str)
 		    case RECORD_APPLICATION_DATA:
 			input->append(data->payload());
 			break;
+
+		    default:
+			error("UNEXPECTED_MESSAGE");
 		    }
 		    continue;
 		}
@@ -426,14 +617,15 @@ mixed *receiveMessage(string str)
 
 	desc = alertDescription(err);
 	sendData(output, new Alert(ALERT_FATAL, desc));
-	alert = (desc == ALERT_INTERNAL_ERROR) ? "INTERNAL_ERROR" : err;
-	state = STATE_CLOSED;
+	status = (desc == ALERT_INTERNAL_ERROR) ? "INTERNAL_ERROR" : err;
+	inClosed = outClosed = TRUE;
     }
 
     return ({
 	(input->length() != 0) ? input : nil,
 	(output->length() != 0) ? output : nil,
-	alert
+	warning,
+	status
     });
 }
 
@@ -443,18 +635,29 @@ mixed *receiveMessage(string str)
 StringBuffer sendMessage(StringBuffer str)
 {
     StringBuffer output;
-    string chunk;
+    string chunk, key, IV;
 
+    if (outClosed) {
+	error("Connection closed");
+    }
     if (state != STATE_CONNECTED) {
 	error("Connection not established");
     }
 
     if (str->length() > 16384) {
-	str = new StringBuffer(str, 16384);
+	str = new StringBuffer(str, 16384);	/* RFC 8446 section 5.1 */
     }
     output = new StringBuffer;
     while ((chunk=str->chunk())) {
-	::sendMessage(output, chunk);
+	if (sendBytes >= SEND_LIMIT) {
+	    /* RFC 8446 section 4.6.3 */
+	    sendBytes = 0;
+	    sendData(output, new KeyUpdate(FALSE));
+	    clientSecret = updateSecret(clientSecret, cipherSuite);
+	    ({ key, IV }) = keyIV(clientSecret, cipherSuite);
+	    setSendKey(key, IV, cipherSuite);
+	}
+	sendBytes += ::sendMessage(output, chunk);
     }
     return output;
 }
@@ -470,13 +673,13 @@ StringBuffer close()
 	error("Unconnected");
     }
 
-    if (state != STATE_CLOSED) {
+    if (!outClosed) {
 	output = new StringBuffer;
 	if (state != STATE_CONNECTED) {
 	    sendData(output, new Alert(ALERT_WARNING, ALERT_USER_CANCELED));
 	}
 	sendData(output, new Alert(ALERT_WARNING, ALERT_CLOSE_NOTIFY));
-	state = STATE_CLOSED;
+	outClosed = TRUE;
     }
 
     return output;
