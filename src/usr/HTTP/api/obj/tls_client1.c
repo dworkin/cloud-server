@@ -110,7 +110,7 @@ void logout(int quit)
 
     if (previous_program() == LIB_CONN) {
 	::logout(quit);
-	output = client->close();
+	output = session->close();
 	if (output) {
 	    ::sendMessage(output, TRUE);
 	}

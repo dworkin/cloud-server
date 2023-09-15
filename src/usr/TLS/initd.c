@@ -9,7 +9,9 @@ static void create()
 {
     compile_object("sys/explode2");
     compile_object(OBJECT_PATH(Asn1Der));
-    compile_object(OBJECT_PATH(Certificate));
+    compile_object(OBJECT_PATH(X509Certificate));
+    compile_object(OBJECT_PATH(X509Key));
+    compile_object(OBJECT_PATH(TlsClientSession));
     compile_object(OBJECT_PATH(RemoteRecord));
     compile_object(OBJECT_PATH(RemoteAlert));
     compile_object(OBJECT_PATH(RemoteHandshake));
@@ -33,5 +35,4 @@ static void create()
     compile_object(OBJECT_PATH(RemoteKeyShareServer));
     compile_object(OBJECT_PATH(RemoteKeyShareRetry));
     compile_object(OBJECT_PATH(UnknownExtension));
-    compile_object(OBJECT_PATH(TlsClientSession));
 }

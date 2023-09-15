@@ -80,6 +80,49 @@ static string *signatureAlgorithms()
 }
 
 /*
+ * convert certificates and key from PEM format
+ */
+static mixed *certKey(string certificate, string key)
+{
+    string *stack;
+    int sz, i;
+
+    /* certificate stack */
+    if (sscanf(certificate, "-----BEGIN CERTIFICATE-----\n%s",
+	       certificate) == 0) {
+	error("Certificate not in PEM format");
+    }
+    stack = explode(certificate[.. strlen(certificate) - 28],
+		    "-----END CERTIFICATE-----\n" +
+		    "-----BEGIN CERTIFICATE-----\n");
+    sz = sizeof(stack);
+    for (i = 0; i < sz; i++) {
+	stack[i] = base64::decode(implode(explode(stack[i], "\n"), ""));
+    }
+
+    /* key */
+    if (sscanf(key,
+	       "-----BEGIN EC PARAMETERS-----\n%*s\n" +
+	       "-----END EC PARAMETERS-----\n" +
+	       "-----BEGIN EC PRIVATE KEY-----\n%s\n" +
+	       "-----END EC PRIVATE KEY-----\n",
+	       key) == 0 &&
+	sscanf(key,
+	       "-----BEGIN EC PRIVATE KEY-----\n%s\n" +
+	       "-----END EC PRIVATE KEY-----\n",
+	       key) == 0 &&
+	sscanf(key,
+	       "-----BEGIN PRIVATE KEY-----\n%s\n" +
+	       "-----END PRIVATE KEY-----\n",
+	       key) == 0) {
+	error("Key not in PEM format");
+    }
+    key = base64::decode(implode(explode(key, "\n"), ""));
+
+    return ({ stack, key });
+}
+
+/*
  * return information about a cipher suite (RFC 8446 section B.4)
  */
 private mixed *cipherInfo(string algorithm)
@@ -332,14 +375,14 @@ static void certificateVerify(string certificate, string signature,
 			      string scheme, string algorithm)
 {
     string message, hash, publicKey;
-    Certificate cert;
+    X509Certificate cert;
 
     message = "                                " +
 	      "                                " +
 	      "TLS 1.3, server CertificateVerify\0" +
 	      hash_string(cipherInfo(algorithm)[3], messages...);
 
-    cert = new Certificate(certificate);
+    cert = new X509Certificate(certificate);
     publicKey = cert->publicKey();
     if (publicKey[0] != '\0') {
 	error("BAD_CERTIFICATE");

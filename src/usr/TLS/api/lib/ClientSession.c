@@ -1,6 +1,7 @@
 # include <String.h>
 # include "Record.h"
 # include "Extension.h"
+# include "x509.h"
 # include "tls.h"
 
 inherit "~/lib/tls";
@@ -25,6 +26,8 @@ private string host;			/* remote hostname */
 private int compatible;			/* middlebox compatible? */
 private string sessionId;		/* backward compatible session ID */
 private string cookie;			/* cookie from HelloRetryRequest */
+private string *clientStack;		/* client certificate stack */
+private string clientKey;		/* client certificate key */
 private string serverCertificate;	/* server certificate */
 private string cipherSuite;		/* cipher algorithm suite */
 private string serverSecret;		/* server secret */
@@ -39,6 +42,9 @@ static void create(varargs string certificate, string key)
 {
     ::create();
     group = TLS_FFDHE3072;
+    if (certificate) {
+	({ clientStack, clientKey }) = certKey(certificate, key);
+    }
 }
 
 /*

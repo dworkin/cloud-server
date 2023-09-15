@@ -1,4 +1,5 @@
-# define Certificate		object "/usr/TLS/api/lib/Certificate"
+# define X509Certificate	object "/usr/TLS/api/lib/Certificate"
+# define X509Key		object "/usr/TLS/api/lib/Key"
 
 
 # define OID_COMMON_NAME	"\x55\x04\x03"
