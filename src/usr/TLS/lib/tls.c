@@ -62,20 +62,40 @@ static string *supportedGroups()
 }
 
 /*
+ * default CertificateAlgorithms (RFC 8446 section B.3.1.3)
+ */
+static string *certificateAlgorithms()
+{
+    return ({
+	TLS_RSA_PSS_PSS_SHA256,
+	TLS_RSA_PSS_PSS_SHA384,
+	TLS_RSA_PSS_PSS_SHA512,
+	TLS_RSA_PSS_RSAE_SHA256,
+	TLS_RSA_PSS_RSAE_SHA384,
+	TLS_RSA_PSS_RSAE_SHA512,
+	TLS_RSA_PKCS1_SHA256,
+	TLS_RSA_PKCS1_SHA384,
+	TLS_RSA_PKCS1_SHA512,
+	TLS_ED25519,
+	TLS_ED448,
+	TLS_ECDSA_SECP256R1_SHA256,
+	TLS_ECDSA_SECP384R1_SHA384,
+	TLS_ECDSA_SECP521R1_SHA512
+    });
+}
+
+/*
  * default SignatureAlgorithms (RFC 8446 section B.3.1.3)
  */
 static string *signatureAlgorithms()
 {
     return ({
-	TLS_RSA_PKCS1_SHA256,
-	TLS_RSA_PKCS1_SHA384,
-	TLS_RSA_PKCS1_SHA512,
-	TLS_RSA_PSS_RSAE_SHA256,
-	TLS_RSA_PSS_RSAE_SHA384,
-	TLS_RSA_PSS_RSAE_SHA512,
 	TLS_RSA_PSS_PSS_SHA256,
 	TLS_RSA_PSS_PSS_SHA384,
-	TLS_RSA_PSS_PSS_SHA512
+	TLS_RSA_PSS_PSS_SHA512,
+	TLS_RSA_PSS_RSAE_SHA256,
+	TLS_RSA_PSS_RSAE_SHA384,
+	TLS_RSA_PSS_RSAE_SHA512
     });
 }
 
@@ -335,6 +355,41 @@ static void checkCertificates(string origin, string *certificates)
 }
 
 /*
+ * produce RSA signature (RFC 8017 section 8.1.1)
+ */
+static string rsaSign(string message, X509Key key, string hash)
+{
+    int bits, len;
+    string modulus, p, q, m, d;
+
+    modulus = "\0" + key->modulus();
+    p = "\0" + key->prime1();
+    q = "\0" + key->prime2();
+
+    bits = asn::bits(modulus);
+    message = "\0" + emsa_pss::encode(message, bits - 1, hash);
+
+    m = asn_pow(message, "\0" + key->exponent2(), q);
+    d = asn_sub(asn_pow(message, "\0" + key->exponent1(), p), m, p);
+    if (d[0] & 0x80) {
+	d = asn_add(d, p, p);
+    }
+    m = asn_add(asn_mult(asn_mult("\0" + key->coefficient(), d, p),
+			 q,
+			 modulus),
+		m,
+		modulus);
+
+    len = (bits + 7) / 8;
+    if (strlen(m) > len) {
+	m = m[1 ..];
+    } else {
+	m = asn::extend(m, len);
+    }
+    return m;
+}
+
+/*
  * verify RSA signature (RFC 8017 section 8.1.2)
  */
 static void rsaVerify(string signature, string message, string publicKey,
@@ -362,25 +417,91 @@ static void rsaVerify(string signature, string message, string publicKey,
     if (decrypted[0] == '\0') {
 	decrypted = decrypted[1 ..];
     }
-    if (!emsa_pss::verify(hash_string(hash, message), decrypted,
-			  asn::bits(modulus) - 1, hash)) {
+    if (!emsa_pss::verify(message, decrypted, asn::bits(modulus) - 1, hash)) {
 	error("DECRYPT_ERROR");
     }
 }
 
 /*
+ * RFC 8446, section 4.4.3
+ */
+private string contentDigest(string endpoint, string algorithm)
+{
+    return "                                " +
+	   "                                " +
+	   "TLS 1.3, " + endpoint + " CertificateVerify\0" +
+	   hash_string(cipherInfo(algorithm)[3], messages...);
+}
+
+/*
+ * get signature scheme for certificate/key
+ */
+private string *signatureScheme(string type, string param)
+{
+    switch (type) {
+    case "RSA-PSS":
+	switch (param) {
+	case "SHA256":	return ({ TLS_RSA_PSS_PSS_SHA256 });
+	case "SHA384":	return ({ TLS_RSA_PSS_PSS_SHA384 });
+	case "SHA512":	return ({ TLS_RSA_PSS_PSS_SHA512 });
+	}
+	/* fall through */
+    case "RSA":
+	return ({
+	    TLS_RSA_PSS_RSAE_SHA256,
+	    TLS_RSA_PSS_RSAE_SHA384,
+	    TLS_RSA_PSS_RSAE_SHA512
+	});
+
+    default:
+	return ({ type });
+    }
+}
+
+/*
+ * sign with a certificate key (RFC 8446, section 4.4.3)
+ */
+static string *certificateSign(string endpoint, string certificateKey,
+			       string *certificateAlgorithms, string algorithm)
+{
+    string message, *schemes, hash;
+    X509Key key;
+
+    message = contentDigest(endpoint, algorithm);
+
+    key = new X509Key(certificateKey);
+    schemes = signatureScheme(key->type(), key->param());
+    if (certificateAlgorithms) {
+	certificateAlgorithms &= schemes;
+	if (sizeof(certificateAlgorithms) != 0) {
+	    schemes = certificateAlgorithms;
+	}
+    }
+
+    switch (schemes[0]) {
+    case TLS_RSA_PSS_PSS_SHA256:	hash = "SHA256"; break;
+    case TLS_RSA_PSS_PSS_SHA384:	hash = "SHA384"; break;
+    case TLS_RSA_PSS_PSS_SHA512:	hash = "SHA512"; break;
+    case TLS_RSA_PSS_RSAE_SHA256:	hash = "SHA256"; break;
+    case TLS_RSA_PSS_RSAE_SHA384:	hash = "SHA384"; break;
+    case TLS_RSA_PSS_RSAE_SHA512:	hash = "SHA512"; break;
+    default:
+	error("Unimplemented key type");
+    }
+
+    return ({ schemes[0], rsaSign(message, key, hash) });
+}
+
+/*
  * verify a signature made with a certificate (RFC 8446 section 4.4.3)
  */
-static void certificateVerify(string certificate, string signature,
-			      string scheme, string algorithm)
+static void certificateVerify(string endpoint, string certificate,
+			      string signature, string scheme, string algorithm)
 {
     string message, hash, publicKey;
     X509Certificate cert;
 
-    message = "                                " +
-	      "                                " +
-	      "TLS 1.3, server CertificateVerify\0" +
-	      hash_string(cipherInfo(algorithm)[3], messages...);
+    message = contentDigest(endpoint, algorithm);
 
     cert = new X509Certificate(certificate);
     publicKey = cert->publicKey();
@@ -388,42 +509,22 @@ static void certificateVerify(string certificate, string signature,
 	error("BAD_CERTIFICATE");
     }
 
-    switch (cert->publicKeyType()) {
-    case "RSA":
-	switch (scheme) {
-	case TLS_RSA_PSS_RSAE_SHA256:	hash = "SHA256"; break;
-	case TLS_RSA_PSS_RSAE_SHA384:	hash = "SHA384"; break;
-	case TLS_RSA_PSS_RSAE_SHA512:	hash = "SHA512"; break;
-	default:
-	    error("ILLEGAL_PARAMETER");
-	}
-
-	rsaVerify(signature, message, publicKey, hash);
-	break;
-
-    case "RSA-PSS":
-	switch (scheme) {
-	case TLS_RSA_PSS_PSS_SHA256:	hash = "SHA256"; break;
-	case TLS_RSA_PSS_PSS_SHA384:	hash = "SHA384"; break;
-	case TLS_RSA_PSS_PSS_SHA512:	hash = "SHA512"; break;
-	default:
-	    error("ILLEGAL_PARAMETER");
-	}
-	if (hash != cert->publicKeyParam() && cert->publicKeyParam()) {
-	    error("ILLEGAL_PARAMETER");
-	}
-
-	rsaVerify(signature, message, publicKey, hash);
-	break;
-
-    case TLS_ECDSA_SECP256R1_SHA256:
-    case TLS_ECDSA_SECP384R1_SHA384:
-    case TLS_ECDSA_SECP521R1_SHA512:
-    case TLS_ED25519:
-    case TLS_ED448:
+    if (sizeof(signatureScheme(cert->publicKeyType(),
+			       cert->publicKeyParam()) & ({ scheme })) == 0) {
+	error("ILLEGAL_PARAMETER");
+    }
+    switch (scheme) {
+    case TLS_RSA_PSS_PSS_SHA256:	hash = "SHA256"; break;
+    case TLS_RSA_PSS_PSS_SHA384:	hash = "SHA384"; break;
+    case TLS_RSA_PSS_PSS_SHA512:	hash = "SHA512"; break;
+    case TLS_RSA_PSS_RSAE_SHA256:	hash = "SHA256"; break;
+    case TLS_RSA_PSS_RSAE_SHA384:	hash = "SHA384"; break;
+    case TLS_RSA_PSS_RSAE_SHA512:	hash = "SHA512"; break;
     default:
 	error("UNSUPPORTED_CERTIFICATE");
     }
+
+    rsaVerify(signature, message, publicKey, hash);
 }
 
 /*
@@ -730,6 +831,18 @@ private void sendRecord(StringBuffer output, Record record)
 static void sendData(StringBuffer output, Data data)
 {
     sendRecord(output, new Record(data->type(), data->transport()));
+}
+
+/*
+ * send and transcribe handshake
+ */
+static void sendTranscribeData(StringBuffer output, Data data)
+{
+    string str;
+
+    str = data->transport();
+    transcribe(str);
+    sendRecord(output, new Record(data->type(), str));
 }
 
 /*

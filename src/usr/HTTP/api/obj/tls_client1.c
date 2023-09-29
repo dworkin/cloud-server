@@ -11,7 +11,6 @@ inherit "~/lib/BufferedConnection1";
 object client;			/* assocated client object */
 string responsePath;		/* HttpResponse object path */
 string headersPath;		/* HttpFields object path */
-string tlsClientSessionPath;	/* TlsClientSession object path */
 string host;			/* remote host */
 TlsClientSession session;	/* TLS session */
 HttpResponse response;		/* HTTP response */
@@ -24,14 +23,15 @@ static void create(object client, string host, int port,
 		   string tlsClientSessionPath)
 {
     ::client = client;
+    ::host = host;
     ::responsePath = (responsePath) ?
 		      responsePath : OBJECT_PATH(RemoteHttpResponse);
     headersPath = (fieldsPath) ?
 		   fieldsPath : OBJECT_PATH(RemoteHttpFields);
-    ::tlsClientSessionPath = (tlsClientSessionPath) ?
-			      tlsClientSessionPath :
-			      OBJECT_PATH(TlsClientSession);
-    ::host = host;
+    if (!tlsClientSessionPath) {
+	tlsClientSessionPath = OBJECT_PATH(TlsClientSession);
+    }
+    session = new_object(tlsClientSessionPath);
     ::create(client, headersPath);
     connect(host, port);
 }
@@ -50,7 +50,6 @@ static void connected()
 int login(string str)
 {
     if (previous_program() == LIB_CONN) {
-	session = new_object(tlsClientSessionPath);
 	::sendMessage(session->connect(TRUE, host), TRUE);
     }
     return MODE_NOCHANGE;
@@ -82,7 +81,6 @@ int receive_message(string str)
 {
     StringBuffer input, output;
     string warning, status;
-    int mode;
 
     if (previous_program() == LIB_CONN) {
 	({ input, output, warning, status }) = session->receiveMessage(str);
@@ -97,7 +95,8 @@ int receive_message(string str)
 	if (input) {
 	    ::receive_message(input);
 	}
-	return (status == "EOF") ? MODE_DISCONNECT : MODE_NOCHANGE;
+	return (status && status != "connecting") ?
+		MODE_DISCONNECT : MODE_NOCHANGE;
     }
 }
 

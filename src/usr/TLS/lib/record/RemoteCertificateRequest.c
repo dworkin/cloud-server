@@ -1,6 +1,5 @@
 # include <String.h>
 # include "Record.h"
-# include "Extension.h"
 
 inherit CertificateRequest;
 

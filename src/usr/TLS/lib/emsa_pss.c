@@ -23,14 +23,15 @@ static string MGF1(string seed, int len, string hash)
 }
 
 /*
- * EMSA-PSS encode, with M already hashed
+ * EMSA-PSS encode
  */
-static string encode(string mHash, int bits, string hash)
+static string encode(string M, int bits, string hash)
 {
     int emLen, hlen;
-    string salt, H, maskedData;
+    string mHash, salt, H, maskedData;
 
     emLen = (bits + 7) / 8;
+    mHash = hash_string(hash, M);
     hlen = strlen(mHash);
     if (emLen < hlen + hlen + 2) {
 	error("Not enough bits");
@@ -45,14 +46,15 @@ static string encode(string mHash, int bits, string hash)
 }
 
 /*
- * EMSA-PSS verify, with M already hashed
+ * EMSA-PSS verify
  */
-static int verify(string mHash, string EM, int bits, string hash)
+static int verify(string M, string EM, int bits, string hash)
 {
     int emLen, hlen, bitmask, i;
-    string H, data;
+    string mHash, H, data;
 
     EM = asn::extend(EM, emLen = (bits + 7) / 8);
+    mHash = hash_string(hash, M);
     hlen = strlen(mHash);
     bitmask = 0xff >> ((8 - (bits & 7)) & 7);
     if (emLen < hlen + hlen + 2 || EM[emLen - 1] != '\xbc' ||

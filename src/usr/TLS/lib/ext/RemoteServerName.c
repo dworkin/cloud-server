@@ -16,16 +16,15 @@ static void create(String blob, int offset, int end)
     }
 
     offset += 2;
-    while (offset < end) {
-	if (blob[offset] == '\0') {
-	    if (hostName) {
-		error("ILLEGAL_PARAMETER");
-	    }
-	    ({ hostName, offset }) = len2Restore(blob, offset + 1);
-	} else {
-	    offset = len2Offset(blob, offset + 1);
-	}
+    if (offset == end) {
+	error("DECODE_ERROR");
     }
+    do {
+	if (blob[offset] != '\0' || hostName) {
+	    error("ILLEGAL_PARAMETER");
+	}
+	({ hostName, offset }) = len2Restore(blob, offset + 1);
+    } while (offset < end);
     if (offset != end) {
 	error("DECODE_ERROR");
     }

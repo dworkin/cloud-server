@@ -1,7 +1,6 @@
 # include <String.h>
 # include "Record.h"
 # include "Extension.h"
-# include "x509.h"
 # include "tls.h"
 
 inherit "~/lib/tls";
@@ -93,6 +92,8 @@ static Handshake sendClientHello()
 		      new SupportedVersions(({ TLS_VERSION_13 }))),
 	new Extension(EXT_SUPPORTED_GROUPS,
 		      new SupportedGroups(supportedGroups())),
+	new Extension(EXT_SIGNATURE_ALGORITHMS_CERT,
+		      new SignatureAlgorithms(certificateAlgorithms())),
 	new Extension(EXT_SIGNATURE_ALGORITHMS,
 		      new SignatureAlgorithms(signatureAlgorithms())),
 	new Extension(EXT_KEY_SHARE, new KeyShareClient(({ keyShare() })))
@@ -193,7 +194,6 @@ static void receiveHelloRetryRequest(ServerHello helloRetry,
     string *keyShare, str, secret, key, IV;
     Extension *extensions;
     int version, i;
-    Handshake clientHello;
 
     if (cipherSuite) {
 	error("UNEXPECTED_MESSAGE");	/* 2nd HelloRetryRequest */
@@ -247,10 +247,7 @@ static void receiveHelloRetryRequest(ServerHello helloRetry,
 	compatible = FALSE;
 	sendChangeCipherSpec(output);
     }
-    clientHello = sendClientHello();
-    str = clientHello->transport();
-    transcribe(str);
-    ::sendMessage(output, str, clientHello->type());
+    sendTranscribeData(output, sendClientHello());
 }
 
 /*
@@ -266,6 +263,7 @@ static void receiveExtensions(Extensions extensions, StringBuffer output)
 	switch (list[i]->type()) {
 	case EXT_SUPPORTED_GROUPS:
 	case EXT_SIGNATURE_ALGORITHMS:
+	case EXT_SIGNATURE_ALGORITHMS_CERT:
 	    break;
 
 	default:
@@ -325,7 +323,7 @@ static void receiveCertificates(Certificates certificates, StringBuffer output)
 static void receiveCertificateVerify(CertificateVerify verify,
 				     StringBuffer output)
 {
-    certificateVerify(serverCertificate, verify->signature(),
+    certificateVerify("server", serverCertificate, verify->signature(),
 		      verify->algorithm(), cipherSuite);
 }
 
@@ -378,10 +376,10 @@ static void receiveKeyUpdate(KeyUpdate keyUpdate, StringBuffer output)
     setReceiveKey(key, IV, cipherSuite);
 
     switch (keyUpdate->updateRequested()) {
-    case 0:
+    case FALSE:
 	break;
 
-    case 1:
+    case TRUE:
 	sendBytes = 0;
 	sendData(output, new KeyUpdate(FALSE));
 	clientSecret = updateSecret(clientSecret, cipherSuite);
@@ -502,10 +500,10 @@ mixed *receiveMessage(string str)
 		    if (message->type() != HANDSHAKE_SERVER_HELLO) {
 			error("UNEXPECTED_MESSAGE");
 		    }
-		    transcribe(data->transport());
 		    if (message->random() == HELLO_RETRY_REQUEST) {
 			error("UNEXPECTED_MESSAGE");
 		    }
+		    transcribe(data->transport());
 		    receiveServerHello(message, output);
 		    state = STATE_WAIT_EE;
 		    continue;

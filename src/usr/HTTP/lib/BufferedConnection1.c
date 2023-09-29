@@ -7,6 +7,7 @@ inherit "Connection1";
 private StringBuffer buffer;	/* input buffer */
 private string chunk;		/* chunk from input buffer */
 private int mode;		/* input mode */
+private int established;	/* first message received? */
 private int blocked;		/* input blocked? */
 private int length;		/* length of message to receive */
 private int noline;		/* no full line in input? */
@@ -60,6 +61,14 @@ static void set_message_length(int length)
 }
 
 /*
+ * process first message
+ */
+static int receiveFirstMessage(string str)
+{
+    return ::receive_message(str);
+}
+
+/*
  * process input buffer
  */
 private void receiveBuffer()
@@ -102,7 +111,12 @@ private void receiveBuffer()
 		    }
 		}
 
-		set_mode(::receive_message(str));
+		if (!established) {
+		    established = TRUE;
+		    set_mode(receiveFirstMessage(str));
+		} else {
+		    set_mode(::receive_message(str));
+		}
 	    } else {
 		noline = TRUE;
 	    }
@@ -121,7 +135,12 @@ private void receiveBuffer()
 		str = chunk;
 		chunk = "";
 	    }
-	    set_mode(::receive_message(str));
+	    if (!established) {
+		established = TRUE;
+		set_mode(receiveFirstMessage(str));
+	    } else {
+		set_mode(::receive_message(str));
+	    }
 	}
     }
 }

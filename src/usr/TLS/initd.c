@@ -12,6 +12,7 @@ static void create()
     compile_object(OBJECT_PATH(X509Certificate));
     compile_object(OBJECT_PATH(X509Key));
     compile_object(OBJECT_PATH(TlsClientSession));
+    compile_object(OBJECT_PATH(TlsServerSession));
     compile_object(OBJECT_PATH(RemoteRecord));
     compile_object(OBJECT_PATH(RemoteAlert));
     compile_object(OBJECT_PATH(RemoteHandshake));

@@ -2,36 +2,19 @@
 # include "x509.h"
 # include "tls.h"
 
+inherit "~/lib/expect";
+
 
 private string type;		/* key type */
 private string modulus;		/* RSA modulus */
-private string privKey;		/* private key */
-private string pubKey;		/* public key (RSA or ECDSA) */
+private string privateKey;	/* private key */
+private string publicKey;	/* public key (RSA or ECDSA) */
+private string param;		/* key parameter (RSA-PSS) */
 private string prime1;		/* RSA prime1 */
 private string prime2;		/* RSA prime2 */
 private string exponent1;	/* RSA exponent1 */
 private string exponent2;	/* RSA exponent2 */
 private string coefficient;	/* RSA coefficient */
-
-/*
- * expect a particular node
- */
-static mixed expect(Asn1 node, int tag, varargs int class)
-{
-    if (node->class() != class || node->tag() != tag) {
-	error("Bad key");
-    }
-    return node->contents();
-}
-
-/*
- * expect an algorithm node
- */
-static string expectAlgorithm(Asn1 node)
-{
-    node = expect(node, ASN1_SEQUENCE)[0];
-    return expect(node, ASN1_OBJECT_IDENTIFIER);
-}
 
 /*
  * obtain RSA key data
@@ -42,8 +25,8 @@ static void rsaKey(string str)
 
     list = expect(new Asn1Der(str), ASN1_SEQUENCE);
     modulus = expect(list[1], ASN1_INTEGER);
-    pubKey = expect(list[2], ASN1_INTEGER);
-    privKey = expect(list[3], ASN1_INTEGER);
+    publicKey = expect(list[2], ASN1_INTEGER);
+    privateKey = expect(list[3], ASN1_INTEGER);
     prime1 = expect(list[4], ASN1_INTEGER);
     prime2 = expect(list[5], ASN1_INTEGER);
     exponent1 = expect(list[6], ASN1_INTEGER);
@@ -56,7 +39,7 @@ static void rsaKey(string str)
  */
 static void eddsaKey(string str)
 {
-    privKey = expect(new Asn1Der(str), ASN1_OCTET_STRING);
+    privateKey = expect(new Asn1Der(str), ASN1_OCTET_STRING);
 }
 
 /*
@@ -64,12 +47,13 @@ static void eddsaKey(string str)
  */
 static void create(string str)
 {
-    Asn1 *list;
+    Asn1 *list, *algo;
 
     list = expect(new Asn1Der(str), ASN1_SEQUENCE);
     switch (expect(list[0], ASN1_INTEGER)) {
     case "\0":
-	switch (expectAlgorithm(list[1])) {
+	algo = expect(list[1], ASN1_SEQUENCE);
+	switch (expect(algo[0], ASN1_OBJECT_IDENTIFIER)) {
 	case OID_RSA_ENCRYPTION:
 	    type = "RSA";
 	    rsaKey(expect(list[2], ASN1_OCTET_STRING));
@@ -77,6 +61,11 @@ static void create(string str)
 
 	case OID_RSASSA_PSS:
 	    type = "RSA-PSS";
+	    try {
+		param = expectParams(algo[1]);
+	    } catch (...) {
+		error("Bad key");
+	    }
 	    rsaKey(expect(list[2], ASN1_OCTET_STRING));
 	    break;
 
@@ -96,13 +85,13 @@ static void create(string str)
 	break;
 
     case "\1":
-	privKey = expect(list[1], ASN1_OCTET_STRING);
-	pubKey = expect(expect(list[3], 1, ASN1_CLASS_CONTEXTUAL)[0],
-			ASN1_BIT_STRING);
-	if (pubKey[0] != '\0') {
+	privateKey = expect(list[1], ASN1_OCTET_STRING);
+	publicKey = expect(expect(list[3], 1, ASN1_CLASS_CONTEXTUAL)[0],
+			   ASN1_BIT_STRING);
+	if (publicKey[0] != '\0') {
 	    error("Bad key");
 	}
-	pubKey = pubKey[1 ..];
+	publicKey = publicKey[1 ..];
 	switch (expect(expect(list[2], 0, ASN1_CLASS_CONTEXTUAL)[0],
 		       ASN1_OBJECT_IDENTIFIER)) {
 	case OID_SECP256R1:
@@ -130,8 +119,9 @@ static void create(string str)
 
 string type()			{ return type; }
 string modulus()		{ return modulus; }
-string privKey()		{ return privKey; }
-string pubKey()			{ return pubKey; }
+string privateKey()		{ return privateKey; }
+string publicKey()		{ return publicKey; }
+string param()			{ return param; }
 string prime1()			{ return prime1; }
 string prime2()			{ return prime2; }
 string exponent1()		{ return exponent1; }

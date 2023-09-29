@@ -15,7 +15,7 @@
 # define TLS_ED448			"\x08\x08"
 # define TLS_RSA_PSS_PSS_SHA256		"\x08\x09"
 # define TLS_RSA_PSS_PSS_SHA384		"\x08\x0a"
-# define TLS_RSA_PSS_PSS_SHA512		"\X08\x0b"
+# define TLS_RSA_PSS_PSS_SHA512		"\x08\x0b"
 # define TLS_RSA_PKCS1_SHA1		"\x02\x01"
 # define TLS_ECDSA_SHA1			"\x02\x03"
 

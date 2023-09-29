@@ -1,5 +1,6 @@
 # define HTTP1_SERVER		"/usr/HTTP/api/obj/server1"
 # define HTTP1_CLIENT		"/usr/HTTP/api/obj/client1"
+# define HTTP1_TLS_SERVER	"/usr/HTTP/api/obj/tls_server1"
 # define HTTP1_TLS_CLIENT	"/usr/HTTP/api/obj/tls_client1"
 
 # define WEBSOCK_OPCODE		0x0f	/* opcode */
