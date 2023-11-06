@@ -6,6 +6,8 @@
 # define RemoteSupportedGroups	   object "/usr/TLS/lib/ext/RemoteSupportedGroups"
 # define SignatureAlgorithms	   object "/usr/TLS/lib/ext/SignatureAlgorithms"
 # define RemoteSignatureAlgorithms object "/usr/TLS/lib/ext/RemoteSignatureAlgorithms"
+# define EarlyData		   object "/usr/TLS/lib/ext/EarlyData"
+# define RemoteEarlyData	   object "/usr/TLS/lib/ext/RemoteEarlyData"
 # define SupportedVersions	   object "/usr/TLS/lib/ext/SupportedVersions"
 # define RemoteSupportedVersions   object "/usr/TLS/lib/ext/RemoteSupportedVersions"
 # define Version		   object "/usr/TLS/lib/ext/Version"

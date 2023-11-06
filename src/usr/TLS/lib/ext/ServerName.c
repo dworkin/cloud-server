@@ -18,7 +18,7 @@ static void create(string hostName)
  */
 string transport()
 {
-    return len2Save("\0" + len2Save(hostName));
+    return (hostName) ? len2Save("\0" + len2Save(hostName)) : "";
 }
 
 

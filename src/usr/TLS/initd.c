@@ -29,6 +29,7 @@ static void create()
     compile_object(OBJECT_PATH(RemoteServerName));
     compile_object(OBJECT_PATH(RemoteSupportedGroups));
     compile_object(OBJECT_PATH(RemoteSignatureAlgorithms));
+    compile_object(OBJECT_PATH(RemoteEarlyData));
     compile_object(OBJECT_PATH(RemoteSupportedVersions));
     compile_object(OBJECT_PATH(RemoteVersion));
     compile_object(OBJECT_PATH(RemoteCookie));

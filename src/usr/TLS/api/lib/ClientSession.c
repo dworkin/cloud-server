@@ -114,6 +114,14 @@ static Handshake sendClientHello()
 }
 
 /*
+ * prepare to send an empty list of certificates (RFC 8446 section 4.4.2)
+ */
+static Handshake sendCertificates()
+{
+    return new Handshake(new Certificates("", ({ })));
+}
+
+/*
  * prepare to send a Finished message (RFC 8446 section 4.4.4)
  */
 static Handshake sendFinished()
@@ -262,8 +270,6 @@ static void receiveExtensions(Extensions extensions, StringBuffer output)
     for (sz = sizeof(list), i = 0; i < sz; i++) {
 	switch (list[i]->type()) {
 	case EXT_SUPPORTED_GROUPS:
-	case EXT_SIGNATURE_ALGORITHMS:
-	case EXT_SIGNATURE_ALGORITHMS_CERT:
 	    break;
 
 	default:
@@ -283,6 +289,8 @@ static void receiveCertificateRequest(CertificateRequest request,
 	compatible = FALSE;
 	sendChangeCipherSpec(output);
     }
+
+    sendTranscribeData(output, sendCertificates());
 }
 
 /*

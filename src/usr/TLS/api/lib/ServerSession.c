@@ -76,7 +76,7 @@ static string *keyShare()
 /*
  * prepare to send a ServerHello message (RFC 8446 section 4.1.3)
  */
-static Handshake sendServerHello()
+static Handshake sendServerHello(int named)
 {
     Extension *extensions;
 
@@ -84,6 +84,11 @@ static Handshake sendServerHello()
 	new Extension(EXT_SUPPORTED_VERSIONS, new Version(TLS_VERSION_13)),
 	new Extension(EXT_KEY_SHARE, new KeyShareServer(keyShare()))
     });
+    if (named) {
+	extensions += ({
+	    new Extension(EXT_SERVER_NAME, new ServerName(nil))
+	});
+    }
 
     return new Handshake(new ServerHello(secure_random(32), sessionId,
 					 cipherSuite, 0, extensions));
@@ -110,7 +115,10 @@ static Handshake sendHelloRetryRequest()
  */
 static Handshake sendExtensions()
 {
-    return new Handshake(new Extensions(({ })));
+    return new Handshake(new Extensions(({
+	new Extension(EXT_SUPPORTED_GROUPS,
+		      new SupportedGroups(supportedGroups()))
+    })));
 }
 
 /*
@@ -170,6 +178,8 @@ static int receiveClientHello(ClientHello clientHello, StringBuffer output)
     Extension *extensions;
     mixed **shares;
 
+    alignedRecord();
+
     if (clientHello->version() != TLS_VERSION_12) {
 	error("PROTOCOL_VERSION");
     }
@@ -228,7 +238,18 @@ static int receiveClientHello(ClientHello clientHello, StringBuffer output)
 		key = nil;
 	    }
 	    break;
+
+	case EXT_EARLY_DATA:
+	    /*
+	     * RFC 8446 section 4.6.1
+	     * Let's just say that max_early_data_size is 0.
+	     */
+	    error("UNEXPECTED_MESSAGE");
 	}
+    }
+
+    if (hosts && !host) {
+	error("MISSING_EXTENSION");		/* RFC 6066 section 3 */
     }
 
     if (!groups) {
@@ -244,8 +265,18 @@ static int receiveClientHello(ClientHello clientHello, StringBuffer output)
 	}
     }
 
+    if (!signatureAlgorithms) {
+	error("MISSING_EXTENSION");		/* RFC 8446 section 4.2.3 */
+    }
+    if (!certificateAlgorithms) {
+	certificateAlgorithms = signatureAlgorithms;
+    }
+
     if (key) {
-	sendTranscribeData(output, sendServerHello());
+	sendTranscribeData(output, sendServerHello(hosts && host));
+	if (compatible) {
+	    sendChangeCipherSpec(output);	/* RFC 8446 section D.4 */
+	}
 
 	secret = sharedSecret(key, privKey, prime);
 	group = prime = pubKey = privKey = nil;
@@ -271,6 +302,9 @@ static int receiveClientHello(ClientHello clientHello, StringBuffer output)
 	certificateAlgorithms = nil;
 	reTranscribe(cipherSuite);
 	sendTranscribeData(output, sendHelloRetryRequest());
+	if (compatible) {
+	    sendChangeCipherSpec(output);	/* RFC 8446 section D.4 */
+	}
 	return FALSE;
     }
 }
@@ -343,6 +377,8 @@ static void receiveFinished(Finished verify, StringBuffer output)
 static void receiveKeyUpdate(KeyUpdate keyUpdate, StringBuffer output)
 {
     string key, IV;
+
+    alignedRecord();
 
     clientSecret = updateSecret(clientSecret, cipherSuite);
     ({ key, IV }) = keyIV(clientSecret, cipherSuite);

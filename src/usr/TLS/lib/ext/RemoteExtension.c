@@ -50,6 +50,10 @@ static void create(String blob, int offset, int end, varargs int client)
 		 new RemoteKeyShareRetry(blob, offset, end);
 	break;
 
+    case EXT_EARLY_DATA:
+	data = new RemoteEarlyData(blob, offset, end);
+	break;
+
     default:
 	data = new UnknownExtension(blob, offset, end);
 	break;
