@@ -37,3 +37,19 @@ static string address()
 
     return user::query_ip_name(obj);
 }
+
+/*
+ * NAME:	ip_number()
+ * DESCRIPTION:	return the IP number this object is connected to
+ */
+static string ip_number()
+{
+    object obj;
+
+    obj = query_conn();
+    while (obj <- LIB_USER) {
+	obj = obj->query_conn();
+    }
+
+    return user::query_ip_number(obj);
+}

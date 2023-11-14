@@ -1,3 +1,6 @@
+# define Http1Server		"/usr/HTTP/api/lib/Server1"
+# define Http1Client		"/usr/HTTP/api/lib/Client1"
+
 # define HTTP1_SERVER		"/usr/HTTP/api/obj/server1"
 # define HTTP1_CLIENT		"/usr/HTTP/api/obj/client1"
 # define HTTP1_TLS_SERVER	"/usr/HTTP/api/obj/tls_server1"
