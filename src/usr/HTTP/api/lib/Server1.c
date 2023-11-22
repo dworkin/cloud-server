@@ -16,8 +16,7 @@ private HttpRequest request;	/* HTTP request */
 /*
  * initialize connection object
  */
-static void create(object server, varargs string requestPath,
-		   string headersPath)
+static void create(object server, string requestPath, string headersPath)
 {
     ::server = server;
     ::requestPath = requestPath;

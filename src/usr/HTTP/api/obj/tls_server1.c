@@ -5,12 +5,7 @@
 # include "HttpField.h"
 # include "HttpConnection.h"
 
-inherit server Http1Server;
-inherit buffered "~/lib/BufferedConnection1";
-
-
-TlsServerSession session;	/* TLS session */
-int connected;			/* TLS connection established */
+inherit Http1TlsServer;
 
 
 /*
@@ -29,9 +24,8 @@ static void create(object server, string certificate, string key,
     if (!tlsServerSessionPath) {
 	tlsServerSessionPath = OBJECT_PATH(TlsServerSession);
     }
-    server::create(server, requestPath, fieldsPath);
-    buffered::create(server, fieldsPath);
-    session = new_object(tlsServerSessionPath, certificate, key);
+    ::create(server, certificate, key, requestPath, fieldsPath,
+	     tlsServerSessionPath);
 }
 
 /*
@@ -62,34 +56,10 @@ static int receiveRequest(int code, HttpRequest request)
  */
 int login(string str)
 {
-    StringBuffer input, output;
-    string warning, status;
-
     if (previous_program() == LIB_CONN) {
 	::connection(previous_object());
-	session->accept(FALSE);
-	({ input, output, warning, status }) = session->receiveMessage(str);
-	if (output) {
-	    ::sendMessage(output, TRUE);
-	}
-	if (!status) {
-	    connected = TRUE;
-	    set_mode(MODE_LINE);
-	}
-	if (input) {
-	    ::receive_message(input);
-	}
-	return (status && status != "connecting") ?
-		MODE_DISCONNECT : MODE_NOCHANGE;
+	return tlsAccept(str);
     }
-}
-
-/*
- * process login message
- */
-static int receiveFirstMessage(string str)
-{
-    return ::receiveFirstLine(str);
 }
 
 /*
@@ -97,23 +67,8 @@ static int receiveFirstMessage(string str)
  */
 int receive_message(string str)
 {
-    StringBuffer input, output;
-    string warning, status;
-
     if (previous_program() == LIB_CONN) {
-	({ input, output, warning, status }) = session->receiveMessage(str);
-	if (output) {
-	    ::sendMessage(output, TRUE);
-	}
-	if (!status && !connected) {
-	    connected = TRUE;
-	    set_mode(MODE_LINE);
-	}
-	if (input) {
-	    ::receive_message(input);
-	}
-	return (status && status != "connecting") ?
-		MODE_DISCONNECT : MODE_NOCHANGE;
+	return ::receive_message(str);
     }
 }
 
@@ -122,24 +77,10 @@ int receive_message(string str)
  */
 void logout(int quit)
 {
-    StringBuffer output;
-
     if (previous_program() == LIB_CONN) {
 	::logout(quit);
-	output = session->close();
-	if (output) {
-	    ::sendMessage(output, TRUE);
-	}
 	destruct_object(this_object());
     }
-}
-
-/*
- * send an encrypted message
- */
-static void sendMessage(StringBuffer str)
-{
-    ::sendMessage(session->sendMessage(str));
 }
 
 /*
