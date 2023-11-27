@@ -687,6 +687,13 @@ static Record *receiveMessage(string str)
 	    str = str[5 - len ..];
 	    buflen = 5;
 	}
+	if (buffer[0] < RECORD_CHANGE_CIPHER_SPEC ||
+	    buffer[0] > RECORD_APPLICATION_DATA) {
+	    error("UNEXPECTED_MESSAGE");
+	}
+	if (buffer[1] != '\3' || buffer[2] == '\0' || buffer[2] > '\4') {
+	    error("PROTOCOL_VERSION");
+	}
 	len = (buffer[3] << 8) | buffer[4];
 	if (len + 5 > buflen + strlen(str)) {
 	    buffer += str;
