@@ -17,7 +17,7 @@ private int state;			/* client state */
 private int inClosed, outClosed;	/* input/output closed */
 private string warning;			/* last warning */
 private string group;			/* keyshare group */
-private string prime, pubKey, privKey;	/* FFDHE parameters */
+private string pubKey, privKey;		/* FFDHE parameters */
 private string *hosts;			/* server hostnames */
 private string host;			/* chosen host */
 private int compatible;			/* middlebox compatible? */
@@ -47,29 +47,7 @@ static void create(string certificate, string key)
  */
 static string *keyShare()
 {
-    switch (group) {
-    case TLS_FFDHE2048:
-	prime = ffdhe2048p();
-	break;
-
-    case TLS_FFDHE3072:
-	prime = ffdhe3072p();
-	break;
-
-    case TLS_FFDHE4096:
-	prime = ffdhe4096p();
-	break;
-
-    case TLS_FFDHE6144:
-	prime = ffdhe6144p();
-	break;
-
-    case TLS_FFDHE8192:
-	prime = ffdhe8192p();
-	break;
-    }
-
-    ({ pubKey, privKey }) = keyPair(prime);
+    ({ pubKey, privKey }) = encrypt("FFDHE key", groupBits(group));
     return ({ group, pubKey });
 }
 
@@ -278,8 +256,8 @@ static int receiveClientHello(ClientHello clientHello, StringBuffer output)
 	    sendChangeCipherSpec(output);	/* RFC 8446 section D.4 */
 	}
 
-	secret = sharedSecret(key, privKey, prime);
-	group = prime = pubKey = privKey = nil;
+	secret = decrypt("FFDHE derive", groupBits(group), key, privKey);
+	group = pubKey = privKey = nil;
 	({
 	    serverSecret,
 	    clientSecret,

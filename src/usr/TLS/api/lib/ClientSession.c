@@ -20,7 +20,7 @@ private int state;			/* client state */
 private int inClosed, outClosed;	/* input/output closed */
 private string warning;			/* last warning */
 private string group;			/* keyshare group */
-private string prime, pubKey, privKey;	/* FFDHE parameters */
+private string pubKey, privKey;		/* FFDHE parameters */
 private string host;			/* remote hostname */
 private int compatible;			/* middlebox compatible? */
 private string sessionId;		/* backward compatible session ID */
@@ -51,29 +51,7 @@ static void create(varargs string certificate, string key)
  */
 static string *keyShare()
 {
-    switch (group) {
-    case TLS_FFDHE2048:
-	prime = ffdhe2048p();
-	break;
-
-    case TLS_FFDHE3072:
-	prime = ffdhe3072p();
-	break;
-
-    case TLS_FFDHE4096:
-	prime = ffdhe4096p();
-	break;
-
-    case TLS_FFDHE6144:
-	prime = ffdhe6144p();
-	break;
-
-    case TLS_FFDHE8192:
-	prime = ffdhe8192p();
-	break;
-    }
-
-    ({ pubKey, privKey }) = keyPair(prime);
+    ({ pubKey, privKey }) = encrypt("FFDHE key", groupBits(group));
     return ({ group, pubKey });
 }
 
@@ -171,8 +149,9 @@ static void receiveServerHello(ServerHello serverHello, StringBuffer output)
 	    if (keyShare[0] != group || !privKey) {
 		error("ILLEGAL_PARAMETER");
 	    }
-	    secret = sharedSecret(keyShare[1], privKey, prime);
-	    group = prime = pubKey = privKey = nil;
+	    secret = decrypt("FFDHE derive", groupBits(group), keyShare[1],
+			     privKey);
+	    group = pubKey = privKey = nil;
 	    ({
 		serverSecret,
 		clientSecret,

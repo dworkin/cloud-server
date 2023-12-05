@@ -6,7 +6,6 @@
 # include <type.h>
 
 inherit "hkdf";
-inherit "ffdhe";
 inherit emsa_pss "emsa_pss";
 private inherit asn "/lib/util/asn";
 private inherit base64 "/lib/util/base64";
@@ -59,6 +58,20 @@ static string *supportedGroups()
 	TLS_FFDHE8192,
 	TLS_FFDHE2048
     });
+}
+
+/*
+ * return the number of bits in a FFDHE group
+ */
+static int groupBits(string group)
+{
+    switch (group) {
+    case TLS_FFDHE2048:	return 2048;
+    case TLS_FFDHE3072:	return 3072;
+    case TLS_FFDHE4096:	return 4096;
+    case TLS_FFDHE6144:	return 6144;
+    case TLS_FFDHE8192:	return 8192;
+    }
 }
 
 /*
