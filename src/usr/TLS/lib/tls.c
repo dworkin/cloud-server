@@ -57,6 +57,8 @@ static string *supportedGroups()
 	TLS_FFDHE6144,
 	TLS_FFDHE8192,
 	TLS_FFDHE2048,
+	TLS_X25519,
+	TLS_X448,
 	TLS_SECP256R1,
 	TLS_SECP384R1,
 	TLS_SECP521R1
@@ -91,6 +93,14 @@ static string *keyGen(string group)
 	    ({ asn::extend(pubX, 66), asn::extend(pubY, 66) }),
 	    privKey
 	});
+
+    case TLS_X25519:
+	({ pubKey, privKey }) = encrypt("X25519 key");
+	return ({ asn::extend(pubKey, 32), privKey });
+
+    case TLS_X448:
+	({ pubKey, privKey }) = encrypt("X448 key");
+	return ({ asn::extend(pubKey, 56), privKey });
 
     case TLS_FFDHE2048:
 	({ pubKey, privKey }) = encrypt("FFDHE key", 2048);
@@ -128,6 +138,12 @@ static string sharedSecret(string group, mixed key, string privKey)
 
     case TLS_SECP521R1:
 	return decrypt("SECP521R1 derive", key[0], key[1], privKey);
+
+    case TLS_X25519:
+	return decrypt("X25519 derive", key, privKey);
+
+    case TLS_X448:
+	return decrypt("X448 derive", key, privKey);
 
     case TLS_FFDHE2048:
 	return decrypt("FFDHE derive", 2048, key, privKey);
