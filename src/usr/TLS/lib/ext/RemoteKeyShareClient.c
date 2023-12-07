@@ -9,7 +9,8 @@ inherit KeyShareClient;
  */
 static void create(String blob, int offset, int end)
 {
-    string **keyShare, group, keyExchange;
+    mixed **keyShare;
+    string group, key;
 
     if (len2Offset(blob, offset) != end) {
 	error("DECODE_ERROR");
@@ -19,10 +20,8 @@ static void create(String blob, int offset, int end)
     keyShare = ({ });
     while (offset < end) {
 	group = substring(blob, offset, offset + 1);
-	({ keyExchange, offset }) = len2Restore(blob, offset + 2);
-	keyShare += ({
-	    ({ group, keyExchange })
-	});
+	({ key, offset }) = len2Restore(blob, offset + 2);
+	keyShare += ({ keyShareRestore(group, key) });
     }
     if (offset != end) {
 	error("DECODE_ERROR");

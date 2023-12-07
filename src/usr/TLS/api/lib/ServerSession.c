@@ -17,7 +17,8 @@ private int state;			/* client state */
 private int inClosed, outClosed;	/* input/output closed */
 private string warning;			/* last warning */
 private string group;			/* keyshare group */
-private string pubKey, privKey;		/* FFDHE parameters */
+private mixed pubKey;			/* group public key */
+private string privKey;			/* group private key */
 private string *hosts;			/* server hostnames */
 private string host;			/* chosen host */
 private int compatible;			/* middlebox compatible? */
@@ -47,7 +48,7 @@ static void create(string certificate, string key)
  */
 static string *keyShare()
 {
-    ({ pubKey, privKey }) = encrypt("FFDHE key", groupBits(group));
+    ({ pubKey, privKey }) = keyGen(group);
     return ({ group, pubKey });
 }
 
@@ -151,10 +152,10 @@ static Handshake sendFinished()
  */
 static int receiveClientHello(ClientHello clientHello, StringBuffer output)
 {
-    string *strs, *groups, key, IV, secret;
+    string *strs, *groups, IV, secret;
     int sz, i, version, nshares, j;
     Extension *extensions;
-    mixed **shares;
+    mixed key, **shares;
 
     alignedRecord();
 
@@ -256,7 +257,7 @@ static int receiveClientHello(ClientHello clientHello, StringBuffer output)
 	    sendChangeCipherSpec(output);	/* RFC 8446 section D.4 */
 	}
 
-	secret = decrypt("FFDHE derive", groupBits(group), key, privKey);
+	secret = sharedSecret(group, key, privKey);
 	group = pubKey = privKey = nil;
 	({
 	    serverSecret,

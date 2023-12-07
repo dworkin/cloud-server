@@ -20,7 +20,8 @@ private int state;			/* client state */
 private int inClosed, outClosed;	/* input/output closed */
 private string warning;			/* last warning */
 private string group;			/* keyshare group */
-private string pubKey, privKey;		/* FFDHE parameters */
+private mixed pubKey;			/* group public key */
+private string privKey;			/* group private key */
 private string host;			/* remote hostname */
 private int compatible;			/* middlebox compatible? */
 private string sessionId;		/* backward compatible session ID */
@@ -51,7 +52,7 @@ static void create(varargs string certificate, string key)
  */
 static string *keyShare()
 {
-    ({ pubKey, privKey }) = encrypt("FFDHE key", groupBits(group));
+    ({ pubKey, privKey }) = keyGen(group);
     return ({ group, pubKey });
 }
 
@@ -112,9 +113,10 @@ static Handshake sendFinished()
  */
 static void receiveServerHello(ServerHello serverHello, StringBuffer output)
 {
-    string str, *keyShare, secret, key, IV;
+    string str, secret, key, IV;
     Extension *extensions;
     int version, i;
+    mixed *keyShare;
 
     alignedRecord();
 
@@ -149,8 +151,7 @@ static void receiveServerHello(ServerHello serverHello, StringBuffer output)
 	    if (keyShare[0] != group || !privKey) {
 		error("ILLEGAL_PARAMETER");
 	    }
-	    secret = decrypt("FFDHE derive", groupBits(group), keyShare[1],
-			     privKey);
+	    secret = sharedSecret(group, keyShare[1], privKey);
 	    group = pubKey = privKey = nil;
 	    ({
 		serverSecret,

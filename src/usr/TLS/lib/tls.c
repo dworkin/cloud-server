@@ -56,21 +56,93 @@ static string *supportedGroups()
 	TLS_FFDHE4096,
 	TLS_FFDHE6144,
 	TLS_FFDHE8192,
-	TLS_FFDHE2048
+	TLS_FFDHE2048,
+	TLS_SECP256R1,
+	TLS_SECP384R1,
+	TLS_SECP521R1
     });
 }
 
 /*
- * return the number of bits in a FFDHE group
+ * generate keys based on group
  */
-static int groupBits(string group)
+static string *keyGen(string group)
+{
+    string pubKey, pubX, pubY, privKey;
+
+    switch (group) {
+    case TLS_SECP256R1:
+	({ pubX, pubY, privKey }) = encrypt("SECP256R1 key");
+	return ({
+	    ({ asn::extend(pubX, 32), asn::extend(pubY, 32) }),
+	    privKey
+	});
+
+    case TLS_SECP384R1:
+	({ pubX, pubY, privKey }) = encrypt("SECP384R1 key");
+	return ({
+	    ({ asn::extend(pubX, 48), asn::extend(pubY, 48) }),
+	    privKey
+	});
+
+    case TLS_SECP521R1:
+	({ pubX, pubY, privKey }) = encrypt("SECP521R1 key");
+	return ({
+	    ({ asn::extend(pubX, 66), asn::extend(pubY, 66) }),
+	    privKey
+	});
+
+    case TLS_FFDHE2048:
+	({ pubKey, privKey }) = encrypt("FFDHE key", 2048);
+	return ({ asn::extend(pubKey, 256), privKey });
+
+    case TLS_FFDHE3072:
+	({ pubKey, privKey }) = encrypt("FFDHE key", 3072);
+	return ({ asn::extend(pubKey, 384), privKey });
+
+    case TLS_FFDHE4096:
+	({ pubKey, privKey }) = encrypt("FFDHE key", 4096);
+	return ({ asn::extend(pubKey, 512), privKey });
+
+    case TLS_FFDHE6144:
+	({ pubKey, privKey }) = encrypt("FFDHE key", 6144);
+	return ({ asn::extend(pubKey, 768), privKey });
+
+    case TLS_FFDHE8192:
+	({ pubKey, privKey }) = encrypt("FFDHE key", 8192);
+	return ({ asn::extend(pubKey, 1024), privKey });
+    }
+}
+
+/*
+ * determine shared secret based on group
+ */
+static string sharedSecret(string group, mixed key, string privKey)
 {
     switch (group) {
-    case TLS_FFDHE2048:	return 2048;
-    case TLS_FFDHE3072:	return 3072;
-    case TLS_FFDHE4096:	return 4096;
-    case TLS_FFDHE6144:	return 6144;
-    case TLS_FFDHE8192:	return 8192;
+    case TLS_SECP256R1:
+	return decrypt("SECP256R1 derive", key[0], key[1], privKey);
+
+    case TLS_SECP384R1:
+	return decrypt("SECP384R1 derive", key[0], key[1], privKey);
+
+    case TLS_SECP521R1:
+	return decrypt("SECP521R1 derive", key[0], key[1], privKey);
+
+    case TLS_FFDHE2048:
+	return decrypt("FFDHE derive", 2048, key, privKey);
+
+    case TLS_FFDHE3072:
+	return decrypt("FFDHE derive", 3072, key, privKey);
+
+    case TLS_FFDHE4096:
+	return decrypt("FFDHE derive", 4096, key, privKey);
+
+    case TLS_FFDHE6144:
+	return decrypt("FFDHE derive", 6144, key, privKey);
+
+    case TLS_FFDHE8192:
+	return decrypt("FFDHE derive", 8192, key, privKey);
     }
 }
 

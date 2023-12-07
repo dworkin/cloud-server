@@ -9,13 +9,13 @@ inherit KeyShareServer;
  */
 static void create(String blob, int offset, int end)
 {
-    string group, keyExchange;
+    string group, key;
 
     group = substring(blob, offset, offset + 1);
-    ({ keyExchange, offset }) = len2Restore(blob, offset + 2);
+    ({ key, offset }) = len2Restore(blob, offset + 2);
     if (offset != end) {
 	error("DECODE_ERROR");
     }
 
-    ::create(({ group, keyExchange }));
+    ::create(keyShareRestore(group, key));
 }

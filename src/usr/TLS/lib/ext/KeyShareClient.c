@@ -3,12 +3,12 @@
 inherit Data;
 
 
-private string **keyShares;	/* list of ({ group, key }) pairs */
+private mixed **keyShares;	/* list of ({ group, key }) pairs */
 
 /*
  * initialize KeyShare for client
  */
-static void create(string **keyShares)
+static void create(mixed **keyShares)
 {
     ::keyShares = keyShares;
 }
@@ -25,11 +25,11 @@ string transport()
     list = allocate(2 * sz);
     for (i = 0, j = 0; i < sz; i++) {
 	list[j++] = keyShares[i][0];
-	list[j++] = len2Save(keyShares[i][1]);
+	list[j++] = len2Save(keyShareSave(keyShares[i][1]));
     }
 
     return len2Save(implode(list, ""));
 }
 
 
-string **keyShares()	{ return keyShares; }
+mixed **keyShares()	{ return keyShares; }

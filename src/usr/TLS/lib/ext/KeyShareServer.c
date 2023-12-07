@@ -3,12 +3,12 @@
 inherit Data;
 
 
-private string *keyShare;	/* ({ group, key }) */
+private mixed *keyShare;	/* ({ group, key }) */
 
 /*
  * initialize KeyShare for ServerHello
  */
-static void create(string *keyShare)
+static void create(mixed *keyShare)
 {
     ::keyShare = keyShare;
 }
@@ -18,8 +18,8 @@ static void create(string *keyShare)
  */
 string transport()
 {
-    return keyShare[0] + len2Save(keyShare[1]);
+    return keyShare[0] + len2Save(keyShareSave(keyShare[1]));
 }
 
 
-string *keyShare()	{ return keyShare; }
+mixed *keyShare()	{ return keyShare; }
