@@ -131,34 +131,34 @@ static string sharedSecret(string group, mixed key, string privKey)
 {
     switch (group) {
     case TLS_SECP256R1:
-	return decrypt("SECP256R1 derive", key[0], key[1], privKey);
+	return decrypt("SECP256R1 derive", privKey, key[0], key[1]);
 
     case TLS_SECP384R1:
-	return decrypt("SECP384R1 derive", key[0], key[1], privKey);
+	return decrypt("SECP384R1 derive", privKey, key[0], key[1]);
 
     case TLS_SECP521R1:
-	return decrypt("SECP521R1 derive", key[0], key[1], privKey);
+	return decrypt("SECP521R1 derive", privKey, key[0], key[1]);
 
     case TLS_X25519:
-	return decrypt("X25519 derive", key, privKey);
+	return decrypt("X25519 derive", privKey, key);
 
     case TLS_X448:
-	return decrypt("X448 derive", key, privKey);
+	return decrypt("X448 derive", privKey, key);
 
     case TLS_FFDHE2048:
-	return decrypt("FFDHE derive", 2048, key, privKey);
+	return decrypt("FFDHE derive", 2048, privKey, key);
 
     case TLS_FFDHE3072:
-	return decrypt("FFDHE derive", 3072, key, privKey);
+	return decrypt("FFDHE derive", 3072, privKey, key);
 
     case TLS_FFDHE4096:
-	return decrypt("FFDHE derive", 4096, key, privKey);
+	return decrypt("FFDHE derive", 4096, privKey, key);
 
     case TLS_FFDHE6144:
-	return decrypt("FFDHE derive", 6144, key, privKey);
+	return decrypt("FFDHE derive", 6144, privKey, key);
 
     case TLS_FFDHE8192:
-	return decrypt("FFDHE derive", 8192, key, privKey);
+	return decrypt("FFDHE derive", 8192, privKey, key);
     }
 }
 
