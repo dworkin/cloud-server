@@ -21,7 +21,7 @@ private int inClosed, outClosed;	/* input/output closed */
 private string warning;			/* last warning */
 private string group;			/* keyshare group */
 private mixed pubKey;			/* group public key */
-private string privKey;			/* group private key */
+private string privKey, param;		/* group parameters */
 private string host;			/* remote hostname */
 private int compatible;			/* middlebox compatible? */
 private string sessionId;		/* backward compatible session ID */
@@ -52,7 +52,7 @@ static void create(varargs string certificate, string key)
  */
 static string *keyShare()
 {
-    ({ pubKey, privKey }) = keyGen(group);
+    ({ pubKey, privKey, param }) = keyGen(group);
     return ({ group, pubKey });
 }
 
@@ -151,8 +151,8 @@ static void receiveServerHello(ServerHello serverHello, StringBuffer output)
 	    if (keyShare[0] != group || !privKey) {
 		error("ILLEGAL_PARAMETER");
 	    }
-	    secret = sharedSecret(group, keyShare[1], privKey);
-	    group = pubKey = privKey = nil;
+	    secret = sharedSecret(group, keyShare[1], privKey, param);
+	    group = pubKey = privKey = param = nil;
 	    ({
 		serverSecret,
 		clientSecret,

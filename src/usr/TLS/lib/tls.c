@@ -6,6 +6,7 @@
 # include <type.h>
 
 inherit "hkdf";
+inherit "ffdhe";
 inherit emsa_pss "emsa_pss";
 private inherit asn "/lib/util/asn";
 private inherit base64 "/lib/util/base64";
@@ -70,64 +71,70 @@ static string *supportedGroups()
  */
 static string *keyGen(string group)
 {
-    string pubKey, pubX, pubY, privKey;
+    string pubKey, pubX, pubY, privKey, prime;
 
     switch (group) {
     case TLS_SECP256R1:
 	({ pubX, pubY, privKey }) = encrypt("SECP256R1 key");
 	return ({
 	    ({ asn::extend(pubX, 32), asn::extend(pubY, 32) }),
-	    privKey
+	    privKey,
+	    nil
 	});
 
     case TLS_SECP384R1:
 	({ pubX, pubY, privKey }) = encrypt("SECP384R1 key");
 	return ({
 	    ({ asn::extend(pubX, 48), asn::extend(pubY, 48) }),
-	    privKey
+	    privKey,
+	    nil
 	});
 
     case TLS_SECP521R1:
 	({ pubX, pubY, privKey }) = encrypt("SECP521R1 key");
 	return ({
 	    ({ asn::extend(pubX, 66), asn::extend(pubY, 66) }),
-	    privKey
+	    privKey,
+	    nil
 	});
 
     case TLS_X25519:
 	({ pubKey, privKey }) = encrypt("X25519 key");
-	return ({ asn::extend(pubKey, 32), privKey });
+	return ({ asn::extend(pubKey, 32), privKey, nil });
 
     case TLS_X448:
 	({ pubKey, privKey }) = encrypt("X448 key");
-	return ({ asn::extend(pubKey, 56), privKey });
+	return ({ asn::extend(pubKey, 56), privKey, nil });
 
     case TLS_FFDHE2048:
-	({ pubKey, privKey }) = encrypt("FFDHE key", 2048);
-	return ({ asn::extend(pubKey, 256), privKey });
+	prime = ffdhe2048p();
+	break;
 
     case TLS_FFDHE3072:
-	({ pubKey, privKey }) = encrypt("FFDHE key", 3072);
-	return ({ asn::extend(pubKey, 384), privKey });
+	prime = ffdhe3072p();
+	break;
 
     case TLS_FFDHE4096:
-	({ pubKey, privKey }) = encrypt("FFDHE key", 4096);
-	return ({ asn::extend(pubKey, 512), privKey });
+	prime = ffdhe4096p();
+	break;
 
     case TLS_FFDHE6144:
-	({ pubKey, privKey }) = encrypt("FFDHE key", 6144);
-	return ({ asn::extend(pubKey, 768), privKey });
+	prime = ffdhe6144p();
+	break;
 
     case TLS_FFDHE8192:
-	({ pubKey, privKey }) = encrypt("FFDHE key", 8192);
-	return ({ asn::extend(pubKey, 1024), privKey });
+	prime = ffdhe8192p();
+	break;
     }
+
+    return keyPair(prime) + ({ prime });
 }
 
 /*
  * determine shared secret based on group
  */
-static string sharedSecret(string group, mixed key, string privKey)
+static string sharedSecret(string group, mixed key, string privKey,
+			   string prime)
 {
     switch (group) {
     case TLS_SECP256R1:
@@ -145,20 +152,8 @@ static string sharedSecret(string group, mixed key, string privKey)
     case TLS_X448:
 	return decrypt("X448 derive", privKey, key);
 
-    case TLS_FFDHE2048:
-	return decrypt("FFDHE derive", 2048, privKey, key);
-
-    case TLS_FFDHE3072:
-	return decrypt("FFDHE derive", 3072, privKey, key);
-
-    case TLS_FFDHE4096:
-	return decrypt("FFDHE derive", 4096, privKey, key);
-
-    case TLS_FFDHE6144:
-	return decrypt("FFDHE derive", 6144, privKey, key);
-
-    case TLS_FFDHE8192:
-	return decrypt("FFDHE derive", 8192, privKey, key);
+    default:
+	return ::sharedSecret(key, privKey, prime);
     }
 }
 

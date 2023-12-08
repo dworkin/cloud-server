@@ -18,7 +18,7 @@ private int inClosed, outClosed;	/* input/output closed */
 private string warning;			/* last warning */
 private string group;			/* keyshare group */
 private mixed pubKey;			/* group public key */
-private string privKey;			/* group private key */
+private string privKey, param;		/* group parameters */
 private string *hosts;			/* server hostnames */
 private string host;			/* chosen host */
 private int compatible;			/* middlebox compatible? */
@@ -48,7 +48,7 @@ static void create(string certificate, string key)
  */
 static string *keyShare()
 {
-    ({ pubKey, privKey }) = keyGen(group);
+    ({ pubKey, privKey, param }) = keyGen(group);
     return ({ group, pubKey });
 }
 
@@ -257,8 +257,8 @@ static int receiveClientHello(ClientHello clientHello, StringBuffer output)
 	    sendChangeCipherSpec(output);	/* RFC 8446 section D.4 */
 	}
 
-	secret = sharedSecret(group, key, privKey);
-	group = pubKey = privKey = nil;
+	secret = sharedSecret(group, key, privKey, param);
+	group = pubKey = privKey = param = nil;
 	({
 	    serverSecret,
 	    clientSecret,
