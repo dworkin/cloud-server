@@ -1,6 +1,5 @@
 # include <String.h>
 # include "Extension.h"
-# include "tls.h"
 # include <type.h>
 
 
@@ -130,35 +129,6 @@ static Extension *extRestore(String str, int offset, int end,
 }
 
 /*
- * restore KeyShare
- */
-static mixed *keyShareRestore(string group, string key)
-{
-    switch (group) {
-    case TLS_SECP256R1:
-	if (key[0] != '\4' || strlen(key) != 1 + 32 + 32) {
-	    error("DECODE_ERROR");
-	}
-	return ({ group, ({ key[1 .. 32], key[33 .. 64] }) });
-
-    case TLS_SECP384R1:
-	if (key[0] != '\4' || strlen(key) != 1 + 48 + 48) {
-	    error("DECODE_ERROR");
-	}
-	return ({ group, ({ key[1 .. 48], key[49 .. 96] }) });
-
-    case TLS_SECP521R1:
-	if (key[0] != '\4' || strlen(key) != 1 + 66 + 66) {
-	    error("DECODE_ERROR");
-	}
-	return ({ group, ({ key[1 .. 66], key[67 .. 132] }) });
-
-    default:
-	return ({ group, key });
-    }
-}
-
-/*
  * save as length-1-encoded string
  */
 static string len1Save(string str)
@@ -249,14 +219,6 @@ static string extSave(Extension *extensions)
 	ext[i] = extensions[i]->transport();
     }
     return len2Save(implode(ext, ""));
-}
-
-/*
- * save KeyShare
- */
-static string keyShareSave(mixed key)
-{
-    return (typeof(key) == T_ARRAY) ? "\4" + key[0] + key[1] : key;
 }
 
 /*

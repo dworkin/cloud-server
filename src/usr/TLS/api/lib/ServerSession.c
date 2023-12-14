@@ -17,8 +17,7 @@ private int state;			/* client state */
 private int inClosed, outClosed;	/* input/output closed */
 private string warning;			/* last warning */
 private string group;			/* keyshare group */
-private mixed pubKey;			/* group public key */
-private string privKey, param;		/* group parameters */
+private string pubKey, privKey, param;	/* group parameters */
 private string *hosts;			/* server hostnames */
 private string host;			/* chosen host */
 private int compatible;			/* middlebox compatible? */
@@ -55,7 +54,7 @@ static string *keyShare()
 /*
  * prepare to send a ServerHello message (RFC 8446 section 4.1.3)
  */
-static Handshake sendServerHello(int named)
+static Handshake sendServerHello()
 {
     Extension *extensions;
 
@@ -63,11 +62,6 @@ static Handshake sendServerHello(int named)
 	new Extension(EXT_SUPPORTED_VERSIONS, new Version(TLS_VERSION_13)),
 	new Extension(EXT_KEY_SHARE, new KeyShareServer(keyShare()))
     });
-    if (named) {
-	extensions += ({
-	    new Extension(EXT_SERVER_NAME, new ServerName(nil))
-	});
-    }
 
     return new Handshake(new ServerHello(secure_random(32), sessionId,
 					 cipherSuite, 0, extensions));
@@ -92,12 +86,22 @@ static Handshake sendHelloRetryRequest()
 /*
  * prepare to send Extensions (RFC 8446 section 4.3.1)
  */
-static Handshake sendExtensions()
+static Handshake sendExtensions(int named)
 {
-    return new Handshake(new Extensions(({
+    Extension *extensions;
+
+    extensions = ({
 	new Extension(EXT_SUPPORTED_GROUPS,
 		      new SupportedGroups(supportedGroups()))
-    })));
+    });
+    if (named) {
+	extensions += ({
+	    /* RFC 6066 section 3 */
+	    new Extension(EXT_SERVER_NAME, new ServerName(nil))
+	});
+    }
+
+    return new Handshake(new Extensions(extensions));
 }
 
 /*
@@ -152,10 +156,9 @@ static Handshake sendFinished()
  */
 static int receiveClientHello(ClientHello clientHello, StringBuffer output)
 {
-    string *strs, *groups, IV, secret;
+    string *strs, *groups, **shares, key, IV, secret;
     int sz, i, version, nshares, j;
     Extension *extensions;
-    mixed key, **shares;
 
     alignedRecord();
 
@@ -252,7 +255,7 @@ static int receiveClientHello(ClientHello clientHello, StringBuffer output)
     }
 
     if (key) {
-	sendTranscribeData(output, sendServerHello(hosts && host));
+	sendTranscribeData(output, sendServerHello());
 	if (compatible) {
 	    sendChangeCipherSpec(output);	/* RFC 8446 section D.4 */
 	}
@@ -269,7 +272,7 @@ static int receiveClientHello(ClientHello clientHello, StringBuffer output)
 	({ key, IV }) = keyIV(clientSecret, cipherSuite);
 	setReceiveKey(key, IV, cipherSuite);
 
-	sendTranscribeData(output, sendExtensions());
+	sendTranscribeData(output, sendExtensions(hosts && host));
 	sendTranscribeData(output, sendCertificates());
 	sendTranscribeData(output, sendCertificateVerify());
 	sendTranscribeData(output, sendFinished());

@@ -71,32 +71,17 @@ static string *supportedGroups()
  */
 static string *keyGen(string group)
 {
-    string pubKey, pubX, pubY, privKey, prime;
+    string pubKey, privKey, prime;
 
     switch (group) {
     case TLS_SECP256R1:
-	({ pubX, pubY, privKey }) = encrypt("SECP256R1 key");
-	return ({
-	    ({ asn::extend(pubX, 32), asn::extend(pubY, 32) }),
-	    privKey,
-	    nil
-	});
+	return encrypt("SECP256R1 key") + ({ nil });
 
     case TLS_SECP384R1:
-	({ pubX, pubY, privKey }) = encrypt("SECP384R1 key");
-	return ({
-	    ({ asn::extend(pubX, 48), asn::extend(pubY, 48) }),
-	    privKey,
-	    nil
-	});
+	return encrypt("SECP384R1 key") + ({ nil });
 
     case TLS_SECP521R1:
-	({ pubX, pubY, privKey }) = encrypt("SECP521R1 key");
-	return ({
-	    ({ asn::extend(pubX, 66), asn::extend(pubY, 66) }),
-	    privKey,
-	    nil
-	});
+	return encrypt("SECP521R1 key") + ({ nil });
 
     case TLS_X25519:
 	({ pubKey, privKey }) = encrypt("X25519 key");
@@ -133,27 +118,27 @@ static string *keyGen(string group)
 /*
  * determine shared secret based on group
  */
-static string sharedSecret(string group, mixed key, string privKey,
+static string sharedSecret(string group, string peer, string privKey,
 			   string prime)
 {
     switch (group) {
     case TLS_SECP256R1:
-	return decrypt("SECP256R1 derive", privKey, key[0], key[1]);
+	return decrypt("SECP256R1 derive", privKey, peer);
 
     case TLS_SECP384R1:
-	return decrypt("SECP384R1 derive", privKey, key[0], key[1]);
+	return decrypt("SECP384R1 derive", privKey, peer);
 
     case TLS_SECP521R1:
-	return decrypt("SECP521R1 derive", privKey, key[0], key[1]);
+	return decrypt("SECP521R1 derive", privKey, peer);
 
     case TLS_X25519:
-	return decrypt("X25519 derive", privKey, key);
+	return decrypt("X25519 derive", privKey, peer);
 
     case TLS_X448:
-	return decrypt("X448 derive", privKey, key);
+	return decrypt("X448 derive", privKey, peer);
 
     default:
-	return ::sharedSecret(key, privKey, prime);
+	return ::sharedSecret(peer, privKey, prime);
     }
 }
 
@@ -191,7 +176,12 @@ static string *signatureAlgorithms()
 	TLS_RSA_PSS_PSS_SHA512,
 	TLS_RSA_PSS_RSAE_SHA256,
 	TLS_RSA_PSS_RSAE_SHA384,
-	TLS_RSA_PSS_RSAE_SHA512
+	TLS_RSA_PSS_RSAE_SHA512,
+	TLS_ED25519,
+	TLS_ED448,
+	TLS_ECDSA_SECP256R1_SHA256,
+	TLS_ECDSA_SECP384R1_SHA384,
+	TLS_ECDSA_SECP521R1_SHA512
     });
 }
 
@@ -488,14 +478,14 @@ static string rsaSign(string message, X509Key key, string hash)
 /*
  * verify RSA signature (RFC 8017 section 8.1.2)
  */
-static void rsaVerify(string signature, string message, string publicKey,
-		      string hash)
+static int rsaVerify(string signature, string message, string publicKey,
+		     string hash)
 {
     Asn1 node, node2;
     string modulus, decrypted;
 
     try {
-	node = new Asn1Der(publicKey[1 ..]);
+	node = new Asn1Der(publicKey);
     } catch (...) {
 	error("BAD_CERTIFICATE");
     }
@@ -513,9 +503,7 @@ static void rsaVerify(string signature, string message, string publicKey,
     if (decrypted[0] == '\0') {
 	decrypted = decrypted[1 ..];
     }
-    if (!emsa_pss::verify(message, decrypted, asn::bits(modulus) - 1, hash)) {
-	error("DECRYPT_ERROR");
-    }
+    return emsa_pss::verify(message, decrypted, asn::bits(modulus) - 1, hash);
 }
 
 /*
@@ -560,7 +548,7 @@ private string *signatureScheme(string type, string param)
 static string *certificateSign(string endpoint, string certificateKey,
 			       string *certificateAlgorithms, string algorithm)
 {
-    string message, *schemes, hash;
+    string message, *schemes;
     X509Key key;
 
     message = contentDigest(endpoint, algorithm);
@@ -575,17 +563,48 @@ static string *certificateSign(string endpoint, string certificateKey,
     }
 
     switch (schemes[0]) {
-    case TLS_RSA_PSS_PSS_SHA256:	hash = "SHA256"; break;
-    case TLS_RSA_PSS_PSS_SHA384:	hash = "SHA384"; break;
-    case TLS_RSA_PSS_PSS_SHA512:	hash = "SHA512"; break;
-    case TLS_RSA_PSS_RSAE_SHA256:	hash = "SHA256"; break;
-    case TLS_RSA_PSS_RSAE_SHA384:	hash = "SHA384"; break;
-    case TLS_RSA_PSS_RSAE_SHA512:	hash = "SHA512"; break;
-    default:
-	error("Unimplemented key type");
-    }
+    case TLS_ECDSA_SECP256R1_SHA256:
+	return ({
+	    schemes[0],
+	    encrypt("ECDSA-SECP256R1-SHA256 sign", key->privateKey(), message)
+	});
 
-    return ({ schemes[0], rsaSign(message, key, hash) });
+    case TLS_ECDSA_SECP384R1_SHA384:
+	return ({
+	    schemes[0],
+	    encrypt("ECDSA-SECP384R1-SHA384 sign", key->privateKey(), message)
+	});
+
+    case TLS_ECDSA_SECP521R1_SHA512:
+	return ({
+	    schemes[0],
+	    encrypt("ECDSA-SECP521R1-SHA512 sign", key->privateKey(), message)
+	});
+
+    case TLS_ED25519:
+	return ({
+	    schemes[0],
+	    encrypt("Ed25519 sign", key->privateKey(), message)
+	});
+
+    case TLS_ED448:
+	return ({
+	    schemes[0],
+	    encrypt("Ed448 sign", key->privateKey(), message)
+	});
+
+    case TLS_RSA_PSS_PSS_SHA256:
+    case TLS_RSA_PSS_RSAE_SHA256:
+	return ({ schemes[0], rsaSign(message, key, "SHA256") });
+
+    case TLS_RSA_PSS_PSS_SHA384:
+    case TLS_RSA_PSS_RSAE_SHA384:
+	return ({ schemes[0], rsaSign(message, key, "SHA256") });
+
+    case TLS_RSA_PSS_PSS_SHA512:
+    case TLS_RSA_PSS_RSAE_SHA512:
+	return ({ schemes[0], rsaSign(message, key, "SHA256") });
+    }
 }
 
 /*
@@ -594,14 +613,15 @@ static string *certificateSign(string endpoint, string certificateKey,
 static void certificateVerify(string endpoint, string certificate,
 			      string signature, string scheme, string algorithm)
 {
-    string message, hash, publicKey;
+    string message, hash, publicKey, *key;
     X509Certificate cert;
+    int valid;
 
     message = contentDigest(endpoint, algorithm);
 
     cert = new X509Certificate(certificate);
     publicKey = cert->publicKey();
-    if (publicKey[0] != '\0') {
+    if (sscanf(publicKey, "\0%s", publicKey) == 0) {
 	error("BAD_CERTIFICATE");
     }
 
@@ -609,18 +629,53 @@ static void certificateVerify(string endpoint, string certificate,
 			       cert->publicKeyParam()) & ({ scheme })) == 0) {
 	error("ILLEGAL_PARAMETER");
     }
-    switch (scheme) {
-    case TLS_RSA_PSS_PSS_SHA256:	hash = "SHA256"; break;
-    case TLS_RSA_PSS_PSS_SHA384:	hash = "SHA384"; break;
-    case TLS_RSA_PSS_PSS_SHA512:	hash = "SHA512"; break;
-    case TLS_RSA_PSS_RSAE_SHA256:	hash = "SHA256"; break;
-    case TLS_RSA_PSS_RSAE_SHA384:	hash = "SHA384"; break;
-    case TLS_RSA_PSS_RSAE_SHA512:	hash = "SHA512"; break;
-    default:
-	error("UNSUPPORTED_CERTIFICATE");
+    try {
+	switch (scheme) {
+	case TLS_ECDSA_SECP256R1_SHA256:
+	    valid = decrypt("ECDSA-SECP256R1-SHA256 verify", publicKey,
+			    signature, message);
+	    break;
+
+	case TLS_ECDSA_SECP384R1_SHA384:
+	    valid = decrypt("ECDSA-SECP384R1-SHA384 verify", publicKey,
+			    signature, message);
+	    break;
+
+	case TLS_ECDSA_SECP521R1_SHA512:
+	    valid = decrypt("ECDSA-SECP521R1-SHA512 verify", publicKey,
+			    signature, message);
+	    break;
+
+	case TLS_ED25519:
+	    valid = decrypt("Ed25519 verify", publicKey, signature, message);
+	    break;
+
+	case TLS_ED448:
+	    valid = decrypt("Ed448 verify", publicKey, signature, message);
+	    break;
+
+	case TLS_RSA_PSS_PSS_SHA256:
+	case TLS_RSA_PSS_RSAE_SHA256:
+	    valid = rsaVerify(signature, message, publicKey, "SHA256");
+	    break;
+
+	case TLS_RSA_PSS_PSS_SHA384:
+	case TLS_RSA_PSS_RSAE_SHA384:
+	    valid = rsaVerify(signature, message, publicKey, "SHA384");
+	    break;
+
+	case TLS_RSA_PSS_PSS_SHA512:
+	case TLS_RSA_PSS_RSAE_SHA512:
+	    valid = rsaVerify(signature, message, publicKey, "SHA512");
+	    break;
+	}
+    } catch (...) {
+	error("BAD_CERTIFICATE");
     }
 
-    rsaVerify(signature, message, publicKey, hash);
+    if (!valid) {
+	error("DECRYPT_ERROR");
+    }
 }
 
 /*

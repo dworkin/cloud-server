@@ -20,8 +20,7 @@ private int state;			/* client state */
 private int inClosed, outClosed;	/* input/output closed */
 private string warning;			/* last warning */
 private string group;			/* keyshare group */
-private mixed pubKey;			/* group public key */
-private string privKey, param;		/* group parameters */
+private string pubKey, privKey, param;	/* group parameters */
 private string host;			/* remote hostname */
 private int compatible;			/* middlebox compatible? */
 private string sessionId;		/* backward compatible session ID */
@@ -71,8 +70,6 @@ static Handshake sendClientHello()
 		      new SupportedVersions(({ TLS_VERSION_13 }))),
 	new Extension(EXT_SUPPORTED_GROUPS,
 		      new SupportedGroups(supportedGroups())),
-	new Extension(EXT_SIGNATURE_ALGORITHMS_CERT,
-		      new SignatureAlgorithms(certificateAlgorithms())),
 	new Extension(EXT_SIGNATURE_ALGORITHMS,
 		      new SignatureAlgorithms(signatureAlgorithms())),
 	new Extension(EXT_KEY_SHARE, new KeyShareClient(({ keyShare() })))
@@ -113,10 +110,9 @@ static Handshake sendFinished()
  */
 static void receiveServerHello(ServerHello serverHello, StringBuffer output)
 {
-    string str, secret, key, IV;
+    string str, *keyShare, secret, key, IV;
     Extension *extensions;
     int version, i;
-    mixed *keyShare;
 
     alignedRecord();
 
@@ -250,6 +246,7 @@ static void receiveExtensions(Extensions extensions, StringBuffer output)
     for (sz = sizeof(list), i = 0; i < sz; i++) {
 	switch (list[i]->type()) {
 	case EXT_SUPPORTED_GROUPS:
+	case EXT_SERVER_NAME:		/* RFC 6066 section 3 */
 	    break;
 
 	default:

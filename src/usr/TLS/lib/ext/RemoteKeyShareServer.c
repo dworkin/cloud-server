@@ -17,5 +17,5 @@ static void create(String blob, int offset, int end)
 	error("DECODE_ERROR");
     }
 
-    ::create(keyShareRestore(group, key));
+    ::create(({ group, key }));
 }
