@@ -599,11 +599,11 @@ static string *certificateSign(string endpoint, string certificateKey,
 
     case TLS_RSA_PSS_PSS_SHA384:
     case TLS_RSA_PSS_RSAE_SHA384:
-	return ({ schemes[0], rsaSign(message, key, "SHA256") });
+	return ({ schemes[0], rsaSign(message, key, "SHA384") });
 
     case TLS_RSA_PSS_PSS_SHA512:
     case TLS_RSA_PSS_RSAE_SHA512:
-	return ({ schemes[0], rsaSign(message, key, "SHA256") });
+	return ({ schemes[0], rsaSign(message, key, "SHA512") });
     }
 }
 
