@@ -278,7 +278,8 @@ private string *preregister_includes(string path)
 	    "/include/kernel/access.h",
 	    "/include/kernel/kernel.h",
 	    "/include/kernel/rsrc.h",
-	    "/include/kernel/user.h"
+	    "/include/kernel/user.h",
+	    "/include/status.h"
 	});
 
     case OBJECTSERVER:

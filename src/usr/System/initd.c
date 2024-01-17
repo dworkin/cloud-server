@@ -2,6 +2,7 @@
 # include <kernel/access.h>
 # include <kernel/user.h>
 # include <kernel/rsrc.h>
+# include <status.h>
 
 inherit access API_ACCESS;
 inherit rsrc API_RSRC;
@@ -145,10 +146,43 @@ void reboot()
 }
 
 /*
- * NAMR:	set_connection_manager()
- * DESCRIPRION:	first come, first go
+ * NAME:	set_connection_manager()
+ * DESCRIPTION:	first come, first go
  */
 void set_connection_manager(string type, int port, object manager)
 {
     call_other(USERD, "set_" + type + "_manager", port, manager);
+}
+
+/*
+ * NAME:	set_connection_manager_by_port()
+ * DESCRIPTION:	first come, first go
+ */
+void set_connection_manager_by_port(string type, int port, object manager)
+{
+    int *ports, i;
+
+    switch (type) {
+    case "binary":
+	ports = status(ST_BINARYPORTS);
+	break;
+
+    case "telnet":
+	ports = status(ST_TELNETPORTS);
+	break;
+
+    case "datagram":
+	ports = status(ST_DATAGRAMPORTS);
+	break;
+
+    default:
+	error("Unknown connection type");
+    }
+
+    for (i = sizeof(ports); --i >= 0; ) {
+	if (ports[i] == port) {
+	    call_other(USERD, "set_" + type + "_manager", i, manager);
+	    break;
+	}
+    }
 }
