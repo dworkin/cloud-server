@@ -1,3 +1,4 @@
+# include <kfun.h>
 # include "asn1.h"
 # include "x509.h"
 # include "Record.h"
@@ -7,6 +8,7 @@
 
 static void create()
 {
+# ifdef KF_SECURE_RANDOM
     compile_object("sys/explode2");
     compile_object(OBJECT_PATH(Asn1Der));
     compile_object(OBJECT_PATH(X509Certificate));
@@ -37,4 +39,5 @@ static void create()
     compile_object(OBJECT_PATH(RemoteKeyShareServer));
     compile_object(OBJECT_PATH(RemoteKeyShareRetry));
     compile_object(OBJECT_PATH(UnknownExtension));
+# endif
 }
