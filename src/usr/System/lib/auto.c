@@ -139,7 +139,7 @@ static object find_object(string path)
  * NAME:	compile_object()
  * DESCRIPTION:	compile an object
  */
-static object compile_object(string path)
+static object compile_object(string path, string source...)
 {
     object obj;
 
@@ -153,7 +153,7 @@ static object compile_object(string path)
 	    error("Ambiguous object");
 	}
     }
-    obj = ::compile_object(path);
+    obj = ::compile_object(path, source...);
     if (obj) {
 	if (sscanf(path, "%*s/obj/") != 0) {
 	    return nil;
