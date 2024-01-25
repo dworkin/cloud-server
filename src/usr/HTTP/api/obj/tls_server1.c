@@ -8,13 +8,18 @@
 inherit Http1TlsServer;
 
 
+int reqCert;		/* request client certificate */
+string *hosts;		/* server hostnames */
+
 /*
  * initialize connection object
  */
 static void create(object server, string certificate, string key,
-		   varargs string requestPath, string fieldsPath,
-		   string tlsServerSessionPath)
+		   varargs int reqCert, string *hosts, string requestPath,
+		   string fieldsPath, string tlsServerSessionPath)
 {
+    ::reqCert = reqCert;
+    ::hosts = hosts;
     if (!requestPath) {
 	requestPath = OBJECT_PATH(RemoteHttpRequest);
     }
@@ -58,7 +63,7 @@ int login(string str)
 {
     if (previous_program() == LIB_CONN) {
 	::connection(previous_object());
-	return tlsAccept(str);
+	return tlsAccept(str, reqCert, ((hosts) ? hosts : ({ }))...);
     }
 }
 

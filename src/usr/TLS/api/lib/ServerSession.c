@@ -4,6 +4,7 @@
 # include "tls.h"
 
 inherit "~/lib/tls";
+private inherit "/lib/util/ascii";
 
 
 # define STATE_INITIAL		0	/* initial state */
@@ -181,6 +182,9 @@ static int receiveClientHello(ClientHello clientHello, StringBuffer output)
     for (sz = sizeof(extensions), i = 0; i < sz; i++) {
 	switch (extensions[i]->type()) {
 	case EXT_SUPPORTED_VERSIONS:
+	    if (version) {
+		error("ILLEGAL_PARAMETER");
+	    }
 	    strs = extensions[i]->data()->versions() & ({ TLS_VERSION_13 });
 	    if (sizeof(strs) == 0) {
 		error("PROTOCOL_VERSION");
@@ -189,13 +193,19 @@ static int receiveClientHello(ClientHello clientHello, StringBuffer output)
 	    break;
 
 	case EXT_SERVER_NAME:
+	    if (host) {
+		error("ILLEGAL_PARAMETER");
+	    }
 	    host = extensions[i]->data()->hostName();
-	    if (hosts && sizeof(hosts & ({ host })) == 0) {
+	    if (hosts && sizeof(hosts & ({ lower_case(host) })) == 0) {
 		error("UNRECOGNIZED_NAME");
 	    }
 	    break;
 
 	case EXT_SUPPORTED_GROUPS:
+	    if (groups) {
+		error("ILLEGAL_PARAMETER");
+	    }
 	    groups = extensions[i]->data()->groups();
 	    if (sizeof(supportedGroups() & groups) == 0) {
 		error("HANDSHAKE_FAILURE");
@@ -203,14 +213,23 @@ static int receiveClientHello(ClientHello clientHello, StringBuffer output)
 	    break;
 
 	case EXT_SIGNATURE_ALGORITHMS:
+	    if (signatureAlgorithms) {
+		error("ILLEGAL_PARAMETER");
+	    }
 	    signatureAlgorithms = extensions[i]->data()->algorithms();
 	    break;
 
 	case EXT_SIGNATURE_ALGORITHMS_CERT:
+	    if (certificateAlgorithms) {
+		error("ILLEGAL_PARAMETER");
+	    }
 	    certificateAlgorithms = extensions[i]->data()->algorithms();
 	    break;
 
 	case EXT_KEY_SHARE:
+	    if (shares) {
+		error("ILLEGAL_PARAMETER");
+	    }
 	    shares = extensions[i]->data()->keyShares();
 	    for (nshares = sizeof(shares), j = 0; j < nshares; j++) {
 		({ group, key }) = shares[j];
@@ -230,6 +249,9 @@ static int receiveClientHello(ClientHello clientHello, StringBuffer output)
 	}
     }
 
+    if (!version) {
+	error("PROTOCOL_VERSION");		/* don't support TLS 1.2 */
+    }
     if (hosts && !host) {
 	error("MISSING_EXTENSION");		/* RFC 6066 section 3 */
     }

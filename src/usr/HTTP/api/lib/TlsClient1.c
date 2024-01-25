@@ -7,17 +7,16 @@ inherit client Http1Client;
 inherit buffered "~/lib/BufferedConnection1";
 
 
-private string host;			/* remote host */
 private TlsClientSession session;	/* TLS session */
+private int connected;			/* TLS connection established */
 
 /*
  * initialize connection object
  */
-static void create(object client, string host, int port, string responsePath,
+static void create(object client, string address, int port, string responsePath,
 		   string fieldsPath, string tlsClientSessionPath)
 {
-    ::host = host;
-    client::create(client, host, port, responsePath, fieldsPath);
+    client::create(client, address, port, responsePath, fieldsPath);
     buffered::create(client, fieldsPath);
     session = new_object(tlsClientSessionPath);
 }
@@ -25,7 +24,7 @@ static void create(object client, string host, int port, string responsePath,
 /*
  * establish connection
  */
-static void tlsConnect()
+static void tlsConnect(varargs string host)
 {
     ::sendMessage(session->connect(TRUE, host), TRUE);
 }
@@ -42,8 +41,8 @@ static int receive_message(string str)
     if (output) {
 	::sendMessage(output, TRUE);
     }
-    if (!status && host) {
-	host = nil;
+    if (!status && !connected) {
+	connected = TRUE;
 	set_mode(MODE_BLOCK);
 	call_limited("connected");
     }

@@ -8,13 +8,16 @@
 inherit Http1TlsClient;
 
 
+string host;		/* server hostname */
+
 /*
  * initialize connection object
  */
-static void create(object client, string host, int port,
-		   varargs string responsePath, string fieldsPath,
+static void create(object client, string address, int port,
+		   varargs string host, string responsePath, string fieldsPath,
 		   string tlsClientSessionPath)
 {
+    ::host = host;
     if (!responsePath) {
 	responsePath = OBJECT_PATH(RemoteHttpResponse);
     }
@@ -24,7 +27,7 @@ static void create(object client, string host, int port,
     if (!tlsClientSessionPath) {
 	tlsClientSessionPath = OBJECT_PATH(TlsClientSession);
     }
-    ::create(client, host, port, responsePath, fieldsPath,
+    ::create(client, address, port, responsePath, fieldsPath,
 	     tlsClientSessionPath);
 }
 
@@ -34,7 +37,7 @@ static void create(object client, string host, int port,
 int login(string str)
 {
     if (previous_program() == LIB_CONN) {
-	tlsConnect();
+	tlsConnect(host);
     }
     return MODE_NOCHANGE;
 }

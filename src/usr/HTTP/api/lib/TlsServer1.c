@@ -26,12 +26,12 @@ static void create(object server, string certificate, string key,
 /*
  * accept HTTPS connection
  */
-static int tlsAccept(string str)
+static int tlsAccept(string str, varargs int reqCert, string hosts...)
 {
     StringBuffer input, output;
     string warning, status;
 
-    session->accept(FALSE);
+    session->accept(reqCert, ((hosts) ? hosts : ({ }))...);
     ({ input, output, warning, status }) = session->receiveMessage(str);
     if (output) {
 	::sendMessage(output, TRUE);
@@ -97,3 +97,6 @@ static void sendMessage(StringBuffer str)
 {
     ::sendMessage(session->sendMessage(str));
 }
+
+
+string host()	{ return session->host(); }
