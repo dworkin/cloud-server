@@ -472,7 +472,7 @@ static int message_done()
 /*
  * send a message
  */
-static void sendMessage(StringBuffer chunk, varargs int quiet)
+static void sendMessage(StringBuffer chunk, varargs int quiet, int hold)
 {
     if (outbuf) {
 	outbuf->append(chunk);

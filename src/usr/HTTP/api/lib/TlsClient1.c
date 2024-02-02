@@ -9,6 +9,7 @@ inherit buffered "~/lib/BufferedConnection1";
 
 private TlsClientSession session;	/* TLS session */
 private int connected;			/* TLS connection established */
+private StringBuffer outbuf;		/* output buffer */
 
 /*
  * initialize connection object
@@ -69,7 +70,17 @@ static void logout(int quit)
 /*
  * send an encrypted message
  */
-static void sendMessage(StringBuffer str)
+static void sendMessage(StringBuffer str, varargs int quiet, int hold)
 {
-    ::sendMessage(session->sendMessage(str));
+    if (outbuf) {
+	outbuf->append(str);
+	str = outbuf;
+	outbuf = nil;
+    }
+
+    if (hold) {
+	outbuf = str;
+    } else {
+	::sendMessage(session->sendMessage(str), quiet);
+    }
 }

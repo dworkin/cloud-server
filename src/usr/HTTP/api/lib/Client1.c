@@ -73,7 +73,9 @@ void sendRequest(HttpRequest request)
 {
     if (previous_object() == client) {
 	::sendRequest(request);
-	sendMessage(new StringBuffer(request->transport()));
+	sendMessage(new StringBuffer(request->transport()), FALSE,
+		    request->headerValue("Transfer-Encoding") ||
+		    request->headerValue("Content-Length"));
     }
 }
 

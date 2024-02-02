@@ -207,6 +207,8 @@ void sendResponse(HttpResponse response)
 {
     if (previous_object() == server) {
 	::sendResponse(response);
-	sendMessage(new StringBuffer(response->transport()));
+	sendMessage(new StringBuffer(response->transport()), FALSE,
+		    response->headerValue("Transfer-Encoding") ||
+		    response->headerValue("Content-Length"));
     }
 }
