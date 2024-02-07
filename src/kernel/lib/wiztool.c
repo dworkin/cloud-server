@@ -583,7 +583,7 @@ static void shutdown(varargs int hotboot)
  */
 static string dump_value(mixed value, mapping seen)
 {
-    string str;
+    string str, *result;
     int i, sz;
     mixed *indices, *values;
 
@@ -628,39 +628,30 @@ static string dump_value(mixed value, mapping seen)
 	if (seen[value]) {
 	    return "#" + (seen[value] - 1);
 	}
-
 	seen[value] = map_sizeof(seen) + 1;
-	sz = sizeof(value);
-	if (sz == 0) {
-	    return "({ })";
-	}
 
-	str = "({ ";
-	for (i = 0, --sz; i < sz; i++) {
-	    str += dump_value(value[i], seen) + ", ";
+	sz = sizeof(value);
+	result = allocate(sz);
+	for (i = 0; i < sz; i++) {
+	    result[i] = dump_value(value[i], seen);
 	}
-	return str + dump_value(value[i], seen) + " })";
+	return "({ " + implode(result, ", ") + " })";
 
     case T_MAPPING:
 	if (seen[value]) {
 	    return "@" + (seen[value] - 1);
 	}
-
 	seen[value] = map_sizeof(seen) + 1;
-	sz = map_sizeof(value);
-	if (sz == 0) {
-	    return "([ ])";
-	}
 
-	str = "([ ";
+	sz = map_sizeof(value);
 	indices = map_indices(value);
 	values = map_values(value);
-	for (i = 0, --sz; i < sz; i++) {
-	    str += dump_value(indices[i], seen) + ":" +
-		   dump_value(values[i], seen) + ", ";
+	result = allocate(sz);
+	for (i = 0; i < sz; i++) {
+	    result[i] = dump_value(indices[i], seen) + ":" +
+		        dump_value(values[i], seen);
 	}
-	return str + dump_value(indices[i], seen) + ":" +
-		     dump_value(values[i], seen) + " ])";
+	return "([ " + implode(result, ", ") + " ])";
 
     case T_NIL:
 	return "nil";

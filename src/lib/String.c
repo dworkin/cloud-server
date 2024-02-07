@@ -730,6 +730,22 @@ StringBuffer bufferRange(varargs mixed from, mixed to)
 }
 
 /*
+ * convert to UTF8-encoded LPC string
+ */
+string utf8()
+{
+    StringBuffer buffer;
+    string str;
+
+    buffer = buffer("UTF8");
+    str = buffer->chunk();
+    if (buffer->chunk()) {
+	error("String too long");
+    }
+    return str;
+}
+
+/*
  * String subrange
  */
 static String operator[..] (mixed from, mixed to)

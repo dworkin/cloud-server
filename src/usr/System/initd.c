@@ -83,6 +83,9 @@ static void create()
     /* global objects */
     compile_object("/sys/utf8encode");
     compile_object("/sys/utf8decode");
+    compile_object("/sys/jsonstrdecode");
+    compile_object("/sys/jsonencode");
+    compile_object("/sys/jsondecode");
     compile_object("/lib/IntIterator");
     compile_object("/lib/String");
     compile_object("/lib/StringBuffer");
