@@ -8,14 +8,18 @@ private inherit hex "/lib/util/hex";
  */
 private string strEncode(string str)
 {
-    return implode(parse_string("\
+    return "\"" +
+	   implode(parse_string("\
 escaped = /[\x00-\x1f\"\\\\]+/						\
 normal = /[^\x00-\x1f\"\\\\]+/						\
 \
-String: String escaped					? escaped	\
+String: String Escaped							\
 String: String normal							\
-String:", str),
-		   "");
+String:									\
+\
+Escaped: escaped					? escaped",
+				str), "") +
+	   "\"";
 }
 
 /*
@@ -23,11 +27,10 @@ String:", str),
  */
 static mixed *escaped(mixed *parsed)
 {
-    int sz, len, i;
     string str, *result;
+    int len, i;
 
-    sz = sizeof(parsed);
-    str = parsed[sz - 1];
+    str = parsed[0];
     len = strlen(str);
     result = allocate(len);
     for (i = 0; i < len; i++) {
@@ -66,7 +69,7 @@ static mixed *escaped(mixed *parsed)
 	}
     }
 
-    return parsed[.. sz - 2] + result;
+    return result;
 }
 
 
@@ -101,7 +104,7 @@ string encode(mixed value)
 	return str;
 
     case T_STRING:
-	return "\"" + strEncode(value) + "\"";
+	return strEncode(value);
 
     case T_ARRAY:
 	sz = sizeof(value);
@@ -120,7 +123,7 @@ string encode(mixed value)
 	    if (typeof(indices[i]) != T_STRING) {
 		error("Invalid member name");
 	    }
-	    result[i] = encode(indices[i]) + ":" + encode(values[i]);
+	    result[i] = strEncode(indices[i]) + ":" + encode(values[i]);
 	}
 	return "{" + implode(result, ",") + "}";
 
