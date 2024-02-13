@@ -638,13 +638,5 @@ mixed include_file(string compiled, string from, string path)
 	    return ({ "" });
 	}
     }
-
-    /* checks */
-    len = strlen(path);
-    if (path != "/include/AUTO" &&
-	(sscanf(path, "%*s.c/") != 0 || sscanf(path, "%*s.h/") != 0 ||
-	 len < 2 || path[len - 2 ..] != ".h")) {
-	error("Invalid include file");
-    }
     return path;
 }
