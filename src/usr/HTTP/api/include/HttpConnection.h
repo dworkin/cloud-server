@@ -1,7 +1,7 @@
-# define Http1Server		"/usr/HTTP/api/lib/Server1"
-# define Http1Client		"/usr/HTTP/api/lib/Client1"
-# define Http1TlsServer		"/usr/HTTP/api/lib/TlsServer1"
-# define Http1TlsClient		"/usr/HTTP/api/lib/TlsClient1"
+# define Http1Server		object "/usr/HTTP/api/lib/Server1"
+# define Http1Client		object "/usr/HTTP/api/lib/Client1"
+# define Http1TlsServer		object "/usr/HTTP/api/lib/TlsServer1"
+# define Http1TlsClient		object "/usr/HTTP/api/lib/TlsClient1"
 
 # define HTTP1_SERVER		"/usr/HTTP/api/obj/server1"
 # define HTTP1_CLIENT		"/usr/HTTP/api/obj/client1"

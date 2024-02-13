@@ -62,7 +62,7 @@ static int receiveRequestHeader(HttpRequest request, HttpField header)
 
     case "transfer-encoding":
 	if (!header->listContains("chunked")) {
-	    return HTTP_BAD_REQUEST;
+	    error("Transfer-Encoding without chunked");
 	}
 	break;
     }

@@ -35,8 +35,17 @@ static string htmlInternalError()
 {
     return "<HTML>\n<HEAD><TITLE>" + HTTP_INTERNAL_ERROR +
 	   " Internal Error</TITLE></HEAD>\n<BODY><H1>" +
-	   HTTP_INTERNAL_ERROR +
-	   " Internal Error</H1></BODY>\n</HTML>\n";
+	   HTTP_INTERNAL_ERROR + " Internal Error</H1></BODY>\n</HTML>\n";
+}
+
+/*
+ * bad request message
+ */
+static string htmlBadRequest()
+{
+    return "<HTML>\n<HEAD><TITLE>" + HTTP_BAD_REQUEST +
+	   " Bad Request</TITLE></HEAD>\n<BODY><H1>" +
+	   HTTP_BAD_REQUEST + " Bad Request</H1></BODY>\n</HTML>\n";
 }
 
 /*
@@ -59,6 +68,35 @@ static void sendInternalError()
     headers->add(new HttpField("Connection", ({ "close" })));
 
     str = htmlInternalError();
+    headers->add(new HttpField("Content-Type", "text/html;charset=utf-8"));
+    headers->add(new HttpField("Content-Length", strlen(str)));
+    response->setHeaders(headers);
+
+    message = new StringBuffer(response->transport());
+    message->append(str);
+    sendMessage(message);
+}
+
+/*
+ * send internal error response
+ */
+static void sendBadRequest()
+{
+    HttpResponse response;
+    HttpFields headers;
+    string str;
+    StringBuffer message;
+
+    response = new HttpResponse(1.1, HTTP_BAD_REQUEST, "Bad Request");
+    headers = new HttpFields();
+    headers->add(new HttpField("Server", ({
+	new HttpProduct(SERVER_NAME, SERVER_VERSION),
+	new HttpProduct(explode(status(ST_VERSION), " ")...)
+    })));
+    headers->add(new HttpField("Date", new HttpTime));
+    headers->add(new HttpField("Connection", ({ "close" })));
+
+    str = htmlBadRequest();
     headers->add(new HttpField("Content-Type", "text/html;charset=utf-8"));
     headers->add(new HttpField("Content-Length", strlen(str)));
     response->setHeaders(headers);
@@ -103,13 +141,13 @@ static int receiveHeaders(string str)
 	code = receiveRequestHeaders(request, new_object(headersPath, str));
     } catch (...) {
 	code = HTTP_BAD_REQUEST;
+	sendBadRequest();
     }
 
     switch (receiveRequest(code, request)) {
     case HTTP_INTERNAL_ERROR:
 	sendInternalError();
-	return MODE_DISCONNECT;
-
+	/* fall through */
     case HTTP_BAD_REQUEST:
 	return MODE_DISCONNECT;
 
@@ -139,6 +177,7 @@ static int receiveFirstLine(string str)
 	code = call_limited("receiveRequestLine", str);
     } catch (...) {
 	code = HTTP_BAD_REQUEST;
+	sendMessage(new StringBuffer(htmlBadRequest()));
     }
 
     if (code != 0 || request->version() < 1.0) {
@@ -147,14 +186,14 @@ static int receiveFirstLine(string str)
 	 * and disconnect immediately
 	 */
 	switch (call_limited("receiveRequest", code, request)) {
-	case HTTP_OK:
-	    return MODE_NOCHANGE;
-
 	case HTTP_INTERNAL_ERROR:
 	    sendMessage(new StringBuffer(htmlInternalError()));
 	    /* fall through */
-	default:
+	case HTTP_BAD_REQUEST:
 	    return MODE_DISCONNECT;
+
+	default:
+	    return MODE_NOCHANGE;
 	}
     }
 
@@ -176,18 +215,18 @@ static int receiveMessage(string str)
     try {
 	code = call_limited("receiveRequestLine", str);
 	if (request->version() < 1.0) {
-	    code = HTTP_BAD_REQUEST;
+	    error("Invalid request version");
 	}
     } catch (...) {
 	code = HTTP_BAD_REQUEST;
+	sendBadRequest();
     }
 
     if (code != 0) {
 	switch (call_limited("receiveRequest", code, request)) {
 	case HTTP_INTERNAL_ERROR:
 	    sendInternalError();
-	    return MODE_DISCONNECT;
-
+	    /* fall through */
 	case HTTP_BAD_REQUEST:
 	    return MODE_DISCONNECT;
 
