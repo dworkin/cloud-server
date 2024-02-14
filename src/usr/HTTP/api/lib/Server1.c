@@ -60,11 +60,11 @@ static void sendInternalError()
 
     response = new HttpResponse(1.1, HTTP_INTERNAL_ERROR, "Internal Error");
     headers = new HttpFields();
+    headers->add(new HttpField("Date", new HttpTime));
     headers->add(new HttpField("Server", ({
 	new HttpProduct(SERVER_NAME, SERVER_VERSION),
 	new HttpProduct(explode(status(ST_VERSION), " ")...)
     })));
-    headers->add(new HttpField("Date", new HttpTime));
     headers->add(new HttpField("Connection", ({ "close" })));
 
     str = htmlInternalError();
@@ -89,11 +89,11 @@ static void sendBadRequest()
 
     response = new HttpResponse(1.1, HTTP_BAD_REQUEST, "Bad Request");
     headers = new HttpFields();
+    headers->add(new HttpField("Date", new HttpTime));
     headers->add(new HttpField("Server", ({
 	new HttpProduct(SERVER_NAME, SERVER_VERSION),
 	new HttpProduct(explode(status(ST_VERSION), " ")...)
     })));
-    headers->add(new HttpField("Date", new HttpTime));
     headers->add(new HttpField("Connection", ({ "close" })));
 
     str = htmlBadRequest();
