@@ -34,10 +34,12 @@ static int receiveRequest(int code, HttpRequest request)
 	if (!host) {
 	    host = "";
 	}
-	::login("HTTP from " + address() + ", " + code + " " +
-		request->method() + " " + host + request->path() + "\n");
+	::login("HTTP from " + address() + ", " +
+		((code != 0) ? code + " " : "") + request->method() + " " +
+		host + request->path() + "\n");
     } else {
-	::login("HTTP from " + address() + ", " + code + "\n");
+	::login("HTTP from " + address() +
+		((code != 0) ? ", " + code : "") + "\n");
     }
 
     return code;

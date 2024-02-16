@@ -47,10 +47,12 @@ static int receiveRequest(int code, HttpRequest request)
 	if (!host) {
 	    host = "";
 	}
-	::login("HTTPS from " + address() + ", " + code + " " +
-		request->method() + " " + host + request->path() + "\n");
+	::login("HTTPS from " + address() + ", " +
+		((code != 0) ? code + " " : "") + request->method() + " " +
+		host + request->path() + "\n");
     } else {
-	::login("HTTPS from " + address() + ", " + code + "\n");
+	::login("HTTPS from " + address() +
+		((code != 0) ? ", " + code : "") + "\n");
     }
 
     return code;
