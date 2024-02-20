@@ -106,18 +106,17 @@ static void create()
     }
 
     /* Domain stuff */
-    domains = get_dir("/usr/[A-Z]*")[0];
+    domains = ({ "TLS", "HTTP" });
+    domains += get_dir("/usr/[A-Z]*")[0] - (domains + ({ "System" }));
     for (i = 0, sz = sizeof(domains); i < sz; i++) {
 	domain = domains[i];
-	if (domain != "System") {
-	    add_owner(domain);
-	    restore(domain);
+	add_owner(domain);
+	restore(domain);
 
-	    rsrc_incr(domain, "fileblocks",
-		      DRIVER->file_size("/usr/" + domain, TRUE));
-	    if (file_info("/usr/" + domain + "/initd.c")) {
-		load("/usr/" + domain + "/initd");
-	    }
+	rsrc_incr(domain, "fileblocks",
+		  DRIVER->file_size("/usr/" + domain, TRUE));
+	if (file_info("/usr/" + domain + "/initd.c")) {
+	    load("/usr/" + domain + "/initd");
 	}
     }
 }
