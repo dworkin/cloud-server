@@ -51,10 +51,10 @@ static string expectName(Asn1 node)
     Asn1 *list, str;
     int sz, i;
 
-    ({ node }) = expect(node, ASN1_SEQUENCE);
-    list = expect(node, ASN1_SET);
+    list = expect(node, ASN1_SEQUENCE);
     for (sz = sizeof(list), i = 0; i < sz; i++) {
-	({ node, str }) = expect(list[i], ASN1_SEQUENCE);
+	({ node }) = expect(list[i], ASN1_SET);
+	({ node, str }) = expect(node, ASN1_SEQUENCE);
 	if (expect(node, ASN1_OBJECT_IDENTIFIER) == OID_COMMON_NAME) {
 	    return expectString(str);
 	}
