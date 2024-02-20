@@ -40,7 +40,7 @@ private int sendBytes;			/* encrypted bytes sent */
 static void create(varargs string certificate, string key)
 {
     ::create();
-    group = TLS_FFDHE3072;
+    group = supportedGroups()[0];
     if (certificate) {
 	({ clientStack, clientKey }) = certKey(certificate, key);
     }
