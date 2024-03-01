@@ -580,7 +580,7 @@ void disconnect()
  */
 static void _logout()
 {
-    relay->disconnect();
+    relay->disconnected();
 }
 
 /*
@@ -589,7 +589,7 @@ static void _logout()
 static void logout(int quit)
 {
     if (quit) {
-	relay->disconnect();
+	relay->disconnected();
     } else {
 	call_limited("_logout");
     }
