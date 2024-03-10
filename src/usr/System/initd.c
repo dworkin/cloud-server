@@ -94,6 +94,8 @@ static void create()
     compile_object("/lib/DelayedContinuation");
     compile_object("/lib/IterativeContinuation");
     compile_object("/lib/DistContinuation");
+    compile_object("/lib/KVstore");
+    compile_object("/obj/kvnode");
 
     resources = ([ ]);
     restore_object("data/rsrc.dat");
