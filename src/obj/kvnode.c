@@ -213,10 +213,7 @@ mixed get(string accessKey, string key)
 	if (type <= LEAF) {
 	    return (found) ? values[index] : nil;
 	} else {
-	    if (found) {
-		index++;
-	    }
-	    return values[index]->get(accessKey, key);
+	    return values[index + found]->get(accessKey, key);
 	}
     }
 }
@@ -404,5 +401,58 @@ void remove(string accessKey)
 	    }
 	}
 	destruct_object(this_object());
+    }
+}
+
+/*
+ * last K/V
+ */
+mixed *last(string accessKey)
+{
+    if (accessKey == ::accessKey) {
+	int last;
+
+	last = sizeof(values) - 1;
+	if (last < 0) {
+	    return ({ 0, nil, nil });
+	}
+
+	return ({ last, (type <= LEAF) ? keys[last] : nil, values[last] });
+    }
+}
+
+/*
+ * next by index
+ */
+mixed *nextIndex(string accessKey, int index)
+{
+    if (accessKey == ::accessKey) {
+	if (index >= sizeof(values)) {
+	    return ({ 0, nil, nil });
+	}
+
+	return ({ index, (type <= LEAF) ? keys[index] : nil, values[index] });
+    }
+}
+
+/*
+ * next by key
+ */
+mixed *nextKey(string accessKey, string key)
+{
+    if (accessKey == ::accessKey) {
+	int index, found;
+
+	({ index, found }) = search(key);
+	if (index >= sizeof(values)) {
+	    return ({ 0, nil, nil });
+	}
+
+	if (type <= LEAF) {
+	    return ({ index, keys[index], values[index] });
+	} else {
+	    index += found;
+	    return ({ index, nil, values[index] });
+	}
     }
 }
