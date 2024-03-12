@@ -8,7 +8,6 @@ private inherit "/lib/util/random";
 
 private string accessKey;	/* KVstore access key */
 private object root;		/* KVstore root object */
-private int changes;		/* change counter */
 
 /*
  * create KVstore, including root object
@@ -43,7 +42,6 @@ atomic void set(string key, mixed value)
 	error("Invalid value");
     }
     root->set(accessKey, key, value, nil, nil, nil, nil);
-    changes++;
 }
 
 /*
@@ -62,13 +60,13 @@ private mixed **stackFirst()
 {
     mixed *ref, **stack;
 
-    ref = root->nextIndex(accessKey, 0);
-    if (ref[2] == nil) {
-	return nil;
+    ref = root->refIndex(accessKey, -1, 0);
+    if (!ref) {
+	return nil;		/* empty root */
     }
 
     for (stack = ({ ref }); !ref[1]; stack = ({ ref }) + stack) {
-	ref = ref[2]->nextIndex(accessKey, 0);
+	ref = ref[2]->refIndex(accessKey, -1, 0);
     }
 
     return stack;
@@ -81,13 +79,13 @@ private mixed **stackKey(string key)
 {
     mixed *ref, **stack;
 
-    ref = root->nextKey(accessKey, key);
-    if (ref[2] == nil) {
-	return nil;
+    ref = root->refKey(accessKey, key);
+    if (!ref) {
+	return nil;		/* empty root */
     }
 
     for (stack = ({ ref }); !ref[1]; stack = ({ ref }) + stack) {
-	ref = ref[2]->nextKey(accessKey, key);
+	ref = ref[2]->refKey(accessKey, key);
     }
 
     return stack;
@@ -98,16 +96,32 @@ private mixed **stackKey(string key)
  */
 private mixed **stackNext(mixed **stack)
 {
+    string key;
     mixed *ref;
     object node;
 
-    while (sizeof(stack) != 0) {
+    key = stack[0][1];
+
+    do {
 	ref = stack[0];
 	stack = stack[1 ..];
 
-	node = (sizeof(stack) != 0) ? stack[0][2] : root;
-	ref = node->nextIndex(accessKey, ref[0] + 1);
-	if (ref[2]) {
+	if (!(node=(sizeof(stack) != 0) ? stack[0][2] : root) ||
+	    !(ref=node->refIndex(accessKey, ref[3], ref[0] + 1))) {
+	    /*
+	     * reference outdated: fall back to search by key
+	     */
+	    stack = stackKey(key);
+	    if (stack && stack[0][1] == key) {
+		continue;
+	    }
+	    return stack;
+	}
+
+	if (ref[2] != nil) {
+	    /*
+	     * not out of range
+	     */
 	    for (;;) {
 		stack = ({ ref }) + stack;
 		if (typeof(ref[2]) != T_OBJECT ||
@@ -115,10 +129,10 @@ private mixed **stackNext(mixed **stack)
 		    /* leaf */
 		    return stack;
 		}
-		ref = ref[2]->nextIndex(accessKey, 0);
+		ref = ref[2]->refIndex(accessKey, -1, 0);
 	    }
 	}
-    }
+    } while (sizeof(stack) != 0);
 }
 
 /*
@@ -126,16 +140,32 @@ private mixed **stackNext(mixed **stack)
  */
 private mixed **stackPrev(mixed **stack)
 {
+    string key;
     mixed *ref;
     object node;
 
-    while (sizeof(stack) != 0) {
+    key = stack[0][1];
+
+    do {
 	ref = stack[0];
 	stack = stack[1 ..];
 
-	if (ref[0] != 0) {
-	    node = (sizeof(stack) != 0) ? stack[0][2] : root;
-	    ref = node->nextIndex(accessKey, ref[0] - 1);
+	if (!(node=(sizeof(stack) != 0) ? stack[0][2] : root) ||
+	    !(ref=node->refIndex(accessKey, ref[3], ref[0] - 1))) {
+	    /*
+	     * reference outdated: fall back to search by key
+	     */
+	    stack = stackKey(key);
+	    if (stack) {
+		continue;
+	    }
+	    return nil;
+	}
+
+	if (ref[2] != nil) {
+	    /*
+	     * not out of range
+	     */
 	    for (;;) {
 		stack = ({ ref }) + stack;
 		if (typeof(ref[2]) != T_OBJECT ||
@@ -143,10 +173,10 @@ private mixed **stackPrev(mixed **stack)
 		    /* leaf */
 		    return stack;
 		}
-		ref = ref[2]->last(accessKey);
+		ref = ref[2]->refLast(accessKey);
 	    }
 	}
-    }
+    } while (sizeof(stack) != 0);
 }
 
 /*
@@ -161,13 +191,13 @@ mixed iteratorStart(mixed from, mixed to)
 	 * backwards
 	 */
 	stack = stackKey(from);
-	if (stack && stack[0][1] != from) {
+	if (stack && (stack[0][1] != from || stack[0][2] == nil)) {
 	    stack = stackPrev(stack);
 	}
-	return ({ stack, to, changes, TRUE });
+	return ({ stack, to, TRUE });
     }
 
-    return ({ (from) ? stackKey(from) : stackFirst(), to, changes, FALSE });
+    return ({ (from) ? stackKey(from) : stackFirst(), to, FALSE });
 }
 
 /*
@@ -177,28 +207,18 @@ mixed *iteratorNext(mixed state)
 {
     mixed **stack, value;
     string key, last;
-    int count, reverse;
+    int reverse;
 
-    ({ stack, last, count, reverse }) = state;
+    ({ stack, last, reverse }) = state;
     state[0] = nil;
     if (!stack) {
 	return ({ state, nil });
     }
-    if (count != changes) {
-	/*
-	 * reconstruct stack from key
-	 */
-	key = stack[0][1];
-	stack = stackKey(key);
-	if (stack && reverse && key != stack[0][1]) {
-	    stack = stackPrev(stack);
-	}
-	if (!stack) {
-	    return ({ state, nil });
-	}
-    }
     key = stack[0][1];
     value = stack[0][2];
+    if (value == nil) {
+	return ({ state, nil });
+    }
 
     if (!reverse) {
 	if (last && key > last) {
@@ -212,7 +232,7 @@ mixed *iteratorNext(mixed state)
 	stack = stackPrev(stack);
     }
 
-    return ({ ({ stack, last, changes, reverse }), ({ key, value }) });
+    return ({ ({ stack, last, reverse }), ({ key, value }) });
 }
 
 /*

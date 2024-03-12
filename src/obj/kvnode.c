@@ -22,6 +22,7 @@ int type;			/* root, interior, leaf */
 int minSize, maxSize;		/* minimum and maximum size */
 string *keys;			/* keys */
 mixed *values;			/* values or nodes */
+int changes;			/* change counter */
 
 /*
  * initialize node
@@ -60,6 +61,8 @@ mixed *stealLeft(string accessKey)
 	value = values[0];
 	keys = keys[1 ..];
 	values = values[1 ..];
+	changes++;
+
 	return ({ key, value });
     }
 }
@@ -84,6 +87,7 @@ mixed *stealRight(string accessKey)
 	size = sizeof(values);
 	value = values[size - 1];
 	values = values[ .. size - 2];
+	changes++;
 
 	return ({ key, value });
     }
@@ -97,6 +101,7 @@ void addLeft(string accessKey, string *keys, mixed *values)
     if (accessKey == ::accessKey) {
 	::keys = keys + ::keys;
 	::values = values + ::values;
+	changes++;
     }
 }
 
@@ -108,6 +113,7 @@ void addRight(string accessKey, string *keys, mixed *values)
     if (accessKey == ::accessKey) {
 	::keys += keys;
 	::values += values;
+	changes++;
     }
 }
 
@@ -229,6 +235,7 @@ mixed *set(string accessKey, string key, mixed value,
 
 	({ index, found }) = search(key);
 	if (type <= LEAF) {
+	    changes++;
 	    if (value != nil) {
 		if (found) {
 		    /*
@@ -307,6 +314,7 @@ mixed *set(string accessKey, string key, mixed value,
 		 */
 		keys = keys[.. index - 1] + ({ key }) + keys[index ..];
 		values = values[.. index] + ({ value }) + values[index + 1 ..];
+		changes++;
 		if (sizeof(keys) > maxSize) {
 		    index = minSize;
 		    key = keys[index];
@@ -336,6 +344,7 @@ mixed *set(string accessKey, string key, mixed value,
 		 * deletion caused theft
 		 */
 		keys[index - 1] = key;
+		changes++;
 		break;
 
 	    case BORDER_RIGHT:
@@ -343,6 +352,7 @@ mixed *set(string accessKey, string key, mixed value,
 		 * deletion caused theft
 		 */
 		keys[index] = key;
+		changes++;
 		break;
 
 	    case MERGE_LEFT:
@@ -351,6 +361,7 @@ mixed *set(string accessKey, string key, mixed value,
 		 */
 		keys = keys[.. index - 2] + keys[index ..];
 		values = values[.. index - 1] + values[index + 1 ..];
+		changes++;
 		if (type == INTERIOR) {
 		    if (sizeof(keys) < minSize) {
 			return grow(index, prev, prevKey, nextKey, next);
@@ -369,6 +380,7 @@ mixed *set(string accessKey, string key, mixed value,
 		 */
 		keys = keys[.. index - 1] + keys[index + 1 ..];
 		values = values[.. index - 1] + values[index + 1 ..];
+		changes++;
 		if (type == INTERIOR) {
 		    if (sizeof(keys) < minSize) {
 			return grow(index, prev, prevKey, nextKey, next);
@@ -407,52 +419,58 @@ void remove(string accessKey)
 /*
  * last K/V
  */
-mixed *last(string accessKey)
+mixed *refLast(string accessKey)
 {
     if (accessKey == ::accessKey) {
 	int last;
 
 	last = sizeof(values) - 1;
-	if (last < 0) {
-	    return ({ 0, nil, nil });
+	if (last >= 0) {
+	    return ({
+		last,
+		(type <= LEAF) ? keys[last] : nil,
+		values[last],
+		changes
+	    });
 	}
-
-	return ({ last, (type <= LEAF) ? keys[last] : nil, values[last] });
     }
 }
 
 /*
- * next by index
+ * find by index
  */
-mixed *nextIndex(string accessKey, int index)
+mixed *refIndex(string accessKey, int changes, int index)
 {
-    if (accessKey == ::accessKey) {
-	if (index >= sizeof(values)) {
-	    return ({ 0, nil, nil });
+    if (accessKey == ::accessKey && (changes == ::changes || changes < 0)) {
+	if (index >= 0 && index < sizeof(values)) {
+	    return ({
+		index,
+		(type <= LEAF) ? keys[index] : nil,
+		values[index],
+		::changes
+	    });
+	} else {
+	    return ({ index, nil, nil, ::changes });	/* out of range */
 	}
-
-	return ({ index, (type <= LEAF) ? keys[index] : nil, values[index] });
     }
 }
 
 /*
- * next by key
+ * find by key
  */
-mixed *nextKey(string accessKey, string key)
+mixed *refKey(string accessKey, string key)
 {
     if (accessKey == ::accessKey) {
 	int index, found;
 
 	({ index, found }) = search(key);
-	if (index >= sizeof(values)) {
-	    return ({ 0, nil, nil });
-	}
-
-	if (type <= LEAF) {
-	    return ({ index, keys[index], values[index] });
-	} else {
+	if (type >= INTERIOR) {
 	    index += found;
-	    return ({ index, nil, values[index] });
+	    return ({ index, nil, values[index], changes });
+	} else if (index < sizeof(values)) {
+	    return ({ index, keys[index], values[index], changes });
+	} else {
+	    return ({ index, key, nil, changes });	/* out of range */
 	}
     }
 }
