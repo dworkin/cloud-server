@@ -52,6 +52,22 @@ atomic void remove()
     root->remove(accessKey);
 }
 
+/*
+ * KVstore[index] = value
+ */
+static void operator[]= (string index, mixed value)
+{
+    set(index, value);
+}
+
+/*
+ * KVstore[index]
+ */
+static mixed operator[] (string index)
+{
+    return get(index);
+}
+
 
 /*
  * first item
