@@ -22,7 +22,7 @@ int type;			/* root, interior, leaf */
 int minSize, maxSize;		/* minimum and maximum size */
 string *keys;			/* keys */
 mixed *values;			/* values or nodes */
-int changes;			/* change counter */
+int changes;			/* structural change counter */
 
 /*
  * initialize node
@@ -235,7 +235,6 @@ mixed *set(string accessKey, string key, mixed value,
 
 	({ index, found }) = search(key);
 	if (type <= LEAF) {
-	    changes++;
 	    if (value != nil) {
 		if (found) {
 		    /*
@@ -249,6 +248,7 @@ mixed *set(string accessKey, string key, mixed value,
 		    keys = keys[.. index - 1] + ({ key }) + keys[index ..];
 		    values = values[.. index - 1] + ({ value }) +
 			     values[index ..];
+		    changes++;
 		    if (sizeof(keys) > maxSize) {
 			/*
 			 * split
@@ -282,6 +282,7 @@ mixed *set(string accessKey, string key, mixed value,
 		 */
 		keys = keys[.. index - 1] + keys[index + 1 ..];
 		values = values[.. index - 1] + values[index + 1 ..];
+		changes++;
 		if (type != FLAT && sizeof(keys) < minSize) {
 		    return grow(index, prev, nil, nil, next);
 		}

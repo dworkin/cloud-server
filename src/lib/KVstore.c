@@ -6,6 +6,7 @@ inherit Iterable;
 private inherit "/lib/util/random";
 
 
+/* ref = ({ index, key, value, changes }) */
 # define INDEX		0
 # define KEY		1
 # define VALUE		2
@@ -17,10 +18,10 @@ private object root;		/* KVstore root object */
 /*
  * create KVstore, including root object
  */
-atomic static void create(int maxSize)
+atomic static void create(int maxSize, varargs string accessKey)
 {
-    accessKey = random_string(32);
-    root = clone_object(KVNODE, accessKey, maxSize);
+    ::accessKey = (accessKey) ? accessKey : random_string(32);
+    root = clone_object(KVNODE, ::accessKey, maxSize);
 }
 
 /*
@@ -82,7 +83,7 @@ private mixed **stackFirst()
     mixed *ref, **stack;
 
     ref = root->refIndex(accessKey, -1, 0);
-    if (!ref) {
+    if (ref[VALUE] == nil) {
 	return nil;		/* empty root */
     }
 
@@ -101,7 +102,7 @@ private mixed **stackKey(string key)
     mixed *ref, **stack;
 
     ref = root->refKey(accessKey, key);
-    if (!ref) {
+    if (ref[VALUE] == nil) {
 	return nil;		/* empty root */
     }
 
@@ -210,20 +211,23 @@ private mixed **stackPrev(mixed **stack)
  */
 mixed iteratorStart(mixed from, mixed to)
 {
+    string first, last;
     mixed **stack;
 
-    if (from && to && from > to) {
+    first = from;
+    last = to;
+    if (first && last && first > last) {
 	/*
 	 * backwards
 	 */
-	stack = stackKey(from);
-	if (stack && (stack[0][KEY] != from || stack[0][VALUE] == nil)) {
+	stack = stackKey(first);
+	if (stack && (stack[0][KEY] != first || stack[0][VALUE] == nil)) {
 	    stack = stackPrev(stack);
 	}
-	return ({ stack, to, TRUE });
+	return ({ stack, last, TRUE });
     }
 
-    return ({ (from) ? stackKey(from) : stackFirst(), to, FALSE });
+    return ({ (first) ? stackKey(first) : stackFirst(), last, FALSE });
 }
 
 /*
@@ -232,33 +236,31 @@ mixed iteratorStart(mixed from, mixed to)
 mixed *iteratorNext(mixed state)
 {
     mixed **stack, value;
-    string key, last;
+    string last, key;
     int reverse;
 
     ({ stack, last, reverse }) = state;
-    state[0] = nil;
-    if (!stack) {
-	return ({ state, nil });
-    }
-    key = stack[0][KEY];
-    value = stack[0][VALUE];
-    if (value == nil) {
-	return ({ state, nil });
+    if (stack) {
+	key = stack[0][KEY];
+	value = stack[0][VALUE];
+	if (value != nil) {
+	    if (!reverse) {
+		if (!last || key <= last) {
+		    return ({
+			({ stackNext(stack), last, reverse }),
+			({ key, value })
+		    });
+		}
+	    } else if (key >= last) {
+		return ({
+		    ({ stackPrev(stack), last, reverse }),
+		    ({ key, value })
+		});
+	    }
+	}
     }
 
-    if (!reverse) {
-	if (last && key > last) {
-	    return ({ state, nil });
-	}
-	stack = stackNext(stack);
-    } else {
-	if (key < last) {
-	    return ({ state, nil });
-	}
-	stack = stackPrev(stack);
-    }
-
-    return ({ ({ stack, last, reverse }), ({ key, value }) });
+    return ({ ({ nil, last, reverse }), ({ nil, nil }) });
 }
 
 /*
@@ -268,13 +270,18 @@ int iteratorEnd(mixed state)
 {
     mixed **stack;
     string last, key;
-    int count, reverse;
+    int reverse;
+    mixed value;
 
-    ({ stack, last, count, reverse }) = state;
+    ({ stack, last, reverse }) = state;
     if (!stack) {
 	return TRUE;
     }
     key = stack[0][KEY];
+    value = stack[0][VALUE];
+    if (value == nil) {
+	return TRUE;
+    }
 
     return (reverse) ? (key < last) : (last && key > last);
 }
