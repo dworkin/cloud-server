@@ -64,10 +64,11 @@ private void addCont(Continuation cont)
     }
 
     continuation = cont->continued();
-    if (sizeof(continuation) != 0 && continuation[CONT_DELAY] != 0 &&
+    if ((i=sizeof(continued)) != 0 && sizeof(continuation) != 0 &&
+	continuation[CONT_DELAY] != 0 &&
 	continuation[CONT_OBJS] == TRUE &&
 	continuation[CONT_FUNC] == "_F_return" &&
-	continued[i=(sizeof(continued) - CONT_SIZE + CONT_DELAY)] == 0) {
+	continued[i+=CONT_DELAY - CONT_SIZE] == 0) {
 	/*
 	 * merge delayed continuation with preceding
 	 */
@@ -109,11 +110,15 @@ void add(mixed func, mixed args...)
  */
 void chain(mixed func, mixed args...)
 {
+    mixed *continuation;
     object origin;
     int size, clone;
 
     if (sizeof(args) == 0 && typeof(func) == T_OBJECT) {
-	switch (typeof(func->continued()[CONT_OBJS])) {
+	if (sizeof(continuation=func->continued()) == 0) {
+	    error("Cannot chain empty continuation");
+	}
+	switch (typeof(continuation[CONT_OBJS])) {
 	case T_OBJECT:
 	    error("Cannot chain iterative continuation");
 
@@ -122,6 +127,9 @@ void chain(mixed func, mixed args...)
 	}
 
 	size = sizeof(continued);
+	if (size == 0) {
+	    error("Cannot chain to empty continuation");
+	}
 	addCont(func);
 	continued[size + CONT_OBJS] = TRUE;
 	return;

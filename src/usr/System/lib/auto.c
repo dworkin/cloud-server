@@ -256,13 +256,15 @@ static object suspendContinuation()
     object continuation;
 
     ref = ::tls_get(TLS_CONTINUATION);
-    if (!ref || sizeof(continued=ref[REF_CONT]) == 0 || !continued[CONT_ORIGIN])
-    {
+    if (!ref) {
 	return nil;
+    }
+    continuation = new Continuation;
+    if (sizeof(continued=ref[REF_CONT]) == 0 || !continued[CONT_ORIGIN]) {
+	return continuation;
     }
     ref[REF_CONT] = ({ });
 
-    continuation = new Continuation;
     continuation->saveContinuation(continued);
     return continuation;
 }
