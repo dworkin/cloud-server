@@ -258,7 +258,7 @@ static object suspendContinuation()
     ref = ::tls_get(TLS_CONTINUATION);
     if (!ref || sizeof(continued=ref[REF_CONT]) == 0 || !continued[CONT_ORIGIN])
     {
-	error("No continuation");
+	return nil;
     }
     ref[REF_CONT] = ({ });
 
