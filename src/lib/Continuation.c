@@ -176,17 +176,17 @@ static Continuation operator>> (Continuation cont)
 /*
  * start the continuation
  */
-atomic void runNext(varargs mixed arg)
+atomic void runNext(mixed args...)
 {
     if (started) {
 	error("Continuation already started");
     }
     if (sizeof(continued) != 0) {
 	if (!continued[CONT_ORIGIN]) {
-	    error("No environment for Continuation");
+	    error("No environment for continuation");
 	}
 
-	continued[CONT_VAL] = arg;
+	continued[CONT_ARGS] += args;
 	::startContinuation(continued, FALSE);
     }
     started = TRUE;
@@ -195,17 +195,17 @@ atomic void runNext(varargs mixed arg)
 /*
  * start the continuation concurrently
  */
-atomic void runParallel(varargs mixed arg)
+atomic void runParallel(mixed args...)
 {
     if (started) {
 	error("Continuation already started");
     }
     if (sizeof(continued) != 0) {
 	if (!continued[CONT_ORIGIN]) {
-	    error("No environment for Continuation");
+	    error("No environment for continuation");
 	}
 
-	continued[CONT_VAL] = arg;
+	continued[CONT_ARGS] += args;
 	::startContinuation(continued, TRUE);
     }
     started = TRUE;
