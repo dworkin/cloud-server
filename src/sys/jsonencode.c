@@ -64,7 +64,7 @@ static mixed *escaped(mixed *parsed)
 	    break;
 
 	default:
-	    result[i] = "\\u00" + hex::encode(0x100 + str[i])[1 ..];
+	    result[i] = "\\u00" + hex::encode(str[i], 2);
 	    break;
 	}
     }

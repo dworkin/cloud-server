@@ -3,7 +3,7 @@
 /*
  * encode a number in hexadecimal (lower case)
  */
-static string encode(int number)
+static string encode(int number, varargs int digits)
 {
     string hex, str;
     int i;
@@ -14,7 +14,7 @@ static string encode(int number)
 	i = number & 0xf;
 	str = hex[i .. i] + str;
 	number >>= 4;
-    } while (number != 0);
+    } while (--digits > 0 || number != 0);
 
     return str;
 }
@@ -22,7 +22,7 @@ static string encode(int number)
 /*
  * encode a number in hexadecimal (upper case)
  */
-static string encodeUpper(int number)
+static string encodeUpper(int number, varargs int digits)
 {
     string hex, str;
     int i;
@@ -33,7 +33,7 @@ static string encodeUpper(int number)
 	i = number & 0xf;
 	str = hex[i .. i] + str;
 	number >>= 4;
-    } while (number != 0);
+    } while (--digits > 0 || number != 0);
 
     return str;
 }
