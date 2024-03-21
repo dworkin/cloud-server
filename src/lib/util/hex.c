@@ -39,6 +39,48 @@ static string encodeUpper(int number, varargs int digits)
 }
 
 /*
+ * format a byte string as hexadecimal
+ */
+static string format(string bytes)
+{
+    string hex, str, *result;
+    int i, x;
+
+    hex = "0123456789abcdef";
+    str = "..";
+    result = allocate(i=strlen(bytes));
+    while (--i >= 0) {
+	x = bytes[i];
+	str[0] = hex[x >> 4];
+	str[1] = hex[x & 0xf];
+	result[i] = str;
+    }
+
+    return implode(result, "");
+}
+
+/*
+ * format a byte string as upper hexadecimal
+ */
+static string formatUpper(string bytes)
+{
+    string hex, str, *result;
+    int i, x;
+
+    hex = "0123456789ABCDEF";
+    str = "..";
+    result = allocate(i=strlen(bytes));
+    while (--i >= 0) {
+	x = bytes[i];
+	str[0] = hex[x >> 4];
+	str[1] = hex[x & 0xf];
+	result[i] = str;
+    }
+
+    return implode(result, "");
+}
+
+/*
  * decode a hexadecimal number
  */
 static int decode(string str)
