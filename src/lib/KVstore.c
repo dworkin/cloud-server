@@ -47,7 +47,37 @@ atomic void set(string key, mixed value)
     {
 	error("Invalid value");
     }
-    root->set(accessKey, key, value, nil, nil, nil, nil);
+    root->set(accessKey, key, value, 0, nil, nil, nil, nil);
+}
+
+/*
+ * set the value associated with a key, which must not yet exist
+ */
+atomic void init(string key, mixed value)
+{
+    if (!key) {
+	error("Invalid key");
+    }
+    if (typeof(value) == T_OBJECT && sscanf(object_name(value), "%*s#-1") == 0)
+    {
+	error("Invalid value");
+    }
+    root->set(accessKey, key, value, -1, nil, nil, nil, nil);
+}
+
+/*
+ * set the value associated with a key, which must already exist
+ */
+atomic void change(string key, mixed value)
+{
+    if (!key) {
+	error("Invalid key");
+    }
+    if (typeof(value) == T_OBJECT && sscanf(object_name(value), "%*s#-1") == 0)
+    {
+	error("Invalid value");
+    }
+    root->set(accessKey, key, value, 1, nil, nil, nil, nil);
 }
 
 /*

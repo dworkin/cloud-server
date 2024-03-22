@@ -227,7 +227,7 @@ mixed get(string accessKey, string key)
 /*
  * set the V for a K, nil for deletion
  */
-mixed *set(string accessKey, string key, mixed value,
+mixed *set(string accessKey, string key, mixed value, int exists,
 	   object prev, string prevKey, string nextKey, object next)
 {
     if (accessKey == ::accessKey) {
@@ -240,11 +240,17 @@ mixed *set(string accessKey, string key, mixed value,
 		    /*
 		     * set value in FLAT/LEAF
 		     */
+		    if (exists < 0) {
+			error("Key already exists");
+		    }
 		    values[index] = value;
 		} else {
 		    /*
 		     * insert key/value in FLAT/LEAF
 		     */
+		    if (exists > 0) {
+			error("Key does not exist");
+		    }
 		    keys = keys[.. index - 1] + ({ key }) + keys[index ..];
 		    values = values[.. index - 1] + ({ value }) +
 			     values[index ..];
@@ -306,8 +312,8 @@ mixed *set(string accessKey, string key, mixed value,
 		state,
 		key,
 		value
-	    }) = values[index]->set(accessKey, key, value, lValue, lKey, rKey,
-				    rValue);
+	    }) = values[index]->set(accessKey, key, value, exists, lValue, lKey,
+				    rKey, rValue);
 	    switch (state) {
 	    case SPLIT:
 		/*
