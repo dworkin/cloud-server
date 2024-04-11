@@ -18,10 +18,11 @@ private object root;		/* KVstore root object */
 /*
  * create KVstore, including root object
  */
-atomic static void create(int maxSize, varargs string accessKey)
+atomic static void create(int maxSize, varargs string accessKey,
+			  string nodePath)
 {
     ::accessKey = (accessKey) ? accessKey : random_string(32);
-    root = clone_object(KVNODE, ::accessKey, maxSize);
+    root = clone_object((nodePath) ? nodePath : KVNODE, ::accessKey, maxSize);
 }
 
 /*
@@ -53,7 +54,7 @@ atomic void set(string key, mixed value)
 /*
  * set the value associated with a key, which must not yet exist
  */
-atomic void init(string key, mixed value)
+atomic void add(string key, mixed value)
 {
     if (!key) {
 	error("Invalid key");
@@ -113,7 +114,7 @@ private mixed **stackFirst()
     mixed *ref, **stack;
 
     ref = root->refIndex(accessKey, -1, 0);
-    if (ref[VALUE] == nil) {
+    if (ref[VALUE] == nil && ref[KEY] == nil) {
 	return nil;		/* empty root */
     }
 
@@ -132,7 +133,7 @@ private mixed **stackKey(string key)
     mixed *ref, **stack;
 
     ref = root->refKey(accessKey, key);
-    if (ref[VALUE] == nil) {
+    if (ref[VALUE] == nil && ref[KEY] == nil) {
 	return nil;		/* empty root */
     }
 
@@ -151,7 +152,6 @@ private mixed **stackNext(mixed **stack)
     string key;
     mixed *ref;
     object node;
-    mixed value;
 
     key = stack[0][KEY];
 
@@ -171,20 +171,17 @@ private mixed **stackNext(mixed **stack)
 	    return stack;
 	}
 
-	value = ref[VALUE];
-	if (value != nil) {
+	if (ref[VALUE] != nil || ref[KEY] != nil) {
 	    /*
 	     * not out of range
 	     */
 	    for (;;) {
 		stack = ({ ref }) + stack;
-		if (typeof(value) != T_OBJECT ||
-		    sscanf(object_name(value), "%*s#-1") != 0) {
+		if (ref[KEY]) {
 		    /* leaf */
 		    return stack;
 		}
-		ref = value->refIndex(accessKey, -1, 0);
-		value = ref[VALUE];
+		ref = ref[VALUE]->refIndex(accessKey, -1, 0);
 	    }
 	}
     } while (sizeof(stack) != 0);
@@ -198,7 +195,6 @@ private mixed **stackPrev(mixed **stack)
     string key;
     mixed *ref;
     object node;
-    mixed value;
 
     key = stack[0][KEY];
 
@@ -218,19 +214,17 @@ private mixed **stackPrev(mixed **stack)
 	    return nil;
 	}
 
-	value = ref[VALUE];
-	if (value != nil) {
+	if (ref[VALUE] != nil || ref[KEY] != nil) {
 	    /*
 	     * not out of range
 	     */
 	    for (;;) {
 		stack = ({ ref }) + stack;
-		if (typeof(value) != T_OBJECT ||
-		    sscanf(object_name(value), "%*s#-1") != 0) {
+		if (ref[KEY]) {
 		    /* leaf */
 		    return stack;
 		}
-		ref = value->refLast(accessKey);
+		ref = ref[VALUE]->refLast(accessKey);
 	    }
 	}
     } while (sizeof(stack) != 0);
@@ -251,7 +245,7 @@ mixed iteratorStart(mixed from, mixed to)
 	 * backwards
 	 */
 	stack = stackKey(first);
-	if (stack && (stack[0][KEY] != first || stack[0][VALUE] == nil)) {
+	if (stack && stack[0][KEY] != first) {
 	    stack = stackPrev(stack);
 	}
 	return ({ stack, last, TRUE });
@@ -273,7 +267,7 @@ mixed *iteratorNext(mixed state)
     if (stack) {
 	key = stack[0][KEY];
 	value = stack[0][VALUE];
-	if (value != nil) {
+	if (key != nil) {
 	    if (!reverse) {
 		if (!last || key <= last) {
 		    return ({
@@ -301,15 +295,13 @@ int iteratorEnd(mixed state)
     mixed **stack;
     string last, key;
     int reverse;
-    mixed value;
 
     ({ stack, last, reverse }) = state;
     if (!stack) {
 	return TRUE;
     }
     key = stack[0][KEY];
-    value = stack[0][VALUE];
-    if (value == nil) {
+    if (key == nil) {
 	return TRUE;
     }
 
