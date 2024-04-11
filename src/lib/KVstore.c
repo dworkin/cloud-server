@@ -114,7 +114,7 @@ private mixed **stackFirst()
     mixed *ref, **stack;
 
     ref = root->refIndex(accessKey, -1, 0);
-    if (ref[VALUE] == nil && ref[KEY] == nil) {
+    if (ref[VALUE] == nil && !ref[KEY]) {
 	return nil;		/* empty root */
     }
 
@@ -133,7 +133,7 @@ private mixed **stackKey(string key)
     mixed *ref, **stack;
 
     ref = root->refKey(accessKey, key);
-    if (ref[VALUE] == nil && ref[KEY] == nil) {
+    if (ref[VALUE] == nil && !ref[KEY]) {
 	return nil;		/* empty root */
     }
 
@@ -171,7 +171,7 @@ private mixed **stackNext(mixed **stack)
 	    return stack;
 	}
 
-	if (ref[VALUE] != nil || ref[KEY] != nil) {
+	if (ref[VALUE] != nil || ref[KEY]) {
 	    /*
 	     * not out of range
 	     */
@@ -214,7 +214,7 @@ private mixed **stackPrev(mixed **stack)
 	    return nil;
 	}
 
-	if (ref[VALUE] != nil || ref[KEY] != nil) {
+	if (ref[VALUE] != nil || ref[KEY]) {
 	    /*
 	     * not out of range
 	     */
@@ -267,7 +267,7 @@ mixed *iteratorNext(mixed state)
     if (stack) {
 	key = stack[0][KEY];
 	value = stack[0][VALUE];
-	if (key != nil) {
+	if (key) {
 	    if (!reverse) {
 		if (!last || key <= last) {
 		    return ({
@@ -288,7 +288,7 @@ mixed *iteratorNext(mixed state)
 }
 
 /*
- * check if an iterator is at its end
+ * check whether an iterator is at its end
  */
 int iteratorEnd(mixed state)
 {
@@ -301,7 +301,7 @@ int iteratorEnd(mixed state)
 	return TRUE;
     }
     key = stack[0][KEY];
-    if (key == nil) {
+    if (!key) {
 	return TRUE;
     }
 
