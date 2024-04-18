@@ -10,6 +10,7 @@ inherit Http1TlsServer;
 
 int reqCert;		/* request client certificate */
 string *hosts;		/* server hostnames */
+private int received;	/* received at least one request */
 
 /*
  * initialize connection object
@@ -40,6 +41,7 @@ static int receiveRequest(int code, HttpRequest request)
 {
     string host;
 
+    received = TRUE;
     code = ::receiveRequest(code, request);
 
     if (request) {
@@ -108,5 +110,15 @@ void restart_input()
 {
     if (previous_program() == BINARY_CONN) {
 	call_limited("restartInput");
+    }
+}
+
+/*
+ * time out if no request was received in time
+ */
+int timeout()
+{
+    if (previous_program() == LIB_CONN) {
+	return !received;
     }
 }

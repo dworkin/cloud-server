@@ -6,6 +6,8 @@
 inherit Http1Server;
 
 
+private int received;	/* received at least one request */
+
 /*
  * initialize connection object
  */
@@ -27,6 +29,7 @@ static int receiveRequest(int code, HttpRequest request)
 {
     string host;
 
+    received = TRUE;
     code = ::receiveRequest(code, request);
 
     if (request) {
@@ -84,5 +87,15 @@ int message_done()
 {
     if (previous_program() == LIB_CONN) {
 	return call_limited("messageDone");
+    }
+}
+
+/*
+ * time out if no request was received in time
+ */
+int timeout()
+{
+    if (previous_program() == LIB_CONN) {
+	return !received;
     }
 }

@@ -226,7 +226,7 @@ nomask object query_user()
  */
 static void timeout(mapping tls)
 {
-    if (!user || user->query_conn() != this_object()) {
+    if (!user || user->query_conn() != this_object() || user->timeout()) {
 	mode = MODE_DISCONNECT;
 	destruct_object(this_object());
     }
