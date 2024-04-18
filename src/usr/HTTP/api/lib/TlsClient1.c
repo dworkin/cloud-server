@@ -48,7 +48,7 @@ static int tlsReceive(string str)
 	connected();
     }
     if (input) {
-	::receive_message(input);
+	receiveBytes(input);
     }
     return (status && status != "connecting") ? MODE_DISCONNECT : MODE_NOCHANGE;
 }

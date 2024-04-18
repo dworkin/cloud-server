@@ -42,7 +42,7 @@ static int tlsAccept(string str, varargs int reqCert, string hosts...)
 	set_mode(MODE_LINE);
     }
     if (input) {
-	::receive_message(input);
+	receiveBytes(input);
     }
     return (status && status != "connecting") ? MODE_DISCONNECT : MODE_NOCHANGE;
 }
@@ -72,7 +72,7 @@ static int tlsReceive(string str)
 	set_mode(MODE_LINE);
     }
     if (input) {
-	::receive_message(input);
+	receiveBytes(input);
     }
     return (status && status != "connecting") ? MODE_DISCONNECT : MODE_NOCHANGE;
 }

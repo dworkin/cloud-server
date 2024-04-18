@@ -65,7 +65,7 @@ static void set_message_length(int length)
  */
 static int receiveFirstMessage(string str)
 {
-    return receiveBytes(str);
+    return ::receiveBytes(str);
 }
 
 /*
@@ -115,7 +115,7 @@ private void receiveBuffer()
 		    established = TRUE;
 		    set_mode(receiveFirstMessage(str));
 		} else {
-		    set_mode(receiveBytes(str));
+		    set_mode(::receiveBytes(str));
 		}
 	    } else {
 		noline = TRUE;
@@ -139,7 +139,7 @@ private void receiveBuffer()
 		established = TRUE;
 		set_mode(receiveFirstMessage(str));
 	    } else {
-		set_mode(receiveBytes(str));
+		set_mode(::receiveBytes(str));
 	    }
 	}
     }
@@ -148,7 +148,7 @@ private void receiveBuffer()
 /*
  * receive a message
  */
-static void receive_message(StringBuffer str)
+static void receiveBytes(StringBuffer str)
 {
     buffer->append(str);
     receiveBuffer();
