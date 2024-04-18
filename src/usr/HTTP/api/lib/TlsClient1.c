@@ -33,7 +33,7 @@ static void tlsConnect(varargs string host)
 /*
  * receive a message
  */
-static int receive_message(string str)
+static int tlsReceive(string str)
 {
     StringBuffer input, output;
     string warning, status;
@@ -45,7 +45,7 @@ static int receive_message(string str)
     if (!status && !connected) {
 	connected = TRUE;
 	set_mode(MODE_BLOCK);
-	call_limited("connected");
+	connected();
     }
     if (input) {
 	::receive_message(input);
@@ -56,11 +56,11 @@ static int receive_message(string str)
 /*
  * connection terminated
  */
-static void logout(int quit)
+static void tlsClose(int quit)
 {
     StringBuffer output;
 
-    ::logout(quit);
+    close(quit);
     output = session->close();
     if (output) {
 	::sendMessage(output, TRUE);

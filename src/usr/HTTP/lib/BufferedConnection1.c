@@ -65,7 +65,7 @@ static void set_message_length(int length)
  */
 static int receiveFirstMessage(string str)
 {
-    return ::receive_message(str);
+    return receiveBytes(str);
 }
 
 /*
@@ -115,7 +115,7 @@ private void receiveBuffer()
 		    established = TRUE;
 		    set_mode(receiveFirstMessage(str));
 		} else {
-		    set_mode(::receive_message(str));
+		    set_mode(receiveBytes(str));
 		}
 	    } else {
 		noline = TRUE;
@@ -139,7 +139,7 @@ private void receiveBuffer()
 		established = TRUE;
 		set_mode(receiveFirstMessage(str));
 	    } else {
-		set_mode(::receive_message(str));
+		set_mode(receiveBytes(str));
 	    }
 	}
     }
@@ -168,9 +168,7 @@ int buffered_input()
 /*
  * reprocess pending input
  */
-void restart_input()
+static void restartInput()
 {
-    if (previous_program() == BINARY_CONN) {
-	receiveBuffer();
-    }
+    receiveBuffer();
 }

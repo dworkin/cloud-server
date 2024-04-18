@@ -86,7 +86,7 @@ static int receiveMessage(string str)
 {
     try {
 	response = new_object(responsePath, str);
-        call_limited("receiveStatusLine", response);
+        receiveStatusLine(response);
     } catch (...) {
         return MODE_DISCONNECT;
     }

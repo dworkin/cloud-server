@@ -52,7 +52,7 @@ void connect_failed(int errorcode)
 int receive_message(string str)
 {
     if (previous_program() == LIB_CONN) {
-	return ::receive_message(str);
+	return call_limited("receiveBytes", str);
     }
 }
 
@@ -62,7 +62,7 @@ int receive_message(string str)
 void logout(int quit)
 {
     if (previous_program() == LIB_CONN) {
-	::logout(quit);
+	call_limited("close", quit);
 	destruct_object(this_object());
     }
 }
@@ -73,6 +73,6 @@ void logout(int quit)
 int message_done()
 {
     if (previous_program() == LIB_CONN) {
-	return ::message_done();
+	return call_limited("messageDone");
     }
 }

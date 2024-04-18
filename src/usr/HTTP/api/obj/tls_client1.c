@@ -37,7 +37,7 @@ static void create(object client, string address, int port,
 int login(string str)
 {
     if (previous_program() == LIB_CONN) {
-	tlsConnect(host);
+	call_limited("tlsConnect", host);
     }
     return MODE_NOCHANGE;
 }
@@ -59,7 +59,7 @@ void connect_failed(int errorcode)
 int receive_message(string str)
 {
     if (previous_program() == LIB_CONN) {
-	return ::receive_message(str);
+	return call_limited("tlsReceive", str);
     }
 }
 
@@ -69,7 +69,7 @@ int receive_message(string str)
 void logout(int quit)
 {
     if (previous_program() == LIB_CONN) {
-	::logout(quit);
+	call_limited("tlsClose", quit);
 	destruct_object(this_object());
     }
 }
@@ -80,6 +80,16 @@ void logout(int quit)
 int message_done()
 {
     if (previous_program() == LIB_CONN) {
-	return ::message_done();
+	return call_limited("messageDone");
+    }
+}
+
+/*
+ * reprocess pending input
+ */
+void restart_input()
+{
+    if (previous_program() == BINARY_CONN) {
+	call_limited("restartInput");
     }
 }

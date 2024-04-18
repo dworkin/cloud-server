@@ -174,7 +174,7 @@ static int receiveFirstLine(string str)
     int code;
 
     try {
-	code = call_limited("receiveRequestLine", str);
+	code = receiveRequestLine(str);
     } catch (...) {
 	code = HTTP_BAD_REQUEST;
 	sendMessage(new StringBuffer(htmlBadRequest()));
@@ -185,7 +185,7 @@ static int receiveFirstLine(string str)
 	 * call receiveRequest() early, on error output a raw HTML message
 	 * and disconnect immediately
 	 */
-	switch (call_limited("receiveRequest", code, request)) {
+	switch (receiveRequest(code, request)) {
 	case HTTP_INTERNAL_ERROR:
 	    sendMessage(new StringBuffer(htmlInternalError()));
 	    /* fall through */
@@ -213,7 +213,7 @@ static int receiveMessage(string str)
     }
 
     try {
-	code = call_limited("receiveRequestLine", str);
+	code = receiveRequestLine(str);
 	if (request->version() < 1.0) {
 	    error("Invalid request version");
 	}
@@ -223,7 +223,7 @@ static int receiveMessage(string str)
     }
 
     if (code != 0) {
-	switch (call_limited("receiveRequest", code, request)) {
+	switch (receiveRequest(code, request)) {
 	case HTTP_INTERNAL_ERROR:
 	    sendInternalError();
 	    /* fall through */

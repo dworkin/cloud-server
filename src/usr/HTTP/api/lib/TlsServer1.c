@@ -58,7 +58,7 @@ static int receiveFirstMessage(string str)
 /*
  * receive a message
  */
-static int receive_message(string str)
+static int tlsReceive(string str)
 {
     StringBuffer input, output;
     string warning, status;
@@ -80,11 +80,11 @@ static int receive_message(string str)
 /*
  * terminate connection
  */
-static void logout(int quit)
+static void tlsClose(int quit)
 {
     StringBuffer output;
 
-    ::logout(quit);
+    close(quit);
     output = session->close();
     if (output) {
 	::sendMessage(output, TRUE);

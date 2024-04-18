@@ -184,14 +184,6 @@ void expectEntity(int length)
 }
 
 /*
- * receive an entity
- */
-static void receiveEntity(StringBuffer entity)
-{
-    relay->receiveEntity(entity);
-}
-
-/*
  * expect chunked data
  */
 void expectChunk(varargs string compression)
@@ -244,14 +236,6 @@ static void receiveChunk(StringBuffer chunk, varargs HttpFields trailers)
 # endif
     }
     relay->receiveChunk(chunk, trailers);
-}
-
-/*
- * notify relay of receive error
- */
-static void receiveError(string str)
-{
-    relay->receiveError(str);
 }
 
 /*
@@ -317,10 +301,13 @@ void expectWsFrame()
     }
 }
 
+static int receiveHeaders(string str);
+static int receiveMessage(string str);
+
 /*
  * receive (part of) message
  */
-static int receive_message(string str)
+static int receiveBytes(string str)
 {
     StringBuffer chunk;
 
@@ -330,7 +317,7 @@ static int receive_message(string str)
 		str = frame + str;
 		frame = nil;
 
-		frame = call_limited("receiveWsFrame", str);
+		frame = receiveWsFrame(str);
 	    } else {
 		inbuf->append(str);
 		length -= strlen(str);
@@ -338,12 +325,12 @@ static int receive_message(string str)
 		    chunk = inbuf;
 		    inbuf = nil;
 
-		    call_limited("receiveWsChunk", chunk);
+		    receiveWsChunk(chunk);
 		}
 	    }
 	    return MODE_NOCHANGE;
 	} catch (err) {
-	    call_limited("receiveError", err);
+	    relay->receiveError(err);
 	    return MODE_DISCONNECT;
 	}
     } else if (frame) {
@@ -362,18 +349,17 @@ static int receive_message(string str)
 	    /*
 	     * headers
 	     */
-	    return call_limited("receiveHeaders", str);
+	    return receiveHeaders(str);
 	} else {
 	    /*
 	     * chunk trailers
 	     */
 	    try {
-		call_limited("receiveChunk", nil,
-			     (strlen(str) != 0) ?
-			      new_object(trailersPath, str) : nil);
+		receiveChunk(nil, (strlen(str) != 0) ?
+				   new_object(trailersPath, str) : nil);
 		return MODE_NOCHANGE;
 	    } catch (err) {
-		call_limited("receiveError", err);
+		relay->receiveError(err);
 		return MODE_DISCONNECT;
 	    }
 	}
@@ -387,7 +373,7 @@ static int receive_message(string str)
 	     */
 	    if (strlen(str) != 0) {
 		/* \r\n expected */
-		call_limited("receiveError", "HTTP protocol error");
+		relay->receiveError("HTTP protocol error");
 		return MODE_DISCONNECT;
 	    }
 
@@ -396,9 +382,9 @@ static int receive_message(string str)
 
 	    set_mode(MODE_BLOCK);
 	    try {
-		call_limited("receiveChunk", chunk);
+		receiveChunk(chunk);
 	    } catch (err) {
-		call_limited("receiveError", err);
+		relay->receiveError(err);
 		return MODE_DISCONNECT;
 	    }
 	} else {
@@ -413,7 +399,7 @@ static int receive_message(string str)
 		inbuf = nil;
 
 		set_mode(MODE_BLOCK);
-		call_limited("receiveEntity", chunk);
+		relay->receiveEntity(chunk);
 	    }
 	}
 
@@ -423,16 +409,16 @@ static int receive_message(string str)
 	 * chunk line
 	 */
 	try {
-	    return call_limited("receiveChunkLine", str);
+	    return receiveChunkLine(str);
 	} catch (err) {
-	    call_limited("receiveError", err);
+	    relay->receiveError(err);
 	    return MODE_DISCONNECT;
 	}
     } else {
 	/*
 	 * request/response
 	 */
-	return call_limited("receiveMessage", str);
+	return receiveMessage(str);
     }
 }
 
@@ -463,9 +449,9 @@ static void messageChunk()
 /*
  * output remainder of message
  */
-static int message_done()
+static int messageDone()
 {
-    call_limited("messageChunk");
+    messageChunk();
     return MODE_NOCHANGE;
 }
 
@@ -576,23 +562,11 @@ void disconnect()
 }
 
 /*
- * notify relay
- */
-static void _logout()
-{
-    relay->disconnected();
-}
-
-/*
  * connection terminated
  */
-static void logout(int quit)
+static void close(int quit)
 {
-    if (quit) {
-	relay->disconnected();
-    } else {
-	call_limited("_logout");
-    }
+    relay->disconnected();
 }
 
 /*
