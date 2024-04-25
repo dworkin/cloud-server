@@ -223,6 +223,15 @@ void set_mode(int mode)
 }
 
 /*
+ * NAME:	user_restart_input()
+ * DESCRIPTION:	reprocess user input buffer
+ */
+private void user_restart_input(mapping tls, object user)
+{
+    user->restart_input();
+}
+
+/*
  * NAME:	restart_input()
  * DESCRIPTION:	reprocess the input buffer
  */
@@ -238,7 +247,7 @@ static void restart_input()
 	TLSVAR(tls, TLS_USER) = this_object();
 	user = query_user();
 	if (user) {
-	    user->restart_input();
+	    user_restart_input(tls, user);
 	}
 	receive_buffer(tls);
     }
