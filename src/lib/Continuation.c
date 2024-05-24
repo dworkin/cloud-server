@@ -81,34 +81,36 @@ private void addCont(Continuation cont)
 /*
  * add continuation or function to current one
  */
-void add(mixed func, mixed args...)
+object add(mixed func, mixed args...)
 {
     object origin;
     int clone;
 
     if (sizeof(args) == 0 && typeof(func) == T_OBJECT) {
 	addCont(func);
-	return;
-    }
-    if (started) {
-	error("Continuation already started");
+    } else {
+	if (started) {
+	    error("Continuation already started");
+	}
+
+	origin = previous_object();
+	sscanf(object_name(origin), "%*s#%d", clone);
+	if (clone < 0) {
+	    error("Continuation in non-persistent object");
+	}
+	if (typeof(func) != T_STRING) {
+	    error("Not a function");
+	}
+	continued += ({ FALSE, 0, origin, func, args, nil });
     }
 
-    origin = previous_object();
-    sscanf(object_name(origin), "%*s#%d", clone);
-    if (clone < 0) {
-	error("Continuation in non-persistent object");
-    }
-    if (typeof(func) != T_STRING) {
-	error("Not a function");
-    }
-    continued += ({ FALSE, 0, origin, func, args, nil });
+    return this_object();
 }
 
 /*
  * chain continuation or function to current one
  */
-void chain(mixed func, mixed args...)
+object chain(mixed func, mixed args...)
 {
     mixed *continuation;
     object origin;
@@ -132,21 +134,23 @@ void chain(mixed func, mixed args...)
 	}
 	addCont(func);
 	continued[size + CONT_OBJS] = TRUE;
-	return;
-    }
-    if (started) {
-	error("Continuation already started");
+    } else {
+	if (started) {
+	    error("Continuation already started");
+	}
+
+	origin = previous_object();
+	sscanf(object_name(origin), "%*s#%d", clone);
+	if (clone < 0) {
+	    error("Continuation in non-persistent object");
+	}
+	if (typeof(func) != T_STRING) {
+	    error("Not a function");
+	}
+	continued += ({ TRUE, 0, origin, func, args, nil });
     }
 
-    origin = previous_object();
-    sscanf(object_name(origin), "%*s#%d", clone);
-    if (clone < 0) {
-	error("Continuation in non-persistent object");
-    }
-    if (typeof(func) != T_STRING) {
-	error("Not a function");
-    }
-    continued += ({ TRUE, 0, origin, func, args, nil });
+    return this_object();
 }
 
 /*
