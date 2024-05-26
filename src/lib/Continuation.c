@@ -158,11 +158,7 @@ object chain(mixed func, mixed args...)
  */
 static Continuation operator+ (Continuation cont)
 {
-    object obj;
-
-    obj = copy_object();
-    obj->add(cont);
-    return obj;
+    return copy_object()->add(cont);
 }
 
 /*
@@ -170,11 +166,7 @@ static Continuation operator+ (Continuation cont)
  */
 static Continuation operator>> (Continuation cont)
 {
-    object obj;
-
-    obj = copy_object();
-    obj->chain(cont);
-    return obj;
+    return copy_object()->chain(cont);
 }
 
 /*
