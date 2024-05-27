@@ -5,7 +5,7 @@
 # include "tls.h"
 # include <type.h>
 
-inherit "hkdf";
+inherit "~/api/lib/hkdf";
 inherit "ffdhe";
 inherit emsa_pss "emsa_pss";
 private inherit asn "/lib/util/asn";
