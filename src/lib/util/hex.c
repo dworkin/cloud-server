@@ -90,19 +90,16 @@ static int decode(string str)
     len = strlen(str) - 1;
 
     for (i = 0; str[i] == '0' && i < len; i++) ;
-    str = str[i .. len];
-    len -= i - 1;
-
 # if INT_MAX == 0x7fffffff
-    if (len > 8) {
+    if (len - i >= 8) {
 # else
-    if (len > 16) {
+    if (len - i >= 16) {
 # endif
 	error("Hexadecimal too large");
     }
 
     num = 0;
-    for (i = 0; i < len; i++) {
+    for (; i <= len; i++) {
 	switch (c = str[i]) {
 	case '0':
 	case '1':
@@ -142,4 +139,100 @@ static int decode(string str)
     }
 
     return num;
+}
+
+/*
+ * decode a hexadecimal string
+ */
+static string decodeString(string str)
+{
+    int len, i, num, c;
+    string byte, *bytes;
+
+    len = strlen(str);
+    if (len & 1) {
+	str = "0" + str;
+	len++;
+    }
+
+    byte = ".";
+    bytes = allocate(len >> 1);
+    for (i = 0; i < len; i++) {
+	switch (c = str[i]) {
+	case '0':
+	case '1':
+	case '2':
+	case '3':
+	case '4':
+	case '5':
+	case '6':
+	case '7':
+	case '8':
+	case '9':
+	    c -= '0';
+	    break;
+
+	case 'a':
+	case 'b':
+	case 'c':
+	case 'd':
+	case 'e':
+	case 'f':
+	    c -= 'a' - 10;
+	    break;
+
+	case 'A':
+	case 'B':
+	case 'C':
+	case 'D':
+	case 'E':
+	case 'F':
+	    c -= 'A' - 10;
+	    break;
+
+	default:
+	    error("Bad digit in hexadecimal");
+	}
+	num = c << 4;
+
+	switch (c = str[++i]) {
+	case '0':
+	case '1':
+	case '2':
+	case '3':
+	case '4':
+	case '5':
+	case '6':
+	case '7':
+	case '8':
+	case '9':
+	    c -= '0';
+	    break;
+
+	case 'a':
+	case 'b':
+	case 'c':
+	case 'd':
+	case 'e':
+	case 'f':
+	    c -= 'a' - 10;
+	    break;
+
+	case 'A':
+	case 'B':
+	case 'C':
+	case 'D':
+	case 'E':
+	case 'F':
+	    c -= 'A' - 10;
+	    break;
+
+	default:
+	    error("Bad digit in hexadecimal");
+	}
+	byte[0] = num | c;
+	bytes[i >> 1] = byte;
+    }
+
+    return implode(bytes, "");
 }
