@@ -183,3 +183,21 @@ static int bits(string str)
 
     return 0;
 }
+
+/*
+ * invert ASN byte order
+ */
+static string reverse(string str)
+{
+    string *bytes, tmp;
+    int i, j;
+
+    bytes = explode(str, "");
+    for (i = 0, j = sizeof(bytes); i < --j; i++) {
+	tmp = bytes[i];
+	bytes[i] = bytes[j];
+	bytes[j] = tmp;
+    }
+
+    return implode(bytes, "");
+}
