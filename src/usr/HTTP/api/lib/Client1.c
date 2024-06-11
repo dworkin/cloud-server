@@ -6,6 +6,9 @@
 inherit "~/lib/Connection1";
 
 
+/* implemented at the top layer */
+static void connect(string host, int port);
+
 private object client;		/* assocated client object */
 private string responsePath;	/* HttpResponse object path */
 private string headersPath;	/* HttpFields object path */

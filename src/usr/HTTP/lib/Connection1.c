@@ -11,6 +11,12 @@ private inherit hex "/lib/util/hex";
 # define HTTP_TOKENPARAM	"/usr/HTTP/sys/tokenparam"
 
 
+/* implemented at the top layer */
+static int message(string str);
+static void set_mode(int mode);
+static void set_message_length(int length);
+static void disconnect();
+
 private object relay;		/* object to relay to */
 private string trailersPath;	/* HttpFields object path */
 private string frame;		/* HTTP 1.x headers/trailers or WsFrame */
@@ -31,12 +37,6 @@ static void create(object relay, string trailersPath)
     ::relay = relay;
     ::trailersPath = trailersPath;
 }
-
-/* implemented at the top layer */
-static int message(string str);
-static void set_mode(int mode);
-static void set_message_length(int length);
-static void disconnect();
 
 /*
  * set the receive mode
