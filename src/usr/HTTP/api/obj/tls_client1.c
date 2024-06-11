@@ -6,6 +6,7 @@
 # include "HttpConnection.h"
 
 inherit Http1TlsClient;
+inherit "~System/lib/user";
 
 
 string host;		/* server hostname */

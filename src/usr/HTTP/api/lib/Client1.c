@@ -61,7 +61,7 @@ void doneResponse()
 {
     if (previous_object() == client) {
 	if (!persistent()) {
-	    set_mode(MODE_DISCONNECT);
+	    setMode(MODE_DISCONNECT);
 	}
     }
 }

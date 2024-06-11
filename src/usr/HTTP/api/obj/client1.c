@@ -5,6 +5,7 @@
 # include "HttpConnection.h"
 
 inherit Http1Client;
+inherit "~System/lib/user";
 
 
 /*
@@ -29,7 +30,7 @@ static void create(object client, string host, int port,
 int login(string str)
 {
     if (previous_program() == LIB_CONN) {
-	set_mode(MODE_BLOCK);
+	setMode(MODE_BLOCK);
 	call_limited("connected");
     }
     return MODE_NOCHANGE;

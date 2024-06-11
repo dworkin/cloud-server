@@ -4,6 +4,7 @@
 # include "HttpConnection.h"
 
 inherit Http1Server;
+inherit "~System/lib/user";
 
 
 private int received;	/* received at least one request */

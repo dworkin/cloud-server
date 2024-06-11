@@ -26,7 +26,7 @@ static void create(object relay, string trailersPath)
 /*
  * set the local input mode
  */
-static void set_mode(int mode)
+static void setMode(int mode)
 {
     switch (mode) {
     case MODE_BLOCK:
@@ -49,13 +49,13 @@ static void set_mode(int mode)
 	return;
     }
 
-    ::set_mode(mode);
+    ::setMode(mode);
 }
 
 /*
  * set the local message length
  */
-static void set_message_length(int length)
+static void setMessageLength(int length)
 {
     ::length = length;
 }
@@ -113,9 +113,9 @@ private void receiveBuffer()
 
 		if (!established) {
 		    established = TRUE;
-		    set_mode(receiveFirstMessage(str));
+		    setMode(receiveFirstMessage(str));
 		} else {
-		    set_mode(::receiveBytes(str));
+		    setMode(::receiveBytes(str));
 		}
 	    } else {
 		noline = TRUE;
@@ -137,9 +137,9 @@ private void receiveBuffer()
 	    }
 	    if (!established) {
 		established = TRUE;
-		set_mode(receiveFirstMessage(str));
+		setMode(receiveFirstMessage(str));
 	    } else {
-		set_mode(::receiveBytes(str));
+		setMode(::receiveBytes(str));
 	    }
 	}
     }

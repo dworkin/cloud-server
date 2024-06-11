@@ -39,7 +39,7 @@ static int tlsAccept(string str, varargs int reqCert, string hosts...)
     }
     if (!status) {
 	connected = TRUE;
-	set_mode(MODE_LINE);
+	setMode(MODE_LINE);
     }
     if (input) {
 	receiveBytes(input);
@@ -69,7 +69,7 @@ static int tlsReceive(string str)
     }
     if (!status && !connected) {
 	connected = TRUE;
-	set_mode(MODE_LINE);
+	setMode(MODE_LINE);
     }
     if (input) {
 	receiveBytes(input);

@@ -6,6 +6,7 @@
 # include "HttpConnection.h"
 
 inherit Http1TlsServer;
+inherit "~System/lib/user";
 
 
 int reqCert;		/* request client certificate */

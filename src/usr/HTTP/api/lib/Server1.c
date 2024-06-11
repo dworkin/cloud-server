@@ -25,7 +25,7 @@ static void create(object server, string requestPath, string headersPath)
     ::requestPath = requestPath;
     ::headersPath = headersPath;
     ::create(server, headersPath);
-    call_out("disconnect", 300);
+    call_out("terminate", 300);
 }
 
 /*
@@ -120,7 +120,7 @@ static int receiveRequestLine(string str)
  */
 static int receiveRequest(int code, HttpRequest request)
 {
-    set_mode(MODE_BLOCK);
+    setMode(MODE_BLOCK);
     try {
 	code = server->receiveRequest(code, request);
     } catch (...) {
@@ -162,7 +162,7 @@ static int receiveHeaders(string str)
 void doneRequest()
 {
     if (previous_object() == server) {
-	set_mode((persistent()) ? MODE_LINE : MODE_DISCONNECT);
+	setMode((persistent()) ? MODE_LINE : MODE_DISCONNECT);
     }
 }
 

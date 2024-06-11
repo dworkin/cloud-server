@@ -44,7 +44,7 @@ static int tlsReceive(string str)
     }
     if (!status && !connected) {
 	connected = TRUE;
-	set_mode(MODE_BLOCK);
+	setMode(MODE_BLOCK);
 	connected();
     }
     if (input) {

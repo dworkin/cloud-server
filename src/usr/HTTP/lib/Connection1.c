@@ -32,6 +32,28 @@ static void create(object relay, string trailersPath)
     ::trailersPath = trailersPath;
 }
 
+/* implemented at the top layer */
+static int message(string str);
+static void set_mode(int mode);
+static void set_message_length(int length);
+static void disconnect();
+
+/*
+ * set the receive mode
+ */
+static void setMode(int mode)
+{
+    set_mode(mode);
+}
+
+/*
+ * set the receive buffer size
+ */
+static void setMessageLength(int length)
+{
+    set_message_length(length);
+}
+
 /*
  * received request line
  */
@@ -177,9 +199,9 @@ private StringBuffer inflate(StringBuffer input)
 void expectEntity(int length)
 {
     if (previous_object() == relay && length != 0) {
-	set_mode(MODE_RAW);
+	setMode(MODE_RAW);
 	inbuf = new StringBuffer;
-	set_message_length(::length = length);
+	setMessageLength(::length = length);
     }
 }
 
@@ -189,7 +211,7 @@ void expectEntity(int length)
 void expectChunk(varargs string compression)
 {
     if (previous_object() == relay) {
-	set_mode(MODE_LINE);
+	setMode(MODE_LINE);
 	inchunk = TRUE;
 	transform = compression;
     }
@@ -208,7 +230,7 @@ static int receiveChunkLine(string str)
 
     if (length != 0) {
 	inbuf = new StringBuffer;
-	set_message_length(length);
+	setMessageLength(length);
 	return MODE_RAW;
     } else {
 	frame = "";
@@ -246,7 +268,7 @@ static void receiveWsChunk(StringBuffer chunk)
     if (transform) {
 	chunk = maskWsChunk(chunk, transform);
     }
-    set_mode(MODE_BLOCK);
+    setMode(MODE_BLOCK);
     inchunk = FALSE;
     relay->receiveWsChunk(chunk);
 }
@@ -265,7 +287,7 @@ static string receiveWsFrame(string str)
 
 	if (len > strlen(str)) {
 	    /* incomplete */
-	    set_message_length(::length = len - strlen(str));
+	    setMessageLength(::length = len - strlen(str));
 	    inbuf = new StringBuffer(str);
 	    return nil;
 	}
@@ -286,7 +308,7 @@ void expectWsFrame()
     if (previous_object() == relay) {
 	string str;
 
-	set_mode(MODE_RAW);
+	setMode(MODE_RAW);
 	inchunk = TRUE;
 
 	if (!webSocket) {
@@ -344,7 +366,7 @@ static int receiveBytes(string str)
 	str = frame;
 	frame = nil;
 
-	set_mode(MODE_BLOCK);
+	setMode(MODE_BLOCK);
 	if (!inchunk) {
 	    /*
 	     * headers
@@ -380,7 +402,7 @@ static int receiveBytes(string str)
 	    chunk = inbuf;
 	    inbuf = nil;
 
-	    set_mode(MODE_BLOCK);
+	    setMode(MODE_BLOCK);
 	    try {
 		receiveChunk(chunk);
 	    } catch (err) {
@@ -398,7 +420,7 @@ static int receiveBytes(string str)
 		chunk = inbuf;
 		inbuf = nil;
 
-		set_mode(MODE_BLOCK);
+		setMode(MODE_BLOCK);
 		relay->receiveEntity(chunk);
 	    }
 	}
@@ -554,10 +576,10 @@ void sendWsChunk(int opcode, int flags, varargs int mask, StringBuffer chunk)
 /*
  * break the connection
  */
-void disconnect()
+void terminate()
 {
     if (previous_object() == this_object() || previous_object() == relay) {
-	::disconnect();
+	disconnect();
     }
 }
 
@@ -582,7 +604,7 @@ static void sendRequest(HttpRequest request)
     connection = request->headers()->get("connection");
     persistent = !(connection && connection->listContains("close"));
     ::sendRequest(request);
-    set_mode(MODE_LINE);
+    setMode(MODE_LINE);
 }
 
 /*

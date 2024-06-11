@@ -5,8 +5,6 @@
 # include <Iterator.h>
 # include <String.h>
 
-inherit "~System/lib/user";
-
 
 /*
  * received HTTP request line
