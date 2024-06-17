@@ -4,6 +4,7 @@
 # include "HttpConnection.h"
 # include <Iterator.h>
 # include <String.h>
+# include <kfun.h>
 
 
 /*
@@ -162,10 +163,21 @@ static StringBuffer maskWsChunk(StringBuffer buffer, string mask)
 	    offset = 4 - offset;
 	}
 
+# ifdef KF_MASK_XOR
+	len = (strlen(str) & ~3) + offset;
+	if (len > strlen(str)) {
+	    len -= 4;
+	}
+	if (offset < len) {
+	    masked->append(mask_xor(mask, str[offset .. len - 1]));
+	    offset = len;
+	}
+# else
 	/* mask all 4-byte pieces */
 	for (len = strlen(str) - 4; offset <= len; offset += 4) {
 	    masked->append(asn_xor(str[offset .. offset + 3], mask));
 	}
+# endif
 
 	remainder = str[offset ..];
     }
