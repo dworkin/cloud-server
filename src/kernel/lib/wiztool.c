@@ -223,7 +223,7 @@ static mixed *rsrc_get(string owner, string name)
 
     rsrc = ::rsrc_get(owner, name);
     if (owner == "System" && name == "objects") {
-	rsrc[RSRC_USAGE] += sizeof(query_connections());
+	rsrc[RSRC_USAGE] += status(ST_NUSERS);
     }
     return rsrc;
 }
@@ -2120,7 +2120,7 @@ static void cmd_status(object user, string cmd, string str)
 	uptime /= 24;
 	short = status[ST_NCOSHORT];
 	long = status[ST_NCOLONG];
-	i = sizeof(query_connections());
+	i = status[ST_NUSERS];
 	str += "\n" +
 "swap average:  " + (swapavg(status[ST_SWAPRATE1], 60) + ", " +
 		     swapavg(status[ST_SWAPRATE5], 300) + SPACE16)[.. 15] +
