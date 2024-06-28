@@ -85,11 +85,11 @@ static string *keyGen(string group)
 
     case TLS_X25519:
 	({ pubKey, privKey }) = encrypt("X25519 key");
-	return ({ asn::extend(pubKey, 32), privKey, nil });
+	return ({ asn::unsignedExtend(pubKey, 32), privKey, nil });
 
     case TLS_X448:
 	({ pubKey, privKey }) = encrypt("X448 key");
-	return ({ asn::extend(pubKey, 56), privKey, nil });
+	return ({ asn::unsignedExtend(pubKey, 56), privKey, nil });
 
     case TLS_FFDHE2048:
 	prime = ffdhe2048p();
@@ -470,7 +470,7 @@ static string rsaSign(string message, X509Key key, string hash)
     if (strlen(m) > len) {
 	m = m[1 ..];
     } else {
-	m = asn::extend(m, len);
+	m = asn::unsignedExtend(m, len);
     }
     return m;
 }

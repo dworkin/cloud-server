@@ -272,7 +272,7 @@ static string *keyPair(string prime)
     } while (asn_cmp(pubKey, "\1") <= 0);
 
     if (strlen(pubKey) < len) {
-	pubKey = asn::extend(pubKey, len);
+	pubKey = asn::unsignedExtend(pubKey, len);
     } else if (strlen(pubKey) > len) {
 	pubKey = pubKey[1 ..];
     }
@@ -291,7 +291,7 @@ static string sharedSecret(string foreignKey, string privKey, string prime)
     secret = asn_pow("\0" + foreignKey, privKey, prime);
     len = strlen(prime) - 1;
     if (strlen(secret) < len) {
-	secret = asn::extend(secret, len);
+	secret = asn::unsignedExtend(secret, len);
     } else if (strlen(secret) > len) {
 	secret = secret[1 ..];
     }

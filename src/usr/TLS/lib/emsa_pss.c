@@ -53,7 +53,7 @@ static int verify(string M, string EM, int bits, string hash)
     int emLen, hlen, bitmask, i;
     string mHash, H, data;
 
-    EM = asn::extend(EM, emLen = (bits + 7) / 8);
+    EM = asn::unsignedExtend(EM, emLen = (bits + 7) / 8);
     mHash = hash_string(hash, M);
     hlen = strlen(mHash);
     bitmask = 0xff >> ((8 - (bits & 7)) & 7);

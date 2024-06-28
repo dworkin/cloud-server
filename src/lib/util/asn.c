@@ -143,18 +143,37 @@ static int decode(string str)
 }
 
 /*
- * extend an ASN
+ * extend a (signed) ASN
  */
 static string extend(string str, int length)
 {
+    int len;
     string pad;
 
-    if (strlen(str) < length) {
+    len = strlen(str);
+    if (len < length) {
+	pad = (len > 0 && str[0] & 0x80) ?
+	       "\xff\xff\xff\xff\xff\xff\xff\xff" : "\0\0\0\0\0\0\0\0";
+	for (length -= len; strlen(pad) < length; pad += pad) ;
+	str = (pad + str)[strlen(pad) - length ..];
+    }
+
+    return str;
+}
+
+/*
+ * unsigned-extend an ASN
+ */
+static string unsignedExtend(string str, int length)
+{
+    int len;
+    string pad;
+
+    len = strlen(str);
+    if (len < length) {
 	pad = "\0\0\0\0\0\0\0\0";
-	while (strlen(pad) + strlen(str) < length) {
-	    pad += pad;
-	}
-	str = (pad + str)[strlen(pad) + strlen(str) - length ..];
+	for (length -= len; strlen(pad) < length; pad += pad) ;
+	str = (pad + str)[strlen(pad) - length ..];
     }
 
     return str;
