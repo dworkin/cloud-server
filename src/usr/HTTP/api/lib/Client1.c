@@ -63,7 +63,9 @@ static int receiveHeaders(string str)
 void doneResponse()
 {
     if (previous_object() == client) {
-	if (!persistent()) {
+	if (persistent()) {
+	    idle();
+	} else {
 	    setMode(MODE_DISCONNECT);
 	}
     }

@@ -76,7 +76,7 @@ private void receiveBuffer()
     int len;
     string str, head, pre;
 
-    while (!blocked && mode != MODE_DISCONNECT) {
+    while (!blocked && mode != MODE_DISCONNECT && this_object()) {
 	if (strlen(chunk) <= 32768 && buffer->length() != 0) {
 	    chunk += buffer->chunk();
 	    noline = FALSE;

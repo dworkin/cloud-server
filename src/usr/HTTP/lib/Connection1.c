@@ -25,6 +25,7 @@ private string transform;	/* compression or masking */
 private StringBuffer inbuf;	/* entity included in request/response */
 private int length;		/* length of entity to receive */
 private StringBuffer outbuf;	/* output buffer */
+private int idle;		/* idle mode? */
 private int quiet;		/* quiet output? */
 private int persistent;		/* is connection persistent? */
 private int webSocket;		/* WebSocket enabled? */
@@ -194,6 +195,16 @@ private StringBuffer inflate(StringBuffer input)
 # endif
 
 /*
+ * be idle, but don't block input
+ */
+static void idle()
+{
+    idle = TRUE;
+    setMessageLength(1);
+    setMode(MODE_RAW);
+}
+
+/*
  * prepare to receive an entity
  */
 void expectEntity(int length)
@@ -333,7 +344,10 @@ static int receiveBytes(string str)
 {
     StringBuffer chunk;
 
-    if (webSocket) {
+    if (idle) {
+	relay->receiveError("HTTP protocol error");
+	return MODE_DISCONNECT;
+    } else if (webSocket) {
 	try {
 	    if (frame) {
 		str = frame + str;
@@ -604,6 +618,8 @@ static void sendRequest(HttpRequest request)
     connection = request->headers()->get("connection");
     persistent = !(connection && connection->listContains("close"));
     ::sendRequest(request);
+    idle = FALSE;
+    setMessageLength(0);
     setMode(MODE_LINE);
 }
 
