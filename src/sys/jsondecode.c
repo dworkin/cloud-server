@@ -1,4 +1,5 @@
 # include <String.h>
+# include <limits.h>
 
 
 object strDecode;	/* JSON string decoder */
@@ -68,6 +69,16 @@ static mixed *decodeString(mixed *parsed)
  */
 static mixed *decodeInt(mixed *parsed)
 {
+# if INT_MIN == 0x80000000
+    string str;
+
+    str = parsed[0];
+    sscanf(str, "-%s", str);
+    if (strlen(str) >= 9 && (float) str > (float) INT_MAX) {
+	return parsed;	/* leave as string if too large to represent */
+    }
+# endif
+
     return ({ (int) parsed[0] });
 }
 
