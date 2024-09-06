@@ -449,11 +449,6 @@ string generate_leaf(string path)
     if (previous_program() == SYSTEMAUTO) {
 	string str, tail;
 
-	str = object_name(previous_object());
-	if (sscanf(str, WIZTOOL + "#%*d") == 0 &&
-	    !access(str, path, READ_ACCESS)) {
-	    error("Access denied");
-	}
 	sscanf(path, "%s/lib/%s", str, tail);
 	str += "/@@@/" + tail;
 	if (!find_object(str)) {

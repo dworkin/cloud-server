@@ -71,7 +71,6 @@ static void create()
 
     /* global access */
     set_global_access("System", TRUE);
-    set_global_access("TLS", TRUE);
 
     /* server objects */
     load("sys/errord");

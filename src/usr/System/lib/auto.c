@@ -89,7 +89,8 @@ static object new_object(string path, mixed args...)
 	    }
 	    break;
 	}
-	if (sscanf(path, "%*s/lib/") != 0 && status(path, O_INDEX) != nil) {
+	if (sscanf(path, "%*s/lib/") != 0 && sscanf(path, "/kernel/%*s") == 0 &&
+	    status(path, O_INDEX) != nil) {
 	    /* let upgrade server generate a leaf object */
 	    path = UPGRADE_SERVER->generate_leaf(path);
 	}

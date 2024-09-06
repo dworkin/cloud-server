@@ -265,13 +265,9 @@ static object clone_object(string path, varargs string uid)
     obj = ::find_object(DRIVER);
     creator = obj->creator(object_name(this_object()));
     path = obj->normalize_path(path, nil, creator);
-    if ((sscanf(path, "/kernel/%*s") != 0 && !KERNEL()) ||
-	(creator != "System" &&
-	 !::find_object(ACCESSD)->access(object_name(this_object()), path,
-					 READ_ACCESS))) {
+    if (sscanf(path, "/kernel/%*s") != 0 && !KERNEL()) {
 	/*
-	 * kernel objects can only be cloned by kernel objects, and cloning
-	 * in general requires read access
+	 * kernel objects can only be cloned by kernel objects
 	 */
 	error("Access denied");
     }
@@ -338,10 +334,7 @@ static object new_object(mixed obj, varargs string uid)
 	/*
 	 * check access
 	 */
-	if (sscanf(str, "/kernel/%*s") != 0 ||
-	    (creator != "System" &&
-	     !::find_object(ACCESSD)->access(object_name(this_object()), str,
-					     READ_ACCESS))) {
+	if (sscanf(str, "/kernel/%*s") != 0) {
 	    error("Access denied");
 	}
 
