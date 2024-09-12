@@ -364,7 +364,8 @@ static string verifyData(string secret, string algorithm)
 /*
  * check stack of certificates, translate OpenSSL error to TLS error
  */
-static void checkCertificates(string origin, string *certificates)
+static void checkCertificates(string origin, string *certificates,
+			      varargs int permitSelfSigned)
 {
     string tlsError;
 
@@ -403,6 +404,10 @@ static void checkCertificates(string origin, string *certificates)
 	    break;
 
 	case "self-signed certificate":
+	    if (permitSelfSigned) {
+		return;
+	    }
+	    /* fall through */
 	case "certificate chain too long":
 	case "invalid CA certificate":
 	case "path length constraint exceeded":
