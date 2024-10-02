@@ -157,7 +157,7 @@ static void receiveBytes(StringBuffer str)
 /*
  * is there buffered input?
  */
-int buffered_input()
+static int bufferedInput()
 {
     if (strlen(chunk) == 0 && buffer->length() == 0) {
 	return FALSE;

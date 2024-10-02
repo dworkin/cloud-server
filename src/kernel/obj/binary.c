@@ -254,12 +254,24 @@ static void restart_input()
 }
 
 /*
+ * NAMR:	tls_set_mode()
+ * DESCRIPTION:	set_mode() with TLS
+ */
+private void tls_set_mode(mapping tls, int mode)
+{
+    set_mode(mode);
+}
+
+/*
  * NAME:	message_done()
  * DESCRIPTION:	called when output is completed
  */
 static void message_done()
 {
-    set_mode(::message_done(([ ])));
+    mapping tls;
+
+    tls = ([ ]);
+    tls_set_mode(tls, ::message_done(tls));
 }
 
 /*

@@ -105,6 +105,16 @@ int message_done()
 }
 
 /*
+ * is there buffered input?
+ */
+int buffered_input()
+{
+    if (previous_program() == BINARY_CONN) {
+	return call_limited("bufferedInput");
+    }
+}
+
+/*
  * reprocess pending input
  */
 void restart_input()
