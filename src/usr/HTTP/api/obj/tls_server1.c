@@ -1,5 +1,4 @@
 # include <kernel/user.h>
-# include <String.h>
 # include "~TLS/tls.h"
 # include "HttpRequest.h"
 # include "HttpField.h"
@@ -9,9 +8,9 @@ inherit Http1TlsServer;
 inherit "~System/lib/user";
 
 
-int reqCert;		/* request client certificate */
-string *hosts;		/* server hostnames */
-private int received;	/* received at least one request */
+int reqCert;	/* request client certificate */
+string *hosts;	/* server hostnames */
+int received;	/* received at least one request */
 
 /*
  * initialize connection object

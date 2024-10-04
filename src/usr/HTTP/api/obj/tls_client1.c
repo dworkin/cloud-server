@@ -1,5 +1,4 @@
 # include <kernel/user.h>
-# include <String.h>
 # include "~TLS/tls.h"
 # include "HttpField.h"
 # include "HttpResponse.h"

@@ -7,7 +7,7 @@ inherit Http1Server;
 inherit "~System/lib/user";
 
 
-private int received;	/* received at least one request */
+int received;	/* received at least one request */
 
 /*
  * initialize connection object

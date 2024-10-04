@@ -28,6 +28,14 @@ static void create(object client, string host, int port, string responsePath,
 }
 
 /*
+ * default client inactivity timeout
+ */
+static int inactivityTimeout()
+{
+    return 120;
+}
+
+/*
  * connection established (client)
  */
 static void connected()

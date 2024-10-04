@@ -25,7 +25,14 @@ static void create(object server, string requestPath, string headersPath)
     ::requestPath = requestPath;
     ::headersPath = headersPath;
     ::create(server, headersPath);
-    call_out("terminate", 300);
+}
+
+/*
+ * default server inactivity timeout
+ */
+static int inactivityTimeout()
+{
+    return 60;
 }
 
 /*

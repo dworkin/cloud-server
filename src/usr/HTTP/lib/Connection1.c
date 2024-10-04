@@ -17,6 +17,10 @@ static void set_mode(int mode);
 static void set_message_length(int length);
 static void disconnect();
 
+static int inactivityTimeout();
+static int receiveHeaders(string str);
+static int receiveMessage(string str);
+
 private object relay;		/* object to relay to */
 private string trailersPath;	/* HttpFields object path */
 private string frame;		/* HTTP 1.x headers/trailers or WsFrame */
@@ -24,6 +28,7 @@ private int inchunk;		/* expecting chunk? */
 private string transform;	/* compression or masking */
 private StringBuffer inbuf;	/* entity included in request/response */
 private int length;		/* length of entity to receive */
+private int active;		/* activity time */
 private StringBuffer outbuf;	/* output buffer */
 private int idle;		/* idle mode? */
 private int quiet;		/* quiet output? */
@@ -35,8 +40,15 @@ private int webSocket;		/* WebSocket enabled? */
  */
 static void create(object relay, string trailersPath)
 {
+    int timeout;
+
     ::relay = relay;
     ::trailersPath = trailersPath;
+    active = time();
+    timeout = inactivityTimeout();
+    if (timeout != 0) {
+	call_out("inactive", timeout);
+    }
 }
 
 /*
@@ -334,9 +346,6 @@ void expectWsFrame()
     }
 }
 
-static int receiveHeaders(string str);
-static int receiveMessage(string str);
-
 /*
  * receive (part of) message
  */
@@ -344,6 +353,7 @@ static int receiveBytes(string str)
 {
     StringBuffer chunk;
 
+    active = time();
     if (idle) {
 	relay->receiveError("HTTP protocol error");
 	return MODE_DISCONNECT;
@@ -638,6 +648,22 @@ static void sendResponse(HttpResponse response)
 	persistent = FALSE;
     }
     ::sendResponse(response);
+}
+
+/*
+ * see if the timeout for inactivity was reached
+ */
+static void inactive()
+{
+    int inactive, timeout;
+
+    inactive = time() - active;
+    timeout = inactivityTimeout();
+    if (inactive >= timeout) {
+	terminate();
+    } else {
+	call_out("inactive", timeout - inactive);
+    }
 }
 
 
