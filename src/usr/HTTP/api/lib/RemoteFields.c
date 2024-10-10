@@ -26,7 +26,13 @@ static HttpAuthentication *parseAuthenticate(string str)
  */
 static HttpProduct *parseProducts(string str)
 {
-    return HTTP_PRODUCTS->products(str);
+    mixed *values;
+
+    values = HTTP_PRODUCTS->products(str);
+    if (!values) {
+	error("Bad field");
+    }
+    return values;
 }
 
 /*

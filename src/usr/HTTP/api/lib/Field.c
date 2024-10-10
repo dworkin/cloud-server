@@ -52,7 +52,11 @@ int listContains(string str)
  */
 string transport()
 {
-    return name + ((value) ? ": " + transportValue(value, params) : ":");
+    return name + ((value) ?
+		    ": " + transportValue(value, params,
+					  (lcName == "server" ||
+					   lcName == "user-agent")) :
+		    ":");
 }
 
 

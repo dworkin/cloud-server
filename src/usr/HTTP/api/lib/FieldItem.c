@@ -7,7 +7,7 @@
 /*
  * transport part of an item
  */
-static string transportValue(mixed item, varargs mixed *params)
+static string transportValue(mixed item, varargs mixed *params, int products)
 {
     string str;
     mixed *values;
@@ -39,7 +39,7 @@ static string transportValue(mixed item, varargs mixed *params)
 		values[i] += ";" + implode(params[i], ";");
 	    }
 	}
-	return implode(values, ", ");
+	return implode(values, (products) ? " " : ", ");
 
     default:
 	error("Unhandled value in transport");
