@@ -465,8 +465,11 @@ static int call_out(string func, mixed args...)
  * NAME:	call_out_other()
  * DESCRIPTION:	prevent System auto functions from being called by callout
  */
-static int call_out_other(object obj, string func, mixed args...)
+static int call_out_other(mixed obj, string func, mixed args...)
 {
+    if (typeof(obj) == T_STRING) {
+	obj = find_object(obj);
+    }
     if (function_object(func, obj) == SYSTEM_AUTO) {
 	error("Illegal callout");
     }

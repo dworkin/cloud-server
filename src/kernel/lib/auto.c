@@ -93,7 +93,7 @@ static object find_object(string path)
 	return nil;
     }
 
-    path = ::find_object(DRIVER)->normalize_path(path, nil);
+    path = ::find_object(DRIVER)->normalize_path(path);
     if (sscanf(path, "%*s/lib/") != 0) {
 	/*
 	 * It is not possible to find a class object by name, or to call a
@@ -479,7 +479,7 @@ static mixed status(varargs mixed obj, mixed index)
     case T_STRING:
 	/* get corresponding object */
 	driver = ::find_object(DRIVER);
-	obj = ::find_object(driver->normalize_path(obj, nil));
+	obj = ::find_object(driver->normalize_path(obj));
 	if (!obj) {
 	    return nil;
 	}
