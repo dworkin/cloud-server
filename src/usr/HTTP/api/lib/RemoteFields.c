@@ -110,6 +110,7 @@ static void create(string blob)
 	case "host":
 	case "referer":
 	case "sec-websocket-key":
+	case "sec-websocket-version":
 	    if (!value || sscanf(value, "%*s ") != 0) {
 		error("Bad field");
 	    }
