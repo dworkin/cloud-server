@@ -66,11 +66,8 @@ static object find_object(string path)
  */
 static object clone_object(string path, mixed args...)
 {
-    string owner;
-
-    owner = query_owner();
-    path = DRIVER->normalize_path(path, query_directory(), owner);
-    if (sscanf(path, "/kernel/%*s") != 0 || !access(owner, path, READ_ACCESS)) {
+    path = DRIVER->normalize_path(path, query_directory(), query_owner());
+    if (sscanf(path, "/kernel/%*s") != 0) {
 	message(path + ": Permission denied.\n");
 	return nil;
     }
@@ -83,11 +80,8 @@ static object clone_object(string path, mixed args...)
  */
 static object new_object(string path, mixed args...)
 {
-    string owner;
-
-    owner = query_owner();
-    path = DRIVER->normalize_path(path, query_directory(), owner);
-    if (sscanf(path, "/kernel/%*s") != 0 || !access(owner, path, READ_ACCESS)) {
+    path = DRIVER->normalize_path(path, query_directory(), query_owner());
+    if (sscanf(path, "/kernel/%*s") != 0) {
 	message(path + ": Permission denied.\n");
 	return nil;
     }
@@ -100,11 +94,27 @@ static object new_object(string path, mixed args...)
  */
 static object compile_object(string path, string source...)
 {
-    if (path && sscanf(path, "%*s/@@@/") != 0) {
+    object obj;
+
+    path = DRIVER->normalize_path(path, query_directory(), query_owner());
+    if (sscanf(path, "%*s/@@@/") != 0) {
 	message(path + ": Cannot compile leaf object.\n");
 	return nil;
     }
-    return wiztool::compile_object(path, source...);
+    if (sscanf(path, "%*s/lib/") + sscanf(path, "%*s/obj/") +
+	sscanf(path, "%*s/sys/") > 1) {
+	message("Ambiguous object.\n");
+	return nil;
+    }
+    obj = wiztool::compile_object(path, source...);
+    if (obj) {
+	if (sscanf(path, "%*s/obj/") != 0) {
+	    return nil;
+	} else if (sscanf(path, "%*s/sys/") != 0) {
+	    call_other(obj, "???");
+	}
+    }
+    return obj;
 }
 
 /*
