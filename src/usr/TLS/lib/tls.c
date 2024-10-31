@@ -404,6 +404,7 @@ static void checkCertificates(string origin, string *certificates,
 	    break;
 
 	case "self-signed certificate":
+	case "self-signed certificate in certificate chain":
 	    if (permitSelfSigned) {
 		return;
 	    }
@@ -411,7 +412,6 @@ static void checkCertificates(string origin, string *certificates,
 	case "certificate chain too long":
 	case "invalid CA certificate":
 	case "path length constraint exceeded":
-	case "self-signed certificate in certificate chain":
 	case "unable to get issuer certificate":
 	case "unable to get local issuer certificate":
 	case "unable to get certificate CRL":
