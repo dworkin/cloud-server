@@ -20,13 +20,13 @@ static mixed expect(Asn1 node, int tag, varargs int class)
  */
 static string expectAlgorithm(Asn1 node)
 {
-    Asn1 params;
+    Asn1 *list;
 
-    ({ node, params }) = expect(node, ASN1_SEQUENCE);
-    if (expect(params, ASN1_NULL) != "") {
+    list = expect(node, ASN1_SEQUENCE);
+    if (sizeof(list) > 1 && expect(list[1], ASN1_NULL) != "") {
 	error("BAD_CERTIFICATE");
     }
-    return expect(node, ASN1_OBJECT_IDENTIFIER);
+    return expect(list[0], ASN1_OBJECT_IDENTIFIER);
 }
 
 /*
