@@ -15,9 +15,8 @@ private int noline;		/* no full line in input? */
 /*
  * initialize HTTP1 connection with buffered input
  */
-static void create(object relay, string trailersPath)
+static void create()
 {
-    ::create(relay, trailersPath);
     buffer = new StringBuffer(nil, 32767);
     chunk = "";
     mode = MODE_RAW;

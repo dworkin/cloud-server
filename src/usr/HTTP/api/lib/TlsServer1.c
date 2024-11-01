@@ -20,7 +20,7 @@ static void create(object server, string certificate, string key,
 		   string tlsServerSessionPath)
 {
     server::create(server, requestPath, fieldsPath);
-    buffered::create(server, fieldsPath);
+    buffered::create();
     session = new_object(tlsServerSessionPath, certificate, key);
 }
 

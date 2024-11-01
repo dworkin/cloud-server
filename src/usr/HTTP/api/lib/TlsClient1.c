@@ -18,7 +18,7 @@ static void create(object client, string address, int port, string responsePath,
 		   string fieldsPath, string tlsClientSessionPath)
 {
     client::create(client, address, port, responsePath, fieldsPath);
-    buffered::create(client, fieldsPath);
+    buffered::create();
     session = new_object(tlsClientSessionPath);
 }
 
