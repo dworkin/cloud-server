@@ -444,16 +444,9 @@ mixed upgrade(string owner, string *sources, int atom, object patchtool)
  * NAME:	generate_leaf()
  * DESCRIPTION:	generate a leaf object
  */
-string generate_leaf(string path)
+void generate_leaf(string path, string code)
 {
     if (previous_program() == SYSTEMAUTO) {
-	string str, tail;
-
-	sscanf(path, "%s/lib/%s", str, tail);
-	str += "/@@@/" + tail;
-	if (!find_object(str)) {
-	    compile_object(str, "inherit \"" + path + "\";\n");
-	}
-	return str;
+	compile_object(path, code);
     }
 }

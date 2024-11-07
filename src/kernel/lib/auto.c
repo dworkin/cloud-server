@@ -392,7 +392,7 @@ static mixed *call_trace(varargs mixed index)
 	    }
 	}
     } else {
-	trace = ::call_trace()[index];
+	trace = ::call_trace()[(int) index];
 	if (index == 1 && previous_program() != RSRCOBJ) {
 	    trace[TRACE_FIRSTARG] = nil;
 	}
@@ -466,10 +466,10 @@ static mixed status(varargs mixed obj, mixed index)
 
     case T_INT:
 	if (obj == -1) {
-	    return (index == nil) ? ::status(1) : ::status(1)[index];
+	    return (index == nil) ? ::status(1) : ::status(1)[(int) index];
 	} else {
 	    CHECKARG(index == nil, 1, "status");
-	    status = ::status()[obj];
+	    status = ::status()[(int) obj];
 	    if (obj == ST_STACKDEPTH && status >= 0) {
 		status++;
 	    }
@@ -492,7 +492,7 @@ static mixed status(varargs mixed obj, mixed index)
 	    break;
 
 	case T_INT:
-	    status = ::status(obj)[index];
+	    status = ::status(obj)[(int) index];
 	    if (index == O_CALLOUTS) {
 		status = process_callouts(obj, status);
 	    }
