@@ -378,13 +378,16 @@ static void checkCertificates(string origin, string *certificates,
 	case "CA signature digest algorithm too weak":
 	case "certificate rejected":
 	case "certificate not trusted":
+	case "No matching DANE TLSA records":
 	case "no matching DANE TLSA records":
 	case "EE certificate key too weak":
+	case "Email address mismatch":
 	case "email address mismatch":
 	case "format error in certificate's notBefore field":
 	case "format error in certificate's notAfter field":
 	case "format error in CRL's lastUpdate field":
 	case "format error in CRL's nextUpdate field":
+	case "Hostname mismatch":
 	case "hostname mismatch":
 	case "IP address mismatch":
 	    tlsError = "BAD_CERTIFICATE";
@@ -399,11 +402,14 @@ static void checkCertificates(string origin, string *certificates,
 	    tlsError = "CERTIFICATE_EXPIRED";
 	    break;
 
+	case "unsupported certificate purpose":
 	case "unsuitable certificate purpose":
 	    tlsError = "UNSUPPORTED_CERTIFICATE";
 	    break;
 
+	case "self signed certificate":
 	case "self-signed certificate":
+	case "self signed certificate in certificate chain":
 	case "self-signed certificate in certificate chain":
 	    if (permitSelfSigned) {
 		return;
@@ -425,8 +431,10 @@ static void checkCertificates(string origin, string *certificates,
 	    tlsError = "DECRYPT_ERROR";
 	    break;
 
+	case "Invalid certificate verification context":
 	case "invalid certificate verification context":
 	case "out of memory":
+	case "Issuer certificate lookup error":
 	case "issuer certificate lookup error":
 	case "unspecified certificate verification error":
 	    tlsError = "INTERNAL_ERROR";
