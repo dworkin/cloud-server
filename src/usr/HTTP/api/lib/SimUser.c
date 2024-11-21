@@ -85,21 +85,21 @@ static void sim_send()
  */
 void remote_done()
 {
-    if (previous_object() == remote) {
-	call_out("sim_done", 0);
-    }
+    call_out("sim_done", 0, previous_object());
 }
 
 /*
  * simulated message_done()
  */
-static void sim_done()
+static void sim_done(object caller)
 {
-    awaitingDone = FALSE;
-    if (outbuf) {
-	sim_send();
-    } else {
-	message_done();
+    if (caller == remote) {
+	awaitingDone = FALSE;
+	if (outbuf) {
+	    sim_send();
+	} else {
+	    message_done();
+	}
     }
 }
 
@@ -119,17 +119,17 @@ static void disconnect()
  */
 void remote_disconnect()
 {
-    if (previous_object() == remote) {
-	call_out("sim_disconnect", 0);
-    }
+    call_out("sim_disconnect", 0, previous_object());
 }
 
 /*
  * connection is broken
  */
-static void sim_disconnect()
+static void sim_disconnect(object caller)
 {
-    logout(FALSE);
+    if (caller == remote) {
+	logout(FALSE);
+    }
 }
 
 /*
@@ -302,7 +302,15 @@ static void sim_receive_buffer()
  */
 void remote_message(string input)
 {
-    if (previous_object() == remote) {
+    call_out("sim_receive_message", 0, previous_object(), input);
+}
+
+/*
+ * message received
+ */
+static void sim_receive_message(object caller, string input)
+{
+    if (caller == remote) {
 	if (receive != 0) {
 	    remove_call_out(receive);
 	    receive = 0;
