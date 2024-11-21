@@ -705,7 +705,7 @@ static int call_out(string func, mixed delay, mixed args...)
 	/* direct callouts for kernel objects */
 	return ::call_out(func, delay, args...);
     }
-    return ::call_out("_F_callout", delay, func, owner, args);
+    return ::call_out("_F_callout", delay, func, "", args);
 }
 
 /*
@@ -715,7 +715,8 @@ static int call_out(string func, mixed delay, mixed args...)
 nomask void _F_callout(string func, string oowner, mixed *args)
 {
     if (!previous_program()) {
-	_F_call_limited(func, oowner, args);
+	_F_call_limited(func, (oowner && strlen(oowner) == 0) ? owner : oowner,
+			args);
     }
 }
 
