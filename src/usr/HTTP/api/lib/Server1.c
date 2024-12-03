@@ -123,21 +123,6 @@ static int receiveRequestLine(string str)
 }
 
 /*
- * receive a request
- */
-static int receiveRequest(int code, HttpRequest request)
-{
-    setMode(MODE_BLOCK);
-    try {
-	code = server->receiveRequest(code, request);
-    } catch (...) {
-	code = HTTP_INTERNAL_ERROR;
-    }
-
-    return code;
-}
-
-/*
  * receive request headers
  */
 static int receiveHeaders(string str)

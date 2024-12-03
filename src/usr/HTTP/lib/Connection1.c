@@ -106,6 +106,21 @@ static int receiveRequestHeader(HttpRequest request, HttpField header)
 }
 
 /*
+ * received HTTP request
+ */
+static int receiveRequest(int code, HttpRequest request)
+{
+    setMode(MODE_BLOCK);
+    try {
+	code = relay->receiveRequest(code, request);
+    } catch (...) {
+	code = HTTP_INTERNAL_ERROR;
+    }
+
+    return code;
+}
+
+/*
  * received response status line
  */
 static void receiveStatusLine(HttpResponse response)
@@ -136,6 +151,15 @@ static void receiveResponseHeader(HttpResponse response, HttpField header)
 	break;
     }
     ::receiveResponseHeader(response, header);
+}
+
+/*
+ * received HTTP response
+ */
+static int receiveResponse(HttpResponse response)
+{
+    relay->receiveResponse(response);
+    return MODE_NOCHANGE;
 }
 
 /*

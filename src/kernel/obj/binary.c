@@ -190,45 +190,30 @@ static void receive_message(string str)
 void set_mode(int mode)
 {
     int oldmode;
-    object user;
 
     if (KERNEL()) {
 	oldmode = query_mode();
 	::set_mode(mode);
-	if (oldmode == MODE_BLOCK && mode != MODE_DISCONNECT &&
-	    mode != MODE_BLOCK && restart == 0) {
-	    if (strlen(buffer) != 0) {
-		switch (mode) {
-		case MODE_LINE:
-		case MODE_EDIT:
-		    if (!noline) {
-			break;
-		    }
-		    /* fall through */
-		default:
-		    if (!(user=query_user()) || !user->buffered_input()) {
-			return;
-		    }
-		    /* fall through */
-		case MODE_RAW:
+	if (oldmode == MODE_BLOCK && restart == 0 && strlen(buffer) != 0) {
+	    if (mode == MODE_UNBLOCK) {
+		mode = query_mode();
+	    }
+	    switch (mode) {
+	    case MODE_LINE:
+	    case MODE_EDIT:
+		if (!noline) {
 		    break;
 		}
-	    } else if (!(user=query_user()) || !user->buffered_input()) {
+		/* fall through */
+	    default:
 		return;
-	    }
 
+	    case MODE_RAW:
+		break;
+	    }
 	    restart = call_out("restart_input", 0);
 	}
     }
-}
-
-/*
- * NAME:	user_restart_input()
- * DESCRIPTION:	reprocess user input buffer
- */
-private void user_restart_input(mapping tls, object user)
-{
-    user->restart_input();
 }
 
 /*
@@ -239,22 +224,17 @@ static void restart_input()
 {
     int mode;
     mapping tls;
-    object user;
 
     restart = 0;
     if ((mode=query_mode()) != MODE_BLOCK && mode != MODE_DISCONNECT) {
 	tls = ([ ]);
 	TLSVAR(tls, TLS_USER) = this_object();
-	user = query_user();
-	if (user) {
-	    user_restart_input(tls, user);
-	}
 	receive_buffer(tls);
     }
 }
 
 /*
- * NAMR:	tls_set_mode()
+ * NAME:	tls_set_mode()
  * DESCRIPTION:	set_mode() with TLS
  */
 private void tls_set_mode(mapping tls, int mode)

@@ -6,8 +6,6 @@
 static int receive_message(string str);
 static void logout(int quit);
 static int message_done();
-static int buffered_input();
-static void restart_input();
 
 private SimUser remote;		/* remote user */
 private StringBuffer outbuf;	/* output buffer */
@@ -177,22 +175,18 @@ static void set_mode(int mode)
 		    }
 		    /* fall through */
 		default:
-		    if (!buffered_input()) {
-			return;
-		    }
-		    /* fall through */
+		    return;
+
 		case MODE_RAW:
 		    break;
 		}
-	    } else if (!buffered_input()) {
-		return;
-	    }
 
-	    if (receive != 0) {
-		remove_call_out(receive);
-		receive = 0;
+		if (receive != 0) {
+		    remove_call_out(receive);
+		    receive = 0;
+		}
+		restart = call_out("sim_restart_input", 0);
 	    }
-	    restart = call_out("sim_restart_input", 0);
 	}
     }
 }
@@ -333,7 +327,6 @@ static void sim_restart_input()
 {
     restart = 0;
     if (!blocked && mode != MODE_DISCONNECT) {
-	restart_input();
 	sim_receive_buffer();
     }
 }

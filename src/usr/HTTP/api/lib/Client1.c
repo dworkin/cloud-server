@@ -61,8 +61,7 @@ static int receiveHeaders(string str)
     } catch (...) {
 	return MODE_DISCONNECT;
     }
-    client->receiveResponse(response);
-    return MODE_NOCHANGE;
+    return receiveResponse(response);
 }
 
 /*

@@ -11,6 +11,7 @@ private int established;	/* first message received? */
 private int blocked;		/* input blocked? */
 private int length;		/* length of message to receive */
 private int noline;		/* no full line in input? */
+private int start;		/* starting buffered input? */
 
 /*
  * initialize HTTP1 connection with buffered input
@@ -23,6 +24,21 @@ static void create()
 }
 
 /*
+ * start processing input
+ */
+private void startInput()
+{
+    if (start == 0) {
+	if ((strlen(chunk) != 0 || buffer->length() != 0) &&
+	    (mode == MODE_RAW || !noline)) {
+	    start = call_out("startBufferedInput", 0);
+	} else {
+	    ::setMode(MODE_RAW);
+	}
+    }
+}
+
+/*
  * set the local input mode
  */
 static void setMode(int mode)
@@ -32,23 +48,24 @@ static void setMode(int mode)
 	blocked = TRUE;
 	break;
 
-    case MODE_UNBLOCK:
-	blocked = FALSE;
-	break;
-
     case MODE_LINE:
     case MODE_EDIT:
     case MODE_RAW:
-	blocked = FALSE;
 	::mode = mode;
 	mode = MODE_RAW;
+	/* fall through */
+    case MODE_UNBLOCK:
+	if (blocked) {
+	    blocked = FALSE;
+	    startInput();
+	    return;
+	}
 	break;
-
-    case MODE_NOCHANGE:
-	return;
     }
 
-    ::setMode(mode);
+    if (mode != MODE_NOCHANGE) {
+	::setMode(mode);
+    }
 }
 
 /*
@@ -154,20 +171,13 @@ static void receiveBytes(StringBuffer str)
 }
 
 /*
- * is there buffered input?
+ * process buffered input
  */
-static int bufferedInput()
+static void startBufferedInput()
 {
-    if (strlen(chunk) == 0 && buffer->length() == 0) {
-	return FALSE;
-    }
-    return (mode == MODE_RAW) ? TRUE : !noline;
-}
-
-/*
- * reprocess pending input
- */
-static void restartInput()
-{
+    start = 0;
     receiveBuffer();
+    if (!blocked) {
+	startInput();
+    }
 }

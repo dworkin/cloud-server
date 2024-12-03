@@ -83,23 +83,3 @@ int message_done()
 	return call_limited("messageDone");
     }
 }
-
-/*
- * is there buffered input?
- */
-int buffered_input()
-{
-    if (previous_program() == BINARY_CONN) {
-	return call_limited("bufferedInput");
-    }
-}
-
-/*
- * reprocess pending input
- */
-void restart_input()
-{
-    if (previous_program() == BINARY_CONN) {
-	call_limited("restartInput");
-    }
-}
