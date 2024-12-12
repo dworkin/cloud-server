@@ -18,7 +18,7 @@ static void create(object client, string address, int port, string responsePath,
 		   string fieldsPath, string tlsClientSessionPath)
 {
     client::create(client, address, port, responsePath, fieldsPath);
-    buffered::create();
+    buffered::create(MODE_LINE);
     session = new_object(tlsClientSessionPath);
 }
 
@@ -33,7 +33,7 @@ static void tlsConnect(varargs string host)
 /*
  * receive a message
  */
-static int tlsReceive(string str)
+static void tlsReceive(string str)
 {
     StringBuffer input, output;
     string warning, status;
@@ -44,13 +44,17 @@ static int tlsReceive(string str)
     }
     if (!status && !connected) {
 	connected = TRUE;
-	setMode(MODE_BLOCK);
 	connected();
     }
     if (input) {
 	receiveBytes(input);
+    } else {
+	startInput();
     }
-    return (status && status != "connecting") ? MODE_DISCONNECT : MODE_NOCHANGE;
+
+    if (status && status != "connecting") {
+	disconnect();
+    }
 }
 
 /*

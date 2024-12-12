@@ -31,6 +31,7 @@ int login(string str)
 {
     if (previous_program() == LIB_CONN) {
 	setMode(MODE_BLOCK);
+	flow();
 	call_limited("connected");
     }
     return MODE_NOCHANGE;
@@ -50,30 +51,39 @@ void connect_failed(int errorcode)
 /*
  * receive a message
  */
-int receive_message(string str)
+int flow_receive_message(string str, int mode)
 {
     if (previous_program() == LIB_CONN) {
-	return call_limited("receiveBytes", str);
+	call_out("receiveBytes", 0, str);
     }
+    return TRUE;
 }
 
 /*
  * connection terminated
  */
-void logout(int quit)
+static void _logout(int quit)
+{
+    call_limited("close", quit);
+    destruct_object(this_object());
+}
+
+/*
+ * connection terminated
+ */
+void flow_logout(int quit)
 {
     if (previous_program() == LIB_CONN) {
-	call_limited("close", quit);
-	destruct_object(this_object());
+	call_out("_logout", 0, quit);
     }
 }
 
 /*
  * output remainder of message
  */
-int message_done()
+void flow_message_done()
 {
     if (previous_program() == LIB_CONN) {
-	return call_limited("messageDone");
+	call_limited("messageDone");
     }
 }

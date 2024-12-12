@@ -3,9 +3,9 @@
 # include "SimUser.h"
 
 
-static int receive_message(string str);
+static void receive_message(string str);
 static void logout(int quit);
-static int message_done();
+static void message_done();
 
 private SimUser remote;		/* remote user */
 private StringBuffer outbuf;	/* output buffer */
@@ -133,7 +133,7 @@ static void sim_disconnect(object caller)
 /*
  * set connection mode
  */
-static void set_mode(int mode)
+static void flow_mode(int mode, varargs int length)
 {
     if (::mode != MODE_DISCONNECT) {
 	switch (mode) {
@@ -158,6 +158,7 @@ static void set_mode(int mode)
 
 	default:
 	    ::mode = mode;
+	    ::length = length;
 	    if (blocked) {
 		blocked = FALSE;
 		break;
@@ -189,14 +190,6 @@ static void set_mode(int mode)
 	    }
 	}
     }
-}
-
-/*
- * set expected message length
- */
-static void set_message_length(int length)
-{
-    ::length = length;
 }
 
 /*
@@ -247,7 +240,7 @@ static void sim_receive_buffer()
 			}
 		    }
 
-		    set_mode(receive_message(str));
+		    receive_message(str);
 		} else {
 		    noline = TRUE;
 		}
@@ -267,7 +260,7 @@ static void sim_receive_buffer()
 		str = chunk;
 		chunk = "";
 	    }
-	    set_mode(receive_message(str));
+	    receive_message(str);
 	}
     }
 

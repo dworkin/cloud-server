@@ -36,16 +36,6 @@ static int inactivityTimeout()
 }
 
 /*
- * internal error message
- */
-static string htmlInternalError()
-{
-    return "<HTML>\n<HEAD><TITLE>" + HTTP_INTERNAL_ERROR +
-	   " Internal Error</TITLE></HEAD>\n<BODY><H1>" +
-	   HTTP_INTERNAL_ERROR + " Internal Error</H1></BODY>\n</HTML>\n";
-}
-
-/*
  * bad request message
  */
 static string htmlBadRequest()
@@ -56,36 +46,7 @@ static string htmlBadRequest()
 }
 
 /*
- * send internal error response
- */
-static void sendInternalError()
-{
-    HttpResponse response;
-    HttpFields headers;
-    string str;
-    StringBuffer message;
-
-    response = new HttpResponse(1.1, HTTP_INTERNAL_ERROR, "Internal Error");
-    headers = new HttpFields();
-    headers->add(new HttpField("Date", new HttpTime));
-    headers->add(new HttpField("Server", ({
-	new HttpProduct(SERVER_NAME, SERVER_VERSION),
-	new HttpProduct(explode(status(ST_VERSION), " ")...)
-    })));
-    headers->add(new HttpField("Connection", ({ "close" })));
-
-    str = htmlInternalError();
-    headers->add(new HttpField("Content-Type", "text/html;charset=utf-8"));
-    headers->add(new HttpField("Content-Length", strlen(str)));
-    response->setHeaders(headers);
-
-    message = new StringBuffer(response->transport());
-    message->append(str);
-    sendMessage(message);
-}
-
-/*
- * send internal error response
+ * send bad request response
  */
 static void sendBadRequest()
 {
@@ -125,7 +86,7 @@ static int receiveRequestLine(string str)
 /*
  * receive request headers
  */
-static int receiveHeaders(string str)
+static void receiveHeaders(string str)
 {
     int code;
 
@@ -135,27 +96,29 @@ static int receiveHeaders(string str)
 	code = HTTP_BAD_REQUEST;
 	sendBadRequest();
     }
+    receiveRequest(code, request);
 
-    switch (receiveRequest(code, request)) {
-    case HTTP_INTERNAL_ERROR:
-	sendInternalError();
-	/* fall through */
-    case HTTP_BAD_REQUEST:
-	return MODE_DISCONNECT;
-
-    default:
-	return MODE_NOCHANGE;
+    if (code == HTTP_BAD_REQUEST) {
+	disconnect();
     }
 }
 
 /*
  * finished handling a request
  */
-void doneRequest()
+static void _doneRequest(object prev)
 {
-    if (previous_object() == server) {
+    if (prev == server) {
 	setMode((persistent()) ? MODE_LINE : MODE_DISCONNECT);
     }
+}
+
+/*
+ * flow: finished handling a request
+ */
+void doneRequest()
+{
+    call_out("_doneRequest", 0, previous_object());
 }
 
 /*
@@ -177,15 +140,10 @@ static int receiveFirstLine(string str)
 	 * call receiveRequest() early, on error output a raw HTML message
 	 * and disconnect immediately
 	 */
-	switch (receiveRequest(code, request)) {
-	case HTTP_INTERNAL_ERROR:
-	    sendMessage(new StringBuffer(htmlInternalError()));
-	    /* fall through */
-	case HTTP_BAD_REQUEST:
-	    return MODE_DISCONNECT;
+	receiveRequest(code, request);
 
-	default:
-	    return MODE_NOCHANGE;
+	if (code == HTTP_BAD_REQUEST) {
+	    disconnect();
 	}
     }
 
@@ -215,15 +173,10 @@ static int receiveMessage(string str)
     }
 
     if (code != 0) {
-	switch (receiveRequest(code, request)) {
-	case HTTP_INTERNAL_ERROR:
-	    sendInternalError();
-	    /* fall through */
-	case HTTP_BAD_REQUEST:
-	    return MODE_DISCONNECT;
+	receiveRequest(code, request);
 
-	default:
-	    return MODE_NOCHANGE;
+	if (code == HTTP_BAD_REQUEST) {
+	    disconnect();
 	}
     }
 
@@ -234,12 +187,20 @@ static int receiveMessage(string str)
 /*
  * send a response
  */
-void sendResponse(HttpResponse response)
+static void _sendResponse(HttpResponse response, object prev)
 {
-    if (previous_object() == server) {
+    if (prev == server) {
 	::sendResponse(response);
 	sendMessage(new StringBuffer(response->transport()), FALSE,
 		    response->headerValue("Transfer-Encoding") ||
 		    response->headerValue("Content-Length"));
     }
+}
+
+/*
+ * flow: send a response
+ */
+void sendResponse(HttpResponse response)
+{
+    call_out("_sendResponse", 0, response, previous_object());
 }

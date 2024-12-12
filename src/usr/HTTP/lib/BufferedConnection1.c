@@ -16,24 +16,24 @@ private int start;		/* starting buffered input? */
 /*
  * initialize HTTP1 connection with buffered input
  */
-static void create()
+static void create(int mode)
 {
     buffer = new StringBuffer(nil, 32767);
     chunk = "";
-    mode = MODE_RAW;
+    ::mode = mode;
 }
 
 /*
  * start processing input
  */
-private void startInput()
+static void startInput()
 {
     if (start == 0) {
 	if ((strlen(chunk) != 0 || buffer->length() != 0) &&
 	    (mode == MODE_RAW || !noline)) {
 	    start = call_out("startBufferedInput", 0);
 	} else {
-	    ::setMode(MODE_RAW);
+	    ::setMode(MODE_UNBLOCK);
 	}
     }
 }
@@ -41,7 +41,7 @@ private void startInput()
 /*
  * set the local input mode
  */
-static void setMode(int mode)
+static void setMode(int mode, varargs int length)
 {
     switch (mode) {
     case MODE_BLOCK:
@@ -52,36 +52,23 @@ static void setMode(int mode)
     case MODE_EDIT:
     case MODE_RAW:
 	::mode = mode;
-	mode = MODE_RAW;
+	::length = length;
 	/* fall through */
     case MODE_UNBLOCK:
 	if (blocked) {
 	    blocked = FALSE;
 	    startInput();
-	    return;
 	}
 	break;
     }
-
-    if (mode != MODE_NOCHANGE) {
-	::setMode(mode);
-    }
-}
-
-/*
- * set the local message length
- */
-static void setMessageLength(int length)
-{
-    ::length = length;
 }
 
 /*
  * process first message
  */
-static int receiveFirstMessage(string str)
+static void receiveFirstMessage(string str)
 {
-    return ::receiveBytes(str);
+    ::receiveBytes(str);
 }
 
 /*
@@ -129,9 +116,9 @@ private void receiveBuffer()
 
 		if (!established) {
 		    established = TRUE;
-		    setMode(receiveFirstMessage(str));
+		    receiveFirstMessage(str);
 		} else {
-		    setMode(::receiveBytes(str));
+		    ::receiveBytes(str);
 		}
 	    } else {
 		noline = TRUE;
@@ -153,9 +140,9 @@ private void receiveBuffer()
 	    }
 	    if (!established) {
 		established = TRUE;
-		setMode(receiveFirstMessage(str));
+		receiveFirstMessage(str);
 	    } else {
-		setMode(::receiveBytes(str));
+		::receiveBytes(str);
 	    }
 	}
     }

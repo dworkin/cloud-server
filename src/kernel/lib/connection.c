@@ -10,6 +10,7 @@ private int mode;		/* connection mode */
 private int blocked;		/* connection blocked? */
 private string buffer;		/* buffered output string */
 private int timeout;		/* callout handle */
+private int flow;		/* flow state */
 
 /*
  * NAME:	create()
@@ -28,12 +29,12 @@ static void create(string type, int mode)
  * NAME:	set_mode()
  * DESCRIPTION:	set the current connection mode
  */
-static void set_mode(int newmode)
+static void set_mode(int mode)
 {
-    if (newmode != MODE_NOCHANGE && mode != MODE_DISCONNECT &&
-	(newmode != mode || blocked)) {
+    if (mode != MODE_NOCHANGE && ::mode != MODE_DISCONNECT &&
+	(mode != ::mode || blocked)) {
 	rlimits (-1; -1) {
-	    if (newmode == MODE_DISCONNECT) {
+	    if (mode == MODE_DISCONNECT) {
 		if (conntype != "datagram") {
 		    send_close();
 		}
@@ -41,9 +42,9 @@ static void set_mode(int newmode)
 		    remove_call_out(timeout);
 		}
 		timeout = call_out("timeout", DISCONNECT_TIMEOUT);
-	    } else if (newmode >= MODE_UNBLOCK) {
-		if (newmode - MODE_UNBLOCK != blocked) {
-		    block_input(blocked = newmode - MODE_UNBLOCK);
+	    } else if (mode >= MODE_UNBLOCK) {
+		if (mode - MODE_UNBLOCK != blocked) {
+		    block_input(blocked = mode - MODE_UNBLOCK);
 		}
 		return;
 	    }
@@ -51,7 +52,7 @@ static void set_mode(int newmode)
 	    if (blocked) {
 		block_input(blocked = FALSE);
 	    }
-	    mode = newmode;
+	    ::mode = mode;
 	}
     }
 }
@@ -63,6 +64,26 @@ static void set_mode(int newmode)
 int query_mode()
 {
     return (blocked) ? MODE_BLOCK : mode;
+}
+
+/*
+ * NAME:	flow()
+ * DESCRIPTION:	enable flow state
+ */
+void flow()
+{
+    if (previous_object() == user) {
+	flow = TRUE;
+    }
+}
+
+/*
+ * NAME:	flow_mode()
+ * DESCRIPTION:	flow: set the mode
+ */
+static void flow_mode(mapping tls, int mode)
+{
+    set_mode(mode);
 }
 
 
@@ -137,8 +158,12 @@ static void close(mapping tls, int dest)
 {
     rlimits (-1; -1) {
 	if (user) {
-	    catch {
-		user->logout(dest);
+	    if (flow) {
+		user->flow_logout(dest);
+	    } else {
+		catch {
+		    user->logout(dest);
+		}
 	    }
 	}
 	if (!dest) {
@@ -161,6 +186,29 @@ void disconnect()
 }
 
 /*
+ * NAME:	_disconnect()
+ * DESCRIPTION:	break connection
+ */
+static void _disconnect(mapping tls)
+{
+    if (mode != MODE_DISCONNECT) {
+	mode = MODE_DISCONNECT;
+	destruct_object(this_object());
+    }
+}
+
+/*
+ * NAME:	flow_disconnect()
+ * DESCRIPTION:	flow: break connection
+ */
+void flow_disconnect()
+{
+    if (previous_program() == LIB_USER) {
+	call_out("_disconnect", 0);
+    }
+}
+
+/*
  * NAME:	reboot()
  * DESCRIPTION:	destruct connection object after a reboot
  */
@@ -168,8 +216,12 @@ void reboot()
 {
     if (previous_object() == userd || SYSTEM()) {
 	if (user) {
-	    catch {
-		user->logout(FALSE);
+	    if (flow) {
+		user->flow_logout(FALSE);
+	    } else {
+		catch {
+		    user->logout(FALSE);
+		}
 	    }
 	}
 	mode = MODE_DISCONNECT;
@@ -204,6 +256,7 @@ int query_port()
 void set_user(object LIB_USER obj, varargs string str)
 {
     if (KERNEL() || SYSTEM()) {
+	flow = FALSE;
 	user = obj;
 	if (str) {
 	    set_mode(login(str));
@@ -242,6 +295,10 @@ static int receive_message(mapping tls, string str)
 	if (!user) {
 	    user = call_other(userd, conntype + "_user", port, str);
 	    return login(str);
+	} else if (flow) {
+	    if (user->flow_receive_message(str, mode)) {
+		return MODE_BLOCK;
+	    }
 	} else {
 	    return user->receive_message(str);
 	}
@@ -250,12 +307,12 @@ static int receive_message(mapping tls, string str)
 }
 
 /*
- * NAME:	message()
+ * NAME:	_message()
  * DESCRIPTION:	send a message across the connection
  */
-int message(string str)
+static int _message(string str, object prev)
 {
-    if (previous_object() == user && !buffer) {
+    if (prev == user && !buffer) {
 	rlimits (-1; -1) {
 	    int len;
 
@@ -274,6 +331,24 @@ int message(string str)
 }
 
 /*
+ * NAME:	message()
+ * DESCRIPTION:	send a message across the connection
+ */
+int message(string str)
+{
+    return _message(str, previous_object());
+}
+
+/*
+ * NAME:	flow_message()
+ * DESCRIPTION:	flow: send a message across the connection
+ */
+void flow_message(string str)
+{
+    call_out("_message", 0, str, previous_object());
+}
+
+/*
  * NAME:	message_done()
  * DESCRIPTION:	called when output is completed
  */
@@ -286,10 +361,25 @@ static int message_done(mapping tls)
 	    len = send_message(buffer);
 	    buffer = (len != strlen(buffer)) ? buffer[len ..] : nil;
 	} else if (user) {
-	    return user->message_done();
+	    if (flow) {
+		user->flow_message_done();
+	    } else {
+		return user->message_done();
+	    }
 	}
     }
     return MODE_NOCHANGE;
+}
+
+/*
+ * NAME:	_datagram_challenge()
+ * DESCRIPTION:	set the challenge for the datagram channel
+ */
+static void _datagram_challenge(string str, object prev)
+{
+    if (prev == user) {
+	::datagram_challenge(str);
+    }
 }
 
 /*
@@ -298,9 +388,16 @@ static int message_done(mapping tls)
  */
 void datagram_challenge(string str)
 {
-    if (previous_object() == user) {
-	::datagram_challenge(str);
-    }
+    _datagram_challenge(str, previous_object());
+}
+
+/*
+ * NAME:	flow_datagram_challenge()
+ * DESCRIPTION:	flow: set the challenge for the datagram channel
+ */
+void flow_datagram_challenge(string str)
+{
+    call_out("_datagram_challenge", 0, str, previous_object());
 }
 
 /*
@@ -310,7 +407,11 @@ void datagram_challenge(string str)
 static void datagram_attach(mapping tls)
 {
     if (mode != MODE_DISCONNECT && user) {
-	user->datagram_attach();
+	if (flow) {
+	    user->flow_datagram_attach();
+	} else {
+	    user->datagram_attach();
+	}
     }
 }
 
@@ -318,10 +419,28 @@ static void datagram_attach(mapping tls)
  * NAME:	receive_datagram()
  * DESCRIPTION:	forward a datagram to the user
  */
-static void receive_datagram(mapping tls, string str)
+static int receive_datagram(mapping tls, string str)
 {
     if (mode != MODE_DISCONNECT && user) {
-	user->receive_datagram(str);
+	if (flow) {
+	    if (user->flow_receive_datagram(str)) {
+		return MODE_BLOCK;
+	    }
+	} else {
+	    user->receive_datagram(str);
+	}
+    }
+    return MODE_NOCHANGE;
+}
+
+/*
+ * NAME:	_datagram()
+ * DESCRIPTION:	send a datagram across the connection
+ */
+static int _datagram(string str, object prev)
+{
+    if (prev == user) {
+	return (send_datagram(str) == strlen(str));
     }
 }
 
@@ -331,7 +450,14 @@ static void receive_datagram(mapping tls, string str)
  */
 int datagram(string str)
 {
-    if (previous_object() == user) {
-	return (send_datagram(str) == strlen(str));
-    }
+    return _datagram(str, previous_object());
+}
+
+/*
+ * NAME:	flow_datagram()
+ * DESCRIPTION:	flow: send a datagram across the connection
+ */
+void flow_datagram(string str)
+{
+    call_out("_datagram", 0, str, previous_object());
 }

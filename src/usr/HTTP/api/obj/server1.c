@@ -26,12 +26,12 @@ static void create(object server, varargs string requestPath, string fieldsPath)
 /*
  * receive a request
  */
-static int receiveRequest(int code, HttpRequest request)
+static void receiveRequest(int code, HttpRequest request)
 {
     string host;
 
     received = TRUE;
-    code = ::receiveRequest(code, request);
+    ::receiveRequest(code, request);
 
     if (request) {
 	host = request->host();
@@ -45,8 +45,6 @@ static int receiveRequest(int code, HttpRequest request)
 	::login("HTTP from " + address() +
 		((code != 0) ? ", " + code : "") + "\n");
     }
-
-    return code;
 }
 
 /*
@@ -56,6 +54,7 @@ int login(string str)
 {
     if (previous_program() == LIB_CONN) {
 	::connection(previous_object());
+	flow();
 	return call_limited("receiveFirstLine", str);
     }
 }
@@ -63,31 +62,40 @@ int login(string str)
 /*
  * receive a message
  */
-int receive_message(string str)
+int flow_receive_message(string str, int mode)
 {
     if (previous_program() == LIB_CONN) {
-	return call_limited("receiveBytes", str);
+	call_out("receiveBytes", 0, str);
     }
+    return TRUE;
 }
 
 /*
  * terminate connection
  */
-void logout(int quit)
+static void _logout(int quit)
+{
+    call_limited("close", quit);
+    destruct_object(this_object());
+}
+
+/*
+ * terminate connection
+ */
+void flow_logout(int quit)
 {
     if (previous_program() == LIB_CONN) {
-	call_limited("close", quit);
-	destruct_object(this_object());
+	call_out("_logout", 0, quit);
     }
 }
 
 /*
  * send remainder of message
  */
-int message_done()
+void flow_message_done()
 {
     if (previous_program() == LIB_CONN) {
-	return call_limited("messageDone");
+	call_out("messageDone", 0);
     }
 }
 

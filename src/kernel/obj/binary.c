@@ -72,6 +72,36 @@ static void close(int dest)
 }
 
 /*
+ * NAME:	_flow_mode()
+ * DESCRIPTION:	set the flow mode
+ */
+static void _flow_mode(int mode, int length)
+{
+    ::length = length;
+    ::flow_mode(([ ]), mode);
+}
+
+/*
+ * NAME:	flow_mode()
+ * DESCRIPTION:	flow: set the mode
+ */
+void flow_mode(int mode, int length)
+{
+    if (previous_program() == LIB_USER) {
+	call_out("_flow_mode", 0, mode, length);
+    }
+}
+
+/*
+ * NAME:	_disconnect()
+ * DESCRIPTION:	break the connection
+ */
+static void _disconnect()
+{
+    ::_disconnect(([ ]));
+}
+
+/*
  * NAME:	timeout()
  * DESCRIPTION:	connection timed out
  */
@@ -84,10 +114,10 @@ static void timeout()
  * NAME:	set_message_length()
  * DESCRIPTION:	set the size of the receive buffer
  */
-void set_message_length(int len)
+void set_message_length(int length)
 {
     if (previous_program() == LIB_USER) {
-	length = len;
+	::length = length;
     }
 }
 
@@ -234,24 +264,12 @@ static void restart_input()
 }
 
 /*
- * NAME:	tls_set_mode()
- * DESCRIPTION:	set_mode() with TLS
- */
-private void tls_set_mode(mapping tls, int mode)
-{
-    set_mode(mode);
-}
-
-/*
  * NAME:	message_done()
  * DESCRIPTION:	called when output is completed
  */
 static void message_done()
 {
-    mapping tls;
-
-    tls = ([ ]);
-    tls_set_mode(tls, ::message_done(tls));
+    set_mode(::message_done(([ ])));
 }
 
 /*
@@ -269,5 +287,5 @@ static void datagram_attach()
  */
 static void receive_datagram(string str)
 {
-    ::receive_datagram(([ ]), str);
+    set_mode(::receive_datagram(([ ]), str));
 }

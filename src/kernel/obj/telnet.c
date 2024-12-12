@@ -35,6 +35,35 @@ static void close(int dest)
 }
 
 /*
+ * NAME:	_flow_mode()
+ * DESCRIPTION:	set the flow mode
+ */
+static void _flow_mode(int mode)
+{
+    ::flow_mode(([ ]), mode);
+}
+
+/*
+ * NAME:	flow_mode()
+ * DESCRIPTION:	flow: set the mode
+ */
+void flow_mode(int mode, int length)
+{
+    if (previous_program() == LIB_USER) {
+	call_out("_flow_mode", 0, mode);
+    }
+}
+
+/*
+ * NAME:	_disconnect()
+ * DESCRIPTION:	break the connection
+ */
+static void _disconnect()
+{
+    ::_disconnect(([ ]));
+}
+
+/*
  * NAME:	timeout()
  * DESCRIPTION:	connection timed out
  */
