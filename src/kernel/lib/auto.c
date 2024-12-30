@@ -652,7 +652,9 @@ private mixed _F_call_limited(mixed arg1, string oowner, mixed *args)
 
 	ticks = ::status()[ST_TICKS];
 	rlimits (-1; -1) {
+# ifdef RSRC_TICKS_MEASUREMENT
 	    rsrcd->update_ticks(limits, ticks);
+# endif
 	    TLSVAR(tls, TLS_LIMIT) = limits[LIM_NEXT];
 
 	    return result;
