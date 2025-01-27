@@ -12,7 +12,7 @@ private inherit hex "/lib/util/hex";
 
 
 /* implemented at the top layer */
-static int message(string str);
+static void flow_message(object message);
 static void flow_mode(int mode, varargs int length);
 static void disconnect();
 
@@ -508,21 +508,14 @@ static void receiveBytes(string str)
  */
 static void messageChunk()
 {
-    string str;
-
-    if (!outbuf || !(str=outbuf->chunk())) {
+    if (!outbuf || outbuf->length() == 0) {
 	outbuf = nil;
 	if (!quiet) {
 	    relay->doneChunk();
 	}
     } else {
-	while (message(str)) {
-	    str = outbuf->chunk();
-	    if (!str) {
-		outbuf = nil;
-		break;
-	    }
-	}
+	flow_message(outbuf);
+	outbuf = new StringBuffer;
     }
 }
 

@@ -42,21 +42,16 @@ static void connection(SimUser remote)
 /*
  * add message to output buffer
  */
-static int message(string str)
+static void flow_message(object message)
 {
     if (outbuf) {
-	if (outbuf->length() > 65535) {
-	    return FALSE;
-	}
-	outbuf->append(str);
+	outbuf->append(message);
     } else {
-	outbuf = new StringBuffer(str);
+	outbuf = message;
 	if (!awaitingDone) {
 	    call_out("sim_send", 0);
 	}
     }
-
-    return (outbuf->length() <= 65535);
 }
 
 /*
@@ -65,15 +60,13 @@ static int message(string str)
 static void sim_send()
 {
     if (!awaitingDone) {
-	string chunk;
+	StringBuffer message;
 
-	chunk = outbuf->chunk();
-	if (outbuf->length() == 0) {
-	    outbuf = nil;
-	}
+	message = outbuf;
+	outbuf = nil;
 	if (remote) {
 	    awaitingDone = TRUE;
-	    remote->remote_message(chunk);
+	    remote->remote_message(message);
 	}
     }
 }
@@ -287,7 +280,7 @@ static void sim_receive_buffer()
 /*
  * receive message from remote
  */
-void remote_message(string input)
+void remote_message(StringBuffer input)
 {
     call_out("sim_receive_message", 0, previous_object(), input);
 }
@@ -295,7 +288,7 @@ void remote_message(string input)
 /*
  * message received
  */
-static void sim_receive_message(object caller, string input)
+static void sim_receive_message(object caller, StringBuffer input)
 {
     if (caller == remote) {
 	if (receive != 0) {

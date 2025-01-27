@@ -9,6 +9,7 @@ private string conntype;	/* connection type */
 private int mode;		/* connection mode */
 private int blocked;		/* connection blocked? */
 private string buffer;		/* buffered output string */
+private object message;		/* output message */
 private int timeout;		/* callout handle */
 private int flow;		/* flow state */
 
@@ -307,12 +308,12 @@ static int receive_message(mapping tls, string str)
 }
 
 /*
- * NAME:	_message()
+ * NAME:	message()
  * DESCRIPTION:	send a message across the connection
  */
-static int _message(string str, object prev)
+int message(string str)
 {
-    if (prev == user && !buffer) {
+    if (previous_object() == user && !buffer) {
 	rlimits (-1; -1) {
 	    int len;
 
@@ -331,21 +332,44 @@ static int _message(string str, object prev)
 }
 
 /*
- * NAME:	message()
+ * NAME:	_message()
  * DESCRIPTION:	send a message across the connection
  */
-int message(string str)
+static void _message(object message, object prev)
 {
-    return _message(str, previous_object());
+    if (prev == user) {
+	int len;
+
+	if (::message) {
+	    ::message->append(message);
+	} else {
+	    ::message = message;
+	}
+	if (buffer) {
+	    len = send_message(buffer);
+	    if (len != strlen(buffer)) {
+		buffer = buffer[len ..];
+		return;
+	    }
+	}
+	while (buffer=::message->chunk()) {
+	    len = send_message(buffer);
+	    if (len != strlen(buffer)) {
+		buffer = buffer[len ..];
+		return;
+	    }
+	}
+	::message = nil;
+    }
 }
 
 /*
  * NAME:	flow_message()
  * DESCRIPTION:	flow: send a message across the connection
  */
-void flow_message(string str)
+void flow_message(object message)
 {
-    call_out("_message", 0, str, previous_object());
+    call_out("_message", 0, message, previous_object());
 }
 
 /*
@@ -355,12 +379,30 @@ void flow_message(string str)
 static int message_done(mapping tls)
 {
     if (mode != MODE_DISCONNECT) {
-	if (buffer) {
-	    int len;
+	int len, sent;
 
+	if (buffer) {
 	    len = send_message(buffer);
-	    buffer = (len != strlen(buffer)) ? buffer[len ..] : nil;
-	} else if (user) {
+	    if (len != strlen(buffer)) {
+		buffer = buffer[len ..];
+		return MODE_NOCHANGE;
+	    }
+	    sent = TRUE;
+	}
+	if (message) {
+	    if (buffer=message->chunk()) {
+		do {
+		    len = send_message(buffer);
+		    if (len != strlen(buffer)) {
+			buffer = buffer[len ..];
+			return MODE_NOCHANGE;
+		    }
+		} while (buffer=message->chunk());
+		sent = TRUE;
+	    }
+	    message = nil;
+	}
+	if (!sent && user) {
 	    if (flow) {
 		user->flow_message_done();
 	    } else {

@@ -153,14 +153,23 @@ static int message(string str)
 	error("Bad argument 1 for function message");
     }
     if (connection) {
-	if (flow) {
-	    connection->flow_message(str);
-	    return TRUE;
-	} else {
-	    return connection->message(str);
-	}
+	return connection->message(str);
     }
     return FALSE;
+}
+
+/*
+ * NAME:	flow_message()
+ * DESCRIPTION:	forward a message to the connection object
+ */
+static void flow_message(object message)
+{
+    if (!message) {
+	error("Bad argument 1 for function flow_message");
+    }
+    if (connection) {
+	connection->flow_message(message);
+    }
 }
 
 /*
