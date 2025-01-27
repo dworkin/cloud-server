@@ -195,6 +195,11 @@ private void receive_buffer(mapping tls)
 	    break;
 	}
     }
+
+    if (restart != 0) {
+	remove_call_out(restart);
+	restart = 0;
+    }
 }
 
 /*
@@ -205,10 +210,6 @@ static void receive_message(string str)
 {
     mapping tls;
 
-    if (restart != 0) {
-	remove_call_out(restart);
-	restart = 0;
-    }
     add_to_buffer(tls = ([ ]), str);
     receive_buffer(tls);
 }
@@ -252,15 +253,12 @@ void set_mode(int mode)
  */
 static void restart_input()
 {
-    int mode;
     mapping tls;
 
     restart = 0;
-    if ((mode=query_mode()) != MODE_BLOCK && mode != MODE_DISCONNECT) {
-	tls = ([ ]);
-	TLSVAR(tls, TLS_USER) = this_object();
-	receive_buffer(tls);
-    }
+    tls = ([ ]);
+    TLSVAR(tls, TLS_USER) = this_object();
+    receive_buffer(tls);
 }
 
 /*

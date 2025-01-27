@@ -146,6 +146,11 @@ private void receiveBuffer()
 	    }
 	}
     }
+
+    if (start != 0) {
+	remove_call_out(start);
+	start = 0;
+    }
 }
 
 /*
@@ -164,7 +169,4 @@ static void startBufferedInput()
 {
     start = 0;
     receiveBuffer();
-    if (!blocked) {
-	startInput();
-    }
 }
