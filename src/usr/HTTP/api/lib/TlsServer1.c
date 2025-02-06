@@ -52,9 +52,9 @@ static void tlsAccept(string str, varargs int reqCert, string hosts...)
 /*
  * process login message
  */
-static int receiveFirstMessage(string str)
+static void receiveFirstMessage(string str)
 {
-    return ::receiveFirstLine(str);
+    setMode(::receiveFirstLine(str));
 }
 
 /*

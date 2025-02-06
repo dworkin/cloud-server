@@ -28,13 +28,13 @@ static void create(int mode)
  */
 static void startInput()
 {
-    if (start == 0) {
-	if ((strlen(chunk) != 0 || buffer->length() != 0) &&
-	    (mode == MODE_RAW || !noline)) {
+    if ((strlen(chunk) != 0 || buffer->length() != 0) &&
+	(mode == MODE_RAW || !noline)) {
+	if (start == 0) {
 	    start = call_out("startBufferedInput", 0);
-	} else {
-	    ::setMode(MODE_UNBLOCK);
 	}
+    } else {
+	::setMode(MODE_UNBLOCK);
     }
 }
 
@@ -118,6 +118,7 @@ private void receiveBuffer()
 		    established = TRUE;
 		    receiveFirstMessage(str);
 		} else {
+		    blocked = TRUE;
 		    ::receiveBytes(str);
 		}
 	    } else {
@@ -142,6 +143,7 @@ private void receiveBuffer()
 		established = TRUE;
 		receiveFirstMessage(str);
 	    } else {
+		blocked = TRUE;
 		::receiveBytes(str);
 	    }
 	}

@@ -101,7 +101,6 @@ static int receiveRequestHeader(HttpRequest request, HttpField header)
  */
 static void receiveRequest(int code, HttpRequest request)
 {
-    setMode(MODE_BLOCK);
     relay->receiveRequest(code, request);
 }
 
@@ -143,7 +142,6 @@ static void receiveResponseHeader(HttpResponse response, HttpField header)
  */
 static void receiveResponse(HttpResponse response)
 {
-    setMode(MODE_BLOCK);
     relay->receiveResponse(response);
 }
 
@@ -302,7 +300,6 @@ static void receiveChunk(StringBuffer chunk, varargs HttpFields trailers)
 	break;
 # endif
     }
-    setMode(MODE_BLOCK);
     relay->receiveChunk(chunk, trailers);
 }
 
@@ -315,7 +312,6 @@ static void receiveWsChunk(StringBuffer chunk)
 	chunk = maskWsChunk(chunk, transform);
     }
     inchunk = FALSE;
-    setMode(MODE_BLOCK);
     relay->receiveWsChunk(chunk);
 }
 
@@ -477,7 +473,6 @@ static void receiveBytes(string str)
 		    chunk = inbuf;
 		    inbuf = nil;
 
-		    setMode(MODE_BLOCK);
 		    relay->receiveEntity(chunk);
 		}
 	    } else {
