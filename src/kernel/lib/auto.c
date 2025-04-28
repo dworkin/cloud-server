@@ -425,14 +425,18 @@ private mixed **process_callouts(object obj, mixed **callouts)
 	    do {
 		--i;
 		co = callouts[i];
-		callouts[i] = ({ co[CO_HANDLE], co[CO_FIRSTXARG],
+		callouts[i] = ({ co[CO_HANDLE],
+				 (typeof(co[CO_FIRSTXARG]) == T_STRING) ?
+				  co[CO_FIRSTXARG] : co[CO_FIRSTXARG + 1],
 				 co[CO_DELAY] });
 	    } while (i != 0);
 	} else {
 	    do {
 		--i;
 		co = callouts[i];
-		callouts[i] = ({ co[CO_HANDLE], co[CO_FIRSTXARG],
+		callouts[i] = ({ co[CO_HANDLE],
+				 (typeof(co[CO_FIRSTXARG]) == T_STRING) ?
+				  co[CO_FIRSTXARG] : co[CO_FIRSTXARG + 1],
 				 co[CO_DELAY] }) +
 			      co[CO_FIRSTXARG + 2];
 	    } while (i != 0);
@@ -719,6 +723,50 @@ nomask void _F_callout(string func, string oowner, mixed *args)
     if (!previous_program()) {
 	_F_call_limited(func, (oowner && strlen(oowner) == 0) ? owner : oowner,
 			args);
+    }
+}
+
+/*
+ * NAME:	call_out_summand()
+ * DESCRIPTION:	start a summand callout
+ */
+static int call_out_summand(string func, mixed delay, float summand,
+			    mixed args...)
+{
+    int type;
+    string oname;
+
+    CHECKARG(func, 1, "call_out_summand");
+    type = typeof(delay);
+    CHECKARG(type == T_INT || type == T_FLOAT, 2, "call_out_summand");
+    if (!this_object()) {
+	return 0;
+    }
+    CHECKARG(function_object(func, this_object()) != AUTO || func == "create",
+	     1, "call_out_summand");
+    oname = object_name(this_object());
+    if (sscanf(oname, "%*s#-1") != 0) {
+	error("Callout in non-persistent object");
+    }
+
+    /*
+     * add callout
+     */
+    if (sscanf(oname, "/kernel/%*s") != 0) {
+	/* direct callouts for kernel objects */
+	return ::call_out_summand(func, delay, summand, args...);
+    }
+    return ::call_out_summand("_F_callout_summand", delay, summand, func, args);
+}
+
+/*
+ * NAME:	_F_callout_summand()
+ * DESCRIPTION:	summand callout gate
+ */
+nomask void _F_callout_summand(float summand, string func, mixed *args)
+{
+    if (!previous_program()) {
+	_F_call_limited(func, owner, ({ summand }) + args);
     }
 }
 

@@ -224,8 +224,7 @@ static void delayed_incr(mapping map)
     values = map_values(map);
     for (i = 0, sz = sizeof(names); i < sz; i++) {
 	name = names[i];
-	incr = values[i][0];
-	grsrc = values[i][1];
+	({ incr, grsrc }) = values[i];
 	rsrc = resources[name];
 
 	if (grsrc[GRSRC_DECAY] != 0) {
@@ -281,7 +280,7 @@ void decay_ticks(int *limits, int time, mixed *grsrc)
 void update_ticks(int ticks, mixed *grsrc)
 {
     if (previous_program() == RSRCD) {
-	call_out("incr_ticks", 0, ticks, grsrc);
+	call_out_summand("incr_ticks", 0, (float) ticks, grsrc);
     }
 }
 
@@ -289,7 +288,7 @@ void update_ticks(int ticks, mixed *grsrc)
  * NAME:	incr_ticks()
  * DESCRIPTION:	increase ticks
  */
-static void incr_ticks(int ticks, int *grsrc)
+static void incr_ticks(float ticks, int *grsrc)
 {
     mixed *rsrc;
     int time;
@@ -302,6 +301,6 @@ static void incr_ticks(int ticks, int *grsrc)
 	time = 0;
     }
 
-    rsrc[RSRC_USAGE] += (float) ticks;
+    rsrc[RSRC_USAGE] += ticks;
     set_rlimits(rsrc, time == 0);
 }

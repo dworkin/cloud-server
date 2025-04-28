@@ -459,7 +459,7 @@ nomask void _F_timeoutContinuation(int token)
 
 /*
  * NAME:	call_out()
- * DESCRIPTION: prevent System auto functions from being called by callout
+ * DESCRIPTION:	prevent System auto functions from being called by callout
  */
 static int call_out(string func, mixed args...)
 {
@@ -467,6 +467,19 @@ static int call_out(string func, mixed args...)
 	error("Illegal callout");
     }
     return ::call_out(func, args...);
+}
+
+/*
+ * NAME:	call_out_summand()
+ * DESCRIPTION:	prevent System auto functions from being called by callout
+ */
+static int call_out_summand(string func, mixed delay, float summand,
+			    mixed args...)
+{
+    if (function_object(func, this_object()) == SYSTEM_AUTO) {
+	error("Illegal callout");
+    }
+    return ::call_out_summand(func, delay, summand, args...);
 }
 
 /*

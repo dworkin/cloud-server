@@ -87,7 +87,7 @@ int flow_receive_message(string str, int mode)
  */
 static void _logout(int quit)
 {
-    call_limited("tlsClose", quit);
+    tlsClose(quit);
     destruct_object(this_object());
 }
 
