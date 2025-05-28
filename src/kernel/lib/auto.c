@@ -500,11 +500,14 @@ private mixed **process_callouts(object obj, mixed **callouts)
 	    do {
 		--i;
 		co = callouts[i];
-		callouts[i] = ({ co[CO_HANDLE],
-				 (typeof(co[CO_FIRSTXARG]) == T_STRING) ?
-				  co[CO_FIRSTXARG] : co[CO_FIRSTXARG + 1],
-				 co[CO_DELAY] }) +
-			      co[CO_FIRSTXARG + 2];
+		callouts[i] = ((typeof(co[CO_FIRSTXARG]) == T_STRING) ?
+				({ co[CO_HANDLE],
+				   co[CO_FIRSTXARG],
+				   co[CO_DELAY] }) :
+				({ co[CO_HANDLE],
+				   co[CO_FIRSTXARG + 1],
+				   co[CO_DELAY],
+				   co[CO_FIRSTXARG] })) + co[CO_FIRSTXARG + 2];
 	    } while (i != 0);
 	}
     }
