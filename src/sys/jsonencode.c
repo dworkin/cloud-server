@@ -128,6 +128,10 @@ string encode(mixed value)
 	return "{" + implode(result, ",") + "}";
 
     default:
-	error("Non-JSON value");
+	str = value->jsonEncode();
+	if (!str) {
+	    error("Non-JSON value");
+	}
+	return str;
     }
 }
