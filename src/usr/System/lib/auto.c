@@ -349,7 +349,7 @@ private void continued(mixed *ref)
 	for (i = 0; i < sz; i++) {
 	    ::call_out_other(objs[i], "_F_continued", 0, ({
 		({
-		    0, 0, objs[i], func, args, nil,		/* extern */
+		    0, 0, objs[i], func, ({ i }) + args, nil,	/* extern */
 		    this_object(), 0, objs[i], nil, ({ token, i }), nil
 								/* callback */
 		}),
