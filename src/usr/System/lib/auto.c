@@ -227,31 +227,56 @@ nomask int _F_touch()
 # define REF_CONT	0	/* continuation */
 # define REF_COUNT	1	/* callback countdown */
 # define REF_TIMEOUT	2	/* timeout handle */
+# define REF_ORIGIN	3	/* origin */
 
 /*
  * NAME:	startContinuation()
  * DESCRIPTION:	runNext a continuation, start first callout if none running yet
  */
-static void startContinuation(mixed *continuation, int parallel)
+static void startContinuation(mixed *continuation, int mode)
 {
     if (previous_program() == CONTINUATION) {
-	mixed *ref;
+	mixed *ref, *refCont;
 
-	if (parallel || !(ref=::tls_get(TLS_CONTINUATION))) {
+	if (mode == CONT_NEW || !(ref=::tls_get(TLS_CONTINUATION))) {
 	    /*
 	     * schedule first continuation
 	     */
-	    ref = ({ ({ }), 0, 0 });
-	    if (!parallel) {
+	    ref = ({ ({ }), 0, 0, continuation[CONT_ORIGIN] });
+	    if (mode != CONT_NEW) {
 		::tls_set(TLS_CONTINUATION, ref);
 	    }
 	    ::call_out_other(continuation[CONT_ORIGIN], "_F_continued", 0, ref);
 	}
 
+	refCont = ref[REF_CONT];
+	if (sizeof(refCont) != 0 && typeof(refCont[CONT_OBJS]) == T_ARRAY &&
+	    !refCont[CONT_DELAY]) {
+	    /*
+	     * next scheduled continuation is parallel
+	     */
+	    if (mode == CONT_PARALLEL) {
+		/* add to parallel continuations */
+		refCont[CONT_OBJS] += ({ continuation });
+	    } else {
+		/* add after parallel continuations */
+		ref[REF_CONT] = refCont[.. CONT_SIZE - 1] + continuation +
+				refCont[CONT_SIZE ..];
+	    }
+	    return;
+	} else if (mode == CONT_PARALLEL) {
+	    /*
+	     * first parallel continuation
+	     */
+	    continuation = ({
+		({ continuation }), 0, ref[REF_ORIGIN], nil, nil, nil
+	    });
+	}
+
 	/*
 	 * run these continuations before all others
 	 */
-	ref[REF_CONT] = continuation + ref[REF_CONT];
+	ref[REF_CONT] = continuation + refCont;
     }
 }
 
@@ -285,7 +310,7 @@ static object suspendContinuation()
 private void continued(mixed *ref)
 {
     mixed *continued;
-    int type, token, sz, i;
+    int token, sz, i;
     mixed val, objs, delay, args;
     object origin;
     string func;
@@ -297,12 +322,38 @@ private void continued(mixed *ref)
 
     ({ objs, delay, origin, func, args, val }) = continued[.. CONT_SIZE - 1];
     if (origin != this_object()) {
-	::call_out_other(origin, "_F_continued", 0, ref);
+	if (origin) {
+	    ::call_out_other(origin, "_F_continued", 0, ref);
+	}
 	return;
     }
     ::tls_set(TLS_CONTINUATION, ref);
 
     switch (typeof(objs)) {
+    case T_NIL:
+	if (!continued[CONT_FUNC] && storage) {
+	    /*
+	     * callback
+	     */
+	    ({ token, i }) = continued[CONT_ARGS];
+	    ref = storage[token];
+	    if (ref) {
+		continued = ref[REF_CONT];
+		if (sizeof(continued) != 0 &&
+		    typeof(continued[CONT_VAL]) == T_ARRAY) {
+		    continued[CONT_VAL][i] = val;
+		}
+		if (--ref[REF_COUNT] == 0) {
+		    storage[token] = nil;
+		    if (ref[REF_TIMEOUT]) {
+			::remove_call_out(ref[REF_TIMEOUT]);
+		    }
+		    ::call_out("_F_continued", 0, ref);
+		}
+	    }
+	}
+	return;
+
     case T_INT:
 	ref[REF_CONT] = continued[CONT_SIZE ..];
 	if (objs) {
@@ -324,9 +375,8 @@ private void continued(mixed *ref)
 
     case T_ARRAY:
 	/*
-	 * distributed continuation
+	 * distributed/parallel continuation
 	 */
-	sz = sizeof(objs);
 	ref[REF_CONT] = continued = continued[CONT_SIZE ..];
 	if (!storage) {
 	    token = 0;
@@ -336,26 +386,52 @@ private void continued(mixed *ref)
 	    storage["token"] = token;
 	    storage[token] = ref;
 	}
+	sz = sizeof(objs);
 	ref[REF_COUNT] = sz;
-	ref[REF_TIMEOUT] = ::call_out_other(this_object(),
-					    "_F_timeoutContinuation", delay,
-					    token);
-
 	if (sizeof(continued) != 0 && typeof(continued[CONT_OBJS]) == T_INT &&
 	    continued[CONT_OBJS]) {
 	    /* return values from distributed continuations */
 	    continued[CONT_VAL] = allocate(sz);
 	}
-	for (i = 0; i < sz; i++) {
-	    ::call_out_other(objs[i], "_F_continued", 0, ({
-		({
-		    0, 0, objs[i], func, ({ i }) + args, nil,	/* extern */
-		    this_object(), 0, objs[i], nil, ({ token, i }), nil
+
+	if (delay) {
+	    /*
+	     * distributed
+	     */
+	    ref[REF_TIMEOUT] = ::call_out_other(this_object(),
+						"_F_timeoutContinuation", delay,
+						token);
+
+	    for (i = 0; i < sz; i++) {
+		origin = objs[i];
+		::call_out_other(origin, "_F_continued", 0, ({
+		    ({
+			0, 0, origin, func, ({ i }) + args, nil,
+								/* extern */
+			nil, 0, ref[REF_ORIGIN], nil, ({ token, i }), nil
 								/* callback */
-		}),
-		0,
-		0
-	    }));
+		    }),
+		    0,
+		    0,
+		    nil
+		}));
+	    }
+	} else {
+	    /*
+	     * parallel
+	     */
+	    for (i = 0; i < sz; i++) {
+		continued = objs[i];
+		::call_out_other(continued[CONT_ORIGIN], "_F_continued", 0, ({
+		    continued + ({
+			nil, 0, ref[REF_ORIGIN], nil, ({ token, i }), nil
+								/* callback */
+		    }),
+		    0,
+		    0,
+		    nil
+		}));
+	    }
 	}
 	return;
     }
@@ -365,8 +441,9 @@ private void continued(mixed *ref)
 	objs = continued[CONT_OBJS];
 	switch (typeof(objs)) {
 	case T_NIL:
-	    /* callback to destructed object */
-	    return;
+	    /* callback */
+	    continued[CONT_VAL] = val;
+	    break;
 
 	case T_INT:
 	    if (objs) {
@@ -376,17 +453,10 @@ private void continued(mixed *ref)
 	    break;
 
 	case T_OBJECT:
-	    if (continued[CONT_FUNC]) {
-		/* iterator */
-		if (objs->end()) {
-		    ref[REF_CONT] = continued = continued[CONT_SIZE ..];
-		    continue;
-		}
-	    } else {
-		/* callback */
-		::call_out_other(objs, "_F_doneContinuation", 0, val,
-				 continued[CONT_ARGS]...);
-		return;
+	    /* iterator */
+	    if (objs->end()) {
+		ref[REF_CONT] = continued = continued[CONT_SIZE ..];
+		continue;
 	    }
 	    break;
 	}
@@ -411,32 +481,8 @@ nomask mixed _F_return(mixed arg)
 nomask void _F_continued(mixed *ref)
 {
     if (previous_program() == AUTO) {
+	ref[REF_ORIGIN] = this_object();
 	continued(ref);
-    }
-}
-
-/*
- * NAME:	_F_doneContinuation()
- * DESCRIPTION:	finished performing a distributed continuation
- */
-nomask void _F_doneContinuation(mixed result, int token, int index)
-{
-    if (previous_program() == AUTO && storage) {
-	mixed *ref, *continued;
-
-	ref = storage[token];
-	if (ref) {
-	    continued = ref[REF_CONT];
-	    if (sizeof(continued) != 0 &&
-		typeof(continued[CONT_VAL]) == T_ARRAY) {
-		continued[CONT_VAL][index] = result;
-	    }
-	    if (--ref[REF_COUNT] == 0) {
-		storage[token] = nil;
-		::remove_call_out(ref[REF_TIMEOUT]);
-		continued(ref);
-	    }
-	}
     }
 }
 

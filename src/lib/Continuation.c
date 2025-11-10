@@ -183,7 +183,7 @@ atomic void runNext(mixed args...)
 	}
 
 	continued[CONT_ARGS] += args;
-	::startContinuation(continued, FALSE);
+	::startContinuation(continued, CONT_NEXT);
     }
     started = TRUE;
 }
@@ -202,7 +202,29 @@ atomic void runParallel(mixed args...)
 	}
 
 	continued[CONT_ARGS] += args;
-	::startContinuation(continued, TRUE);
+	::startContinuation(continued, CONT_PARALLEL);
+    }
+    started = TRUE;
+}
+
+/*
+ * start a new continuation independently
+ */
+atomic void runNew(mixed args...)
+{
+    if (started) {
+	error("Continuation already started");
+    }
+    if (sizeof(continued) != 0) {
+	if (!continued[CONT_ORIGIN]) {
+	    error("No environment for continuation");
+	}
+	if (continued[CONT_DELAY]) {
+	    error("Invalid delay for continuation");
+	}
+
+	continued[CONT_ARGS] += args;
+	::startContinuation(continued, CONT_NEW);
     }
     started = TRUE;
 }

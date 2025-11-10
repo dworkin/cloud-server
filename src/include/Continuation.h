@@ -11,3 +11,7 @@
 # define CONT_ARGS	4	/* arguments */
 # define CONT_VAL	5	/* previous return value */
 # define CONT_SIZE	6	/* size of continuation */
+
+# define CONT_NEXT	0	/* next to run */
+# define CONT_PARALLEL	1	/* run in parallel */
+# define CONT_NEW	2	/* run independently */
