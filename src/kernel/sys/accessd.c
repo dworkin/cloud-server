@@ -14,9 +14,9 @@ static void create()
 {
     uaccess = ([ ]);
     gaccess = ([ ]);
-    catch {
+    try {
 	restore_object(ACCESSDATA);
-    }
+    } catch (...) { }
 }
 
 /*

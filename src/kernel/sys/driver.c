@@ -439,9 +439,9 @@ static void restored(varargs int hotboot)
 {
     message(status()[ST_VERSION] + "\n");
 
-    catch {
+    try {
 	_restored(([ ]), hotboot);
-    }
+    } catch (...) { }
 
     message("State restored.\n\n");
 }
@@ -454,9 +454,9 @@ static string path_read(string path)
 {
     string oname, creator;
 
-    catch {
+    try {
 	path = previous_object()->path_read(path);
-    }
+    } catch (...) { }
     if (path) {
 	creator = creator(oname = object_name(previous_object()));
 	path = normalize_path(path, oname + "/..", creator);
@@ -475,9 +475,9 @@ static string path_write(string path)
     string oname, creator;
     int *rsrc, size;
 
-    catch {
+    try {
 	path = previous_object()->path_write(path);
-    }
+    } catch (...) { }
     if (path) {
 	creator = creator(oname = object_name(previous_object()));
 	path = normalize_path(path, oname + "/..", creator);
@@ -796,9 +796,9 @@ private void _runtime_error(mapping tls, string str, int caught, int ticks,
     }
 
     if (errord) {
-	catch {
+	try {
 	    errord->runtime_error(str, caught, trace);
-	}
+	} catch (...) { }
     } else {
 	if (caught != 0) {
 	    str += " [caught]";
@@ -844,9 +844,9 @@ private void _runtime_error(mapping tls, string str, int caught, int ticks,
 
 	message(str);
 	if (caught == 0 && user) {
-	    catch {
+	    try {
 		user->message(str);
-	    }
+	    } catch (...) { }
 	}
     }
 }

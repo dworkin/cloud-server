@@ -162,9 +162,9 @@ static void close(mapping tls, int dest)
 	    if (flow) {
 		user->flow_logout(dest);
 	    } else {
-		catch {
+		try {
 		    user->logout(dest);
-		}
+		} catch (...) { }
 	    }
 	}
 	if (!dest) {
@@ -220,9 +220,9 @@ void reboot()
 	    if (flow) {
 		user->flow_logout(FALSE);
 	    } else {
-		catch {
+		try {
 		    user->logout(FALSE);
-		}
+		} catch (...) { }
 	    }
 	}
 	mode = MODE_DISCONNECT;

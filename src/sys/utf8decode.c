@@ -3,7 +3,7 @@
  */
 mixed *decode(string str)
 {
-    catch {
+    try {
 	mixed *result;
 
 	result = parse_string("\
@@ -48,7 +48,7 @@ HighChar: char4				? char4", str);
 	if (result) {
 	    return result;
 	}
-    }
+    } catch (...) { }
     return ({ nil, "" });
 }
 

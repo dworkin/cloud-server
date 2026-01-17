@@ -411,9 +411,9 @@ object *query_editors()
 void prepare_reboot()
 {
     if (previous_program() == DRIVER) {
-	catch {
+	try {
 	    connections = users();
-	}
+	} catch (...) { }
     }
 }
 

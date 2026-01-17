@@ -20,9 +20,9 @@ Date: word word number time number",			/* asctime */
 			  str);
 
     if (parsed) {
-	catch {
+	try {
 	    return new GMTime(implode(parsed, " "));
-	}
+	} catch (...) { }
     }
     return nil;
 }
