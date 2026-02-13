@@ -108,7 +108,7 @@ static void create()
     }
 
     /* Domain stuff */
-    domains = ({ "TLS", "HTTP" });
+    domains = ({ "TLS", "HTTP", "LPC" });
     domains += get_dir("/usr/[A-Z]*")[0] - (domains + ({ "System" }));
     for (i = 0, sz = sizeof(domains); i < sz; i++) {
 	domain = domains[i];

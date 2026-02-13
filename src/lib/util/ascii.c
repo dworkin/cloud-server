@@ -45,3 +45,21 @@ static string upper_case(string str)
     }
     return str;
 }
+
+/*
+ * escape ", \n and \ in a string
+ */
+static string stringify(string str)
+{
+    if (sscanf(str, "%*s\\") != 0) {
+	str = implode(explode("\\" + str + "\\", "\\"), "\\\\");
+    }
+    if (sscanf(str, "%*s\"") != 0) {
+	str = implode(explode("\"" + str + "\"", "\""), "\\\"");
+    }
+    if (sscanf(str, "%*s\n") != 0) {
+	str = implode(explode("\n" + str + "\n", "\n"), "\\n");
+    }
+
+    return str;
+}

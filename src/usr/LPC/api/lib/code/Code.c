@@ -1,6 +1,8 @@
 # include <String.h>
 # include "Code.h"
 
+inherit "/lib/util/ascii";
+
 
 # define LINE	"::line"
 # define EMIT	"::emit"
@@ -126,14 +128,5 @@ static void emitFloat(float flt, varargs int line)
  */
 static void emitString(string str, varargs int line)
 {
-    if (sscanf(str, "%*s\\") != 0) {
-	str = implode(explode("\\" + str + "\\", "\\"), "\\\\");
-    }
-    if (sscanf(str, "%*s\"") != 0) {
-	str = implode(explode("\"" + str + "\"", "\""), "\\\"");
-    }
-    if (sscanf(str, "%*s\n") != 0) {
-	str = implode(explode("\n" + str + "\n", "\n"), "\\n");
-    }
-    emit("\"" + str + "\"", line);
+    emit("\"" + stringify(str) + "\"", line);
 }
