@@ -15,6 +15,14 @@ static mixed *list(mixed *parsed)
 }
 
 /*
+ * ({ parsed1, ",", parsed2 })
+ */
+static mixed *noCommaList(mixed *parsed)
+{
+    return ({ parsed - ({ "," }) });
+}
+
+/*
  * TRUE
  */
 static mixed *true(mixed *parsed)

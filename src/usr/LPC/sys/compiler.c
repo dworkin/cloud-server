@@ -356,14 +356,6 @@ static mixed *opLine(mixed *parsed)
 }
 
 /*
- * ({ parsed1, ",", parsed2 })
- */
-static mixed *noCommaList(mixed *parsed)
-{
-    return ({ parsed - ({ "," }) });
-}
-
-/*
  * ({ "private int", nil, 100, ({ ({ 0, "a", 100 }), ({ 1, "b", 100 }) }) })
  */
 static mixed *dataDecl(mixed *parsed)
