@@ -1,3 +1,6 @@
+inherit hex "/lib/util/hex";
+
+
 /*
  * parse an LPC string with escaped content
  */
@@ -8,7 +11,7 @@ unescaped = /[^\\\\]+/							\
 octal = /\\\\[0-7][0-7]?[0-7]?/						\
 hexadecimal = /\\\\[xX][0-9a-fA-F][0-9a-fA-F]?/				\
 escaped = /\\\\./							\
-									\
+\
 String:									\
 String: String Characters						\
 Characters: unescaped							\
@@ -37,18 +40,7 @@ int octalInt(string str)
  */
 int hexadecimalInt(string str)
 {
-    string map;
-    int result, i, sz;
-
-    map = "................................" +
-	  "................\0\1\2\3\4\5\6\7\x8\x9......" +
-	  ".\xa\xb\xc\xd\xe\xf........................." +
-	  ".\xa\xb\xc\xd\xe\xf";
-    result = 0;
-    for (i = 2, sz = strlen(str); i < sz; i++) {
-	result = (result << 4) + map[str[i]];
-    }
-    return result;
+    return hex::decode(str[2 ..]);
 }
 
 /*
