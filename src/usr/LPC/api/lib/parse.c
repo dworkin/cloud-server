@@ -63,11 +63,27 @@ static mixed *concat(mixed *parsed)
 }
 
 /*
+ * element[0]
+ */
+static mixed *parsed_0_(mixed *parsed)
+{
+    return ({ parsed[0] });
+}
+
+/*
  * element[1]
  */
 static mixed *parsed_1_(mixed *parsed)
 {
     return ({ parsed[1] });
+}
+
+/*
+ * element[2]
+ */
+static mixed *parsed_2_(mixed *parsed)
+{
+    return ({ parsed[2] });
 }
 
 /*
