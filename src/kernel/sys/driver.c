@@ -770,10 +770,10 @@ static void interrupt()
  * NAME:	_runtime_error()
  * DESCRIPTION:	handle runtime error, with proper TLS on the stack
  */
-private void _runtime_error(mapping tls, string str, int caught, int ticks,
-			    mixed **trace, object user)
+private string _runtime_error(mapping tls, string error, int caught, int ticks,
+			      mixed **trace, object user)
 {
-    string line, func, progname, objname;
+    string str, line, func, progname, objname;
     int i, sz, len;
 
     i = sz = sizeof(trace) - 1;
@@ -797,9 +797,10 @@ private void _runtime_error(mapping tls, string str, int caught, int ticks,
 
     if (errord) {
 	try {
-	    errord->runtime_error(str, caught, trace);
+	    return errord->runtime_error(error, caught, trace);
 	} catch (...) { }
     } else {
+	str = error;
 	if (caught != 0) {
 	    str += " [caught]";
 	}
@@ -849,6 +850,8 @@ private void _runtime_error(mapping tls, string str, int caught, int ticks,
 	    } catch (...) { }
 	}
     }
+
+    return error;
 }
 
 /*
@@ -923,9 +926,7 @@ static string runtime_error(string str, int caught, int ticks)
 	return str;
     }
 
-    _runtime_error(tls, str, caught, ticks, trace, user);
-
-    return str;
+    return _runtime_error(tls, str, caught, ticks, trace, user);
 }
 
 /*
