@@ -5,6 +5,8 @@
 inherit LIB_CONN;	/* basic connection object */
 
 
+int blocked;		/* buffer blocked */
+int mode;		/* buffer mode */
 string buffer;		/* buffered input */
 int length;		/* length of message to receive */
 int noline;		/* no full line in input buffer */
@@ -16,7 +18,7 @@ int restart;		/* restart_input handle */
  */
 static void create()
 {
-    ::create("binary", MODE_RAW);
+    ::create("binary", mode = MODE_RAW);
     buffer = "";
 }
 
@@ -141,10 +143,10 @@ private void add_to_buffer(mapping tls, string str)
  */
 private void receive_buffer(mapping tls)
 {
-    int mode, len;
+    int len;
     string str, head, pre;
 
-    while ((mode=query_mode()) != MODE_BLOCK && mode != MODE_DISCONNECT) {
+    while (mode != MODE_BLOCK && mode != MODE_DISCONNECT) {
 	if (mode != MODE_RAW) {
 	    if (sscanf(buffer, "%s\r\n%s", str, buffer) != 0 ||
 		sscanf(buffer, "%s\n%s", str, buffer) != 0) {
@@ -195,11 +197,6 @@ private void receive_buffer(mapping tls)
 	    break;
 	}
     }
-
-    if (restart != 0) {
-	remove_call_out(restart);
-	restart = 0;
-    }
 }
 
 /*
@@ -209,6 +206,11 @@ private void receive_buffer(mapping tls)
 static void receive_message(string str)
 {
     mapping tls;
+
+    if (restart != 0) {
+	remove_call_out(restart);
+	restart = 0;
+    }
 
     add_to_buffer(tls = ([ ]), str);
     receive_buffer(tls);
@@ -220,31 +222,60 @@ static void receive_message(string str)
  */
 void set_mode(int mode)
 {
-    int oldmode;
-
     if (KERNEL()) {
-	oldmode = query_mode();
-	::set_mode(mode);
-	if (oldmode == MODE_BLOCK && restart == 0 && strlen(buffer) != 0) {
-	    if (mode == MODE_UNBLOCK) {
-		mode = query_mode();
-	    }
+	if (mode == MODE_NOCHANGE) {
+	    mode = (blocked) ? MODE_BLOCK : ::mode;
+	} else if (mode == MODE_UNBLOCK) {
+	    mode = ::mode;
+	}
+
+	if (mode != MODE_BLOCK && mode != MODE_DISCONNECT &&
+	    strlen(buffer) != 0) {
+	    /*
+	     * buffer mode
+	     */
 	    switch (mode) {
 	    case MODE_LINE:
 	    case MODE_EDIT:
-		if (!noline) {
-		    break;
+		if (noline) {
+		    break;	/* pass mode to connection */
 		}
 		/* fall through */
-	    default:
-		return;
-
 	    case MODE_RAW:
-		break;
+		if (restart == 0) {
+		    restart = call_out("restart_input", 0);
+		}
+		::mode = mode;
+		return;
 	    }
-	    restart = call_out("restart_input", 0);
+	}
+
+	if (mode != MODE_BLOCK || ::query_mode() != MODE_BLOCK) {
+	    if (restart != 0) {
+		remove_call_out(restart);
+		restart = 0;
+	    }
+
+	    ::set_mode(mode);
+
+	    if (mode == MODE_BLOCK) {
+		blocked = TRUE;
+	    } else if (mode == MODE_UNBLOCK) {
+		blocked = FALSE;
+	    } else {
+		::mode = mode;
+	    }
 	}
     }
+}
+
+/*
+ * NAME:	query_mode()
+ * DESCRIPTION:	return the current connection mode
+ */
+int query_mode()
+{
+    return (blocked) ? MODE_BLOCK : mode;
 }
 
 /*
