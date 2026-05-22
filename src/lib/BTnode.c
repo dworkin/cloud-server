@@ -20,7 +20,7 @@
 private string accessKey;	/* access key */
 private int type;		/* root, interior, leaf */
 private int minSize, maxSize;	/* minimum and maximum size */
-private string *keys;		/* keys */
+private mixed *keys;		/* keys */
 private mixed *values;		/* values or nodes */
 private int changes;		/* structural change counter */
 
@@ -43,7 +43,7 @@ static void delNode() { }
  * initialize node
  */
 static void create(string accessKey, int maxSize,
-		   varargs string *keys, mixed *values)
+		   varargs mixed *keys, mixed *values)
 {
     ::accessKey = accessKey;
     ::maxSize = maxSize;
@@ -65,8 +65,7 @@ static void create(string accessKey, int maxSize,
 mixed *stealLeft(string accessKey)
 {
     if (accessKey == ::accessKey) {
-	string key;
-	mixed value;
+	mixed key, value;
 
 	if (sizeof(keys) == minSize) {
 	    return ({ nil, nil, nil });
@@ -89,8 +88,7 @@ mixed *stealRight(string accessKey)
 {
     if (accessKey == ::accessKey) {
 	int size;
-	string key;
-	mixed value;
+	mixed key, value;
 
 	size = sizeof(keys);
 	if (size == minSize) {
@@ -111,7 +109,7 @@ mixed *stealRight(string accessKey)
 /*
  * add K/Vs on the left side
  */
-void addLeft(string accessKey, string *keys, mixed *values)
+void addLeft(string accessKey, mixed *keys, mixed *values)
 {
     if (accessKey == ::accessKey) {
 	::keys = keys + ::keys;
@@ -123,7 +121,7 @@ void addLeft(string accessKey, string *keys, mixed *values)
 /*
  * add K/Vs on the right side
  */
-void addRight(string accessKey, string *keys, mixed *values)
+void addRight(string accessKey, mixed *keys, mixed *values)
 {
     if (accessKey == ::accessKey) {
 	::keys += keys;
@@ -146,18 +144,18 @@ mixed *delete(string accessKey)
 /*
  * search among the keys
  */
-private int *search(string str)
+private int *search(mixed index)
 {
     int low, high, mid;
-    string key;
+    mixed key;
 
     low = 0;
     high = sizeof(keys);
     while (low < high) {
 	mid = (low + high) / 2;
 	key = keys[mid];
-	if (str >= key) {
-	    if (str == key) {
+	if (index >= key) {
+	    if (index == key) {
 		return ({ mid, TRUE });
 	    }
 	    low = mid + 1;
@@ -172,11 +170,10 @@ private int *search(string str)
 /*
  * increase the size
  */
-private mixed *grow(int index, object prev, string prevKey, string nextKey,
+private mixed *grow(int index, object prev, mixed prevKey, mixed nextKey,
 		    object next, int change)
 {
-    string key;
-    mixed value;
+    mixed key, value;
 
     if (prev) {
 	({ key, value }) = prev->stealRight(accessKey);
@@ -225,7 +222,7 @@ private mixed *grow(int index, object prev, string prevKey, string nextKey,
 /*
  * determine keyValue
  */
-static mixed keyValue(string key, mixed value)
+static mixed keyValue(mixed key, mixed value)
 {
     return value;
 }
@@ -233,7 +230,7 @@ static mixed keyValue(string key, mixed value)
 /*
  * get V for K
  */
-mixed get(string accessKey, string key)
+mixed get(string accessKey, mixed key)
 {
     if (accessKey == ::accessKey) {
 	int index, found;
@@ -250,7 +247,7 @@ mixed get(string accessKey, string key)
 /*
  * set the V for a K, nil for deletion
  */
-mixed *set(string accessKey, string key, mixed value, int exists,
+mixed *set(string accessKey, mixed key, mixed value, int exists,
 	   object prev, string prevKey, string nextKey, object next)
 {
     if (accessKey == ::accessKey) {
@@ -356,7 +353,7 @@ mixed *set(string accessKey, string key, mixed value, int exists,
 		error("Key not present");
 	    }
 	} else {
-	    string lKey, rKey;
+	    mixed lKey, rKey;
 	    object lValue, rValue;
 
 	    if (found) {
@@ -537,7 +534,7 @@ mixed *refIndex(string accessKey, int changes, int index)
 /*
  * find by key
  */
-mixed *refKey(string accessKey, string key)
+mixed *refKey(string accessKey, mixed key)
 {
     if (accessKey == ::accessKey) {
 	int index, found;

@@ -39,44 +39,32 @@ atomic static void create(int maxSize, varargs string accessKey,
 /*
  * get the value associated with a key
  */
-mixed get(string key)
+mixed get(mixed key)
 {
-    if (!key) {
-	error("Invalid key");
-    }
     return root->get(accessKey, key);
 }
 
 /*
  * set the value associated with a key, nil for deletion
  */
-atomic int set(string key, mixed value)
+atomic int set(mixed key, mixed value)
 {
-    if (!key) {
-	error("Invalid key");
-    }
     return root->set(accessKey, key, value, 0, nil, nil, nil, nil)[CHANGE];
 }
 
 /*
  * set the value associated with a key, which must not yet exist
  */
-atomic int add(string key, mixed value)
+atomic int add(mixed key, mixed value)
 {
-    if (!key) {
-	error("Invalid key");
-    }
     return root->set(accessKey, key, value, -1, nil, nil, nil, nil)[CHANGE];
 }
 
 /*
  * set the value associated with a key, which must already exist
  */
-atomic int change(string key, mixed value)
+atomic int change(mixed key, mixed value)
 {
-    if (!key) {
-	error("Invalid key");
-    }
     return root->set(accessKey, key, value, 1, nil, nil, nil, nil)[CHANGE];
 }
 
@@ -91,7 +79,7 @@ atomic void remove()
 /*
  * BTree[index] = value
  */
-static void operator[]= (string index, mixed value)
+static void operator[]= (mixed index, mixed value)
 {
     set(index, value);
 }
@@ -99,7 +87,7 @@ static void operator[]= (string index, mixed value)
 /*
  * BTree[index]
  */
-static mixed operator[] (string index)
+static mixed operator[] (mixed index)
 {
     return get(index);
 }
@@ -127,7 +115,7 @@ private mixed **stackFirst()
 /*
  * find item by key
  */
-private mixed **stackKey(string key)
+private mixed **stackKey(mixed key)
 {
     mixed *ref, **stack;
 
@@ -148,8 +136,7 @@ private mixed **stackKey(string key)
  */
 private mixed **stackNext(mixed **stack)
 {
-    string key;
-    mixed *ref;
+    mixed key, *ref;
     object node;
 
     key = stack[0][KEY];
@@ -191,8 +178,7 @@ private mixed **stackNext(mixed **stack)
  */
 private mixed **stackPrev(mixed **stack)
 {
-    string key;
-    mixed *ref;
+    mixed key, *ref;
     object node;
 
     key = stack[0][KEY];
@@ -234,8 +220,7 @@ private mixed **stackPrev(mixed **stack)
  */
 mixed iteratorStart(mixed from, mixed to)
 {
-    string first, last;
-    mixed **stack;
+    mixed first, last, **stack;
 
     first = from;
     last = to;
@@ -258,8 +243,7 @@ mixed iteratorStart(mixed from, mixed to)
  */
 mixed *iteratorNext(mixed state)
 {
-    mixed **stack, value;
-    string last, key;
+    mixed **stack, last, key, value;
     int reverse;
 
     ({ stack, last, reverse }) = state;
@@ -291,8 +275,7 @@ mixed *iteratorNext(mixed state)
  */
 int iteratorEnd(mixed state)
 {
-    mixed **stack;
-    string last, key;
+    mixed **stack, last, key;
     int reverse;
 
     ({ stack, last, reverse }) = state;
