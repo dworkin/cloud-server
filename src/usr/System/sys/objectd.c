@@ -626,17 +626,25 @@ string inherit_program(string from, string path, int priv)
  */
 mixed include_file(string compiled, string from, string path)
 {
-    int len;
+    string file;
 
-    if (path == "/include/AUTO" && from == "/include/std.h") {
-	if (driver->creator(compiled) != "System") {
-	    /*
-	     * special include file
-	     */
-	    return ({ "inherit \"/usr/System/lib/auto\";\n" });
-	} else {
-	    return ({ "" });
+    switch (from) {
+    case "/include/std.h":
+	if (path == "/include/AUTO") {
+	    return ({
+		(driver->creator(compiled) != "System") ?
+		 "inherit \"/usr/System/lib/auto\";\n" : ""
+	    });
 	}
+	break;
+
+    case "/usr/System/lib/auto.c":
+	if (path == "/include/EXT") {
+	    file = read_file("/usr/System/data/EXT");
+	    return ({ (file) ? file : "" });
+	}
+	break;
     }
-    return path;
+
+    return nil;
 }

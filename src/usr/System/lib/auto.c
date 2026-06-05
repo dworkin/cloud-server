@@ -548,3 +548,8 @@ static int call_out_other(mixed obj, string func, mixed args...)
  */
 static string query_ip_number(object obj)	{ return nil; }
 static string query_ip_name(object obj)		{ return nil; }
+
+/*
+ * Optional extensions.
+ */
+# include <EXT>

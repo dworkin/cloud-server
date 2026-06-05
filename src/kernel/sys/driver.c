@@ -669,14 +669,10 @@ static mixed include_file(string from, string path)
     if (result) {
 	return result;
     }
-    result = explode(path, "/");
-    if (sizeof(get_dir(path)[0] & result[sizeof(result) - 1 ..]) != 1) {
-	return nil;
-    }
     if (objectd) {
 	result = objectd->include_file(TLSVAR(TLS(), TLS_INHERIT)[0], from,
 				       path);
-	if (sscanf(from, "/kernel/%*s") == 0) {
+	if (result && sscanf(from, "/kernel/%*s") == 0) {
 	    return source[path] = result;
 	}
     }
