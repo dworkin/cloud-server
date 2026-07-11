@@ -270,8 +270,21 @@ static object compile_object(string path, string source...)
 	message(path + ": Permission denied.\n");
 	return nil;
     }
-    return (sizeof(source) != 0) ?
-	    ::compile_object(path, source...) : ::compile_object(path);
+    return ::compile_object(path, source...);
+}
+
+/*
+ * NAME:	preprocess_file()
+ * DESCRIPTION:	preprocess_file wrapper
+ */
+static string *preprocess_file(string path, string source...)
+{
+    path = driver->normalize_path(path, directory, owner);
+    if (!access(owner, path, WRITE_ACCESS)) {
+	message(path + ": Permission denied.\n");
+	return nil;
+    }
+    return ::preprocess_file(path, source...);
 }
 
 /*

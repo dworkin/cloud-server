@@ -53,17 +53,6 @@ static object clone_object(string path, mixed args...)
 }
 
 /*
- * NAME:	_F_copy()
- * DESCRIPTION:	call copy() in a newly copied object
- */
-nomask void _F_copy()
-{
-    if (previous_program() == SYSTEM_AUTO) {
-	this_object()->copy();
-    }
-}
-
-/*
  * NAME:	new_object()
  * DESCRIPTION:	create and initialize a new light-weight object
  */
@@ -105,6 +94,17 @@ static object new_object(string path, mixed args...)
     }
     ::tls_set(TLS_ARGUMENTS, args);
     return ::new_object(path, uid);
+}
+
+/*
+ * NAME:	_F_copy()
+ * DESCRIPTION:	call copy() in a newly copied object
+ */
+nomask void _F_copy()
+{
+    if (previous_program() == SYSTEM_AUTO) {
+	this_object()->copy();
+    }
 }
 
 /*

@@ -18,10 +18,5 @@ DESCRIPTION
 	specified owner.  Otherwise, it will have the same owner as the current
 	object.
 
-ACCESS
-	Unless the master object is itself a light-weight object to be copied,
-	the current object must have read access to the file of the object to
-	be created.
-
 SEE ALSO
 	efun/clone_object

@@ -15,10 +15,6 @@ DESCRIPTION
 	specified owner.  Otherwise, it will have the same owner as the current
 	object.
 
-ACCESS
-	The current object must have read access to the file of the object to
-	be cloned.
-
 ERRORS
 	If the number of existing objects is equal to the value of the
 	ST_OTABSIZE field of the array returned by status(), where ST_OTABSIZE

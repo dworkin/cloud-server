@@ -638,7 +638,7 @@ static object inherit_program(string from, string path, int priv)
 static mixed include_file(string from, string path)
 {
     string user, file;
-    mapping source;
+    mapping tls, source;
     mixed result;
 
     if (sscanf(path, "~%s/%s", user, file) != 0 && strlen(user) != 0 &&
@@ -664,16 +664,17 @@ static mixed include_file(string from, string path)
 	}
     }
 
-    source = TLSVAR(TLS(), TLS_SOURCE);
+    tls = TLS();
+    source = TLSVAR(tls, TLS_SOURCE);
     result = source[path];
     if (result) {
 	return result;
     }
-    if (objectd) {
-	result = objectd->include_file(TLSVAR(TLS(), TLS_INHERIT)[0], from,
-				       path);
-	if (result && sscanf(from, "/kernel/%*s") == 0) {
-	    return source[path] = result;
+    if (objectd &&
+	sscanf((file=TLSVAR(tls, TLS_INHERIT)[0]), "/kernel/%*s") == 0) {
+	result = objectd->include_file(file, from, path);
+	if (result) {
+	    return result;
 	}
     }
     return source[path] = path;
@@ -944,7 +945,8 @@ static string atomic_error(string str, int atom, int ticks)
 	mesg = str;
     }
 
-    if (trace[atom][TRACE_FUNCTION] != "_compile" ||
+    func = trace[atom][TRACE_FUNCTION];
+    if ((func != "_compile" && func != "preprocess_file") ||
 	((progname=trace[atom][TRACE_PROGNAME]) != AUTO && progname != DRIVER))
     {
 	if (errord) {

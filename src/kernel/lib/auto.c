@@ -304,6 +304,38 @@ static object compile_object(string path, string source...)
 }
 
 /*
+ * NAME:	preprocess_file()
+ * DESCRIPTION:	preprocess a file
+ */
+atomic static string *preprocess_file(string path, string source...)
+{
+    mapping tls;
+
+    CHECKARG(path, 1, "preprocess_file");
+    if (!this_object()) {
+	error("Permission denied");
+    }
+
+    /*
+     * check access
+     */
+    path = normalize_path(path);
+    if (creator != "System" &&
+	!::find_object(ACCESSD)->access(object_name(this_object()), path,
+					WRITE_ACCESS)) {
+	error("Access denied");
+    }
+
+    /*
+     * do the preprocessing
+     */
+    tls = TLS();
+    TLSVAR(tls, TLS_SOURCE) = ([ ]);
+    TLSVAR(tls, TLS_INHERIT) = ({ path });
+    return ::preprocess_file(path, source...);
+}
+
+/*
  * NAME:	_clone()
  * DESCRIPTION:	reversible low-level clone
  */
