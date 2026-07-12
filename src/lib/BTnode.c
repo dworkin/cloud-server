@@ -177,14 +177,14 @@ private mixed *grow(int index, object prev, mixed prevKey, mixed nextKey,
 
     if (prev) {
 	({ key, value }) = prev->stealRight(accessKey);
-	if (key) {
-	    keys = ({ (prevKey) ? prevKey : key }) + keys;
+	if (key != nil) {
+	    keys = ({ (prevKey != nil) ? prevKey : key }) + keys;
 	    values = ({ value }) + values;
 	    return ({ BORDER_LEFT, key, nil, change });
 	} else if (next) {
 	    ({ key, value }) = next->stealLeft(accessKey);
-	    if (key) {
-		keys += ({ (nextKey) ? nextKey : key });
+	    if (key != nil) {
+		keys += ({ (nextKey != nil) ? nextKey : key });
 		values += ({ value });
 		return ({ BORDER_RIGHT, key, nil, change });
 	    }
@@ -193,7 +193,7 @@ private mixed *grow(int index, object prev, mixed prevKey, mixed nextKey,
 	/*
 	 * merge with prev
 	 */
-	if (prevKey) {
+	if (prevKey != nil) {
 	    keys = ({ prevKey }) + keys;
 	}
 	prev->addRight(accessKey, keys, values);
@@ -201,8 +201,8 @@ private mixed *grow(int index, object prev, mixed prevKey, mixed nextKey,
 	return ({ MERGE_LEFT, nil, nil, change });
     } else {
 	({ key, value }) = next->stealLeft(accessKey);
-	if (key) {
-	    keys += ({ (nextKey) ? nextKey : key });
+	if (key != nil) {
+	    keys += ({ (nextKey != nil) ? nextKey : key });
 	    values += ({ value });
 	    return ({ BORDER_RIGHT, key, nil, change });
 	}
@@ -210,7 +210,7 @@ private mixed *grow(int index, object prev, mixed prevKey, mixed nextKey,
 	/*
 	 * merge with next
 	 */
-	if (nextKey) {
+	if (nextKey != nil) {
 	    keys += ({ nextKey });
 	}
 	next->addLeft(accessKey, keys, values);
