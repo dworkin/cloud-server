@@ -16,4 +16,4 @@ DESCRIPTION
 	If the file doesn't exist, nil is returned.
 
 SEE ALSO
-	efun/get_dir
+	kfun/get_dir

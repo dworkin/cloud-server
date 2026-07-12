@@ -19,4 +19,4 @@ ERRORS
 	in an error.
 
 SEE ALSO
-	efun/call_limited, efun/call_other, kfun/call_out
+	efun/call_limited, kfun/call_other, kfun/call_out
