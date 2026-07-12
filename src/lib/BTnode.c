@@ -28,8 +28,7 @@ private int changes;		/* structural change counter */
 /*
  * create a new BTnode
  */
-static object newNode(string accessKey, int maxSize, string *keys,
-		      mixed *values)
+static object newNode(string accessKey, int maxSize, mixed *keys, mixed *values)
 {
     return new BTnode(accessKey, maxSize, keys, values);
 }
@@ -248,7 +247,7 @@ mixed get(string accessKey, mixed key)
  * set the V for a K, nil for deletion
  */
 mixed *set(string accessKey, mixed key, mixed value, int exists,
-	   object prev, string prevKey, string nextKey, object next)
+	   object prev, mixed prevKey, mixed nextKey, object next)
 {
     if (accessKey == ::accessKey) {
 	int index, found, change, state;
