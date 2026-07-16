@@ -41,6 +41,9 @@ atomic static void create(int maxSize, varargs string accessKey,
  */
 mixed get(mixed key)
 {
+    if (key == nil) {
+	error("Invalid key");
+    }
     return root->get(accessKey, key);
 }
 
@@ -49,6 +52,9 @@ mixed get(mixed key)
  */
 atomic int set(mixed key, mixed value)
 {
+    if (key == nil) {
+	error("Invalid key");
+    }
     return root->set(accessKey, key, value, 0, nil, nil, nil, nil)[CHANGE];
 }
 
@@ -57,6 +63,9 @@ atomic int set(mixed key, mixed value)
  */
 atomic int add(mixed key, mixed value)
 {
+    if (key == nil) {
+	error("Invalid key");
+    }
     return root->set(accessKey, key, value, -1, nil, nil, nil, nil)[CHANGE];
 }
 
@@ -65,6 +74,9 @@ atomic int add(mixed key, mixed value)
  */
 atomic int change(mixed key, mixed value)
 {
+    if (key == nil) {
+	error("Invalid key");
+    }
     return root->set(accessKey, key, value, 1, nil, nil, nil, nil)[CHANGE];
 }
 
@@ -101,11 +113,11 @@ private mixed **stackFirst()
     mixed *ref, **stack;
 
     ref = root->refIndex(accessKey, -1, 0);
-    if (ref[VALUE] == nil && !ref[KEY]) {
+    if (ref[VALUE] == nil && ref[KEY] == nil) {
 	return nil;		/* empty root */
     }
 
-    for (stack = ({ ref }); !ref[KEY]; stack = ({ ref }) + stack) {
+    for (stack = ({ ref }); ref[KEY] == nil; stack = ({ ref }) + stack) {
 	ref = ref[VALUE]->refIndex(accessKey, -1, 0);
     }
 
@@ -120,11 +132,11 @@ private mixed **stackKey(mixed key)
     mixed *ref, **stack;
 
     ref = root->refKey(accessKey, key);
-    if (ref[VALUE] == nil && !ref[KEY]) {
+    if (ref[VALUE] == nil && ref[KEY] == nil) {
 	return nil;		/* empty root */
     }
 
-    for (stack = ({ ref }); !ref[KEY]; stack = ({ ref }) + stack) {
+    for (stack = ({ ref }); ref[KEY] == nil; stack = ({ ref }) + stack) {
 	ref = ref[VALUE]->refKey(accessKey, key);
     }
 
@@ -157,13 +169,13 @@ private mixed **stackNext(mixed **stack)
 	    return stack;
 	}
 
-	if (ref[VALUE] != nil || ref[KEY]) {
+	if (ref[VALUE] != nil || ref[KEY] != nil) {
 	    /*
 	     * not out of range
 	     */
 	    for (;;) {
 		stack = ({ ref }) + stack;
-		if (ref[KEY]) {
+		if (ref[KEY] != nil) {
 		    /* leaf */
 		    return stack;
 		}
@@ -199,13 +211,13 @@ private mixed **stackPrev(mixed **stack)
 	    return nil;
 	}
 
-	if (ref[VALUE] != nil || ref[KEY]) {
+	if (ref[VALUE] != nil || ref[KEY] != nil) {
 	    /*
 	     * not out of range
 	     */
 	    for (;;) {
 		stack = ({ ref }) + stack;
-		if (ref[KEY]) {
+		if (ref[KEY] != nil) {
 		    /* leaf */
 		    return stack;
 		}
@@ -218,13 +230,11 @@ private mixed **stackPrev(mixed **stack)
 /*
  * reset an iterator
  */
-mixed iteratorStart(mixed from, mixed to)
+mixed iteratorStart(mixed first, mixed last)
 {
-    mixed first, last, **stack;
+    mixed **stack;
 
-    first = from;
-    last = to;
-    if (first && last && first > last) {
+    if (first != nil && last != nil && first > last) {
 	/*
 	 * backwards
 	 */
@@ -235,7 +245,7 @@ mixed iteratorStart(mixed from, mixed to)
 	return ({ stack, last, TRUE });
     }
 
-    return ({ (first) ? stackKey(first) : stackFirst(), last, FALSE });
+    return ({ (first != nil) ? stackKey(first) : stackFirst(), last, FALSE });
 }
 
 /*
@@ -250,9 +260,9 @@ mixed *iteratorNext(mixed state)
     if (stack) {
 	key = stack[0][KEY];
 	value = stack[0][VALUE];
-	if (key) {
+	if (key != nil) {
 	    if (!reverse) {
-		if (!last || key <= last) {
+		if (last == nil || key <= last) {
 		    return ({
 			({ stackNext(stack), last, reverse }),
 			({ key, value })
@@ -283,9 +293,9 @@ int iteratorEnd(mixed state)
 	return TRUE;
     }
     key = stack[0][KEY];
-    if (!key) {
+    if (key == nil) {
 	return TRUE;
     }
 
-    return (reverse) ? (key < last) : (last && key > last);
+    return (reverse) ? (key < last) : (last != nil && key > last);
 }

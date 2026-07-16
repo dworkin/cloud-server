@@ -17,9 +17,6 @@ static object rootNode(string nodePath, string accessKey, int maxSize)
  */
 mixed get(string key)
 {
-    if (!key) {
-	error("Invalid key");
-    }
     return ::get(key);
 }
 
@@ -28,9 +25,6 @@ mixed get(string key)
  */
 int set(string key, mixed value)
 {
-    if (!key) {
-	error("Invalid key");
-    }
     return ::set(key, value);
 }
 
@@ -39,9 +33,6 @@ int set(string key, mixed value)
  */
 int add(string key, mixed value)
 {
-    if (!key) {
-	error("Invalid key");
-    }
     return ::add(key, value);
 }
 
@@ -50,8 +41,5 @@ int add(string key, mixed value)
  */
 int change(string key, mixed value)
 {
-    if (!key) {
-	error("Invalid key");
-    }
     return ::change(key, value);
 }
