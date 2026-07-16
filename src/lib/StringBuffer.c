@@ -189,7 +189,7 @@ private void appendString(string str)
     }
 
     chunks[chunkBuffered++] = str;
-    if (chunkSize == 0 && strlen(str) == strMax) {
+    if (chunkSize == 0 && chunkBuffered == 1 && strlen(str) == strMax) {
 	chunkFilled++;
     } else {
 	chunkSize += strlen(str);
@@ -230,7 +230,7 @@ private void appendChars(int *chars)
     }
 
     chunks[chunkBuffered++] = chars;
-    if (chunkSize == 0 && sizeof(chars) == bufMax) {
+    if (chunkSize == 0 && chunkBuffered == 1 && sizeof(chars) == bufMax) {
 	chunkFilled++;
     } else {
 	chunkSize += sizeof(chars);
