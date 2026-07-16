@@ -21,7 +21,6 @@ static void create(object client, string host, int port,
 	fieldsPath = OBJECT_PATH(RemoteHttpFields);
     }
     ::create(client, host, port, responsePath, fieldsPath);
-    connect(host, port);
 }
 
 /*
