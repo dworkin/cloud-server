@@ -64,6 +64,15 @@ static void _disconnect()
 }
 
 /*
+ * NAME:	_message()
+ * DESCRIPTION:	send a message across the connection
+ */
+static void _message(object message, object prev)
+{
+    ::_message(([ ]), message, prev);
+}
+
+/*
  * NAME:	timeout()
  * DESCRIPTION:	connection timed out
  */

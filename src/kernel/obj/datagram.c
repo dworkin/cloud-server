@@ -98,6 +98,15 @@ static void _disconnect()
 }
 
 /*
+ * NAME:	_message()
+ * DESCRIPTION:	send a message to the other side
+ */
+static void _message(string str, object prev)
+{
+    ::_datagram(([ ]), str, prev);
+}
+
+/*
  * NAME:	timeout()
  * DESCRIPTION:	connection timed out
  */

@@ -335,7 +335,7 @@ int message(string str)
  * NAME:	_message()
  * DESCRIPTION:	send a message across the connection
  */
-static void _message(object message, object prev)
+static void _message(mapping tls, object message, object prev)
 {
     if (prev == user) {
 	int len;
@@ -414,23 +414,25 @@ static int message_done(mapping tls)
 }
 
 /*
- * NAME:	_datagram_challenge()
- * DESCRIPTION:	set the challenge for the datagram channel
- */
-static void _datagram_challenge(string str, object prev)
-{
-    if (prev == user) {
-	::datagram_challenge(str);
-    }
-}
-
-/*
  * NAME:	datagram_challenge()
  * DESCRIPTION:	set the challenge for the datagram channel
  */
 void datagram_challenge(string str)
 {
-    _datagram_challenge(str, previous_object());
+    if (previous_object() == user) {
+	::datagram_challenge(str);
+    }
+}
+
+/*
+ * NAME:	_datagram_challenge()
+ * DESCRIPTION:	set the challenge for the datagram channel
+ */
+static void _datagram_challenge(mapping tls, string str, object prev)
+{
+    if (prev == user) {
+	::datagram_challenge(str);
+    }
 }
 
 /*
@@ -476,23 +478,25 @@ static int receive_datagram(mapping tls, string str)
 }
 
 /*
- * NAME:	_datagram()
- * DESCRIPTION:	send a datagram across the connection
- */
-static int _datagram(string str, object prev)
-{
-    if (prev == user) {
-	return (send_datagram(str) == strlen(str));
-    }
-}
-
-/*
  * NAME:	datagram()
  * DESCRIPTION:	send a datagram across the connection
  */
 int datagram(string str)
 {
-    return _datagram(str, previous_object());
+    if (previous_object() == user) {
+	return (send_datagram(str) == strlen(str));
+    }
+}
+
+/*
+ * NAME:	_datagram()
+ * DESCRIPTION:	send a datagram across the connection
+ */
+static void _datagram(mapping tls, string str, object prev)
+{
+    if (prev == user) {
+	send_datagram(str);
+    }
 }
 
 /*

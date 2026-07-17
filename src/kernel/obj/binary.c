@@ -104,6 +104,33 @@ static void _disconnect()
 }
 
 /*
+ * NAME:	_message()
+ * DESCRIPTION:	send a message across the connection
+ */
+static void _message(object message, object prev)
+{
+    ::_message(([ ]), message, prev);
+}
+
+/*
+ * NAME:	_datagram_challenge()
+ * DESCRIPTION:	set the challenge for the datagram channel
+ */
+static void _datagram_challenge(string str, object prev)
+{
+    ::_datagram_challenge(([ ]), str, prev);
+}
+
+/*
+ * NAME:	_datagram()
+ * DESCRIPTION:	send a datagram across the connection
+ */
+static void _datagram(string str, object prev)
+{
+    ::_datagram(([ ]), str, prev);
+}
+
+/*
  * NAME:	timeout()
  * DESCRIPTION:	connection timed out
  */
@@ -146,7 +173,7 @@ private void receive_buffer(mapping tls)
     int len;
     string str, head, pre;
 
-    while (mode != MODE_BLOCK && mode != MODE_DISCONNECT) {
+    while (!blocked && mode != MODE_DISCONNECT) {
 	if (mode != MODE_RAW) {
 	    if (sscanf(buffer, "%s\r\n%s", str, buffer) != 0 ||
 		sscanf(buffer, "%s\n%s", str, buffer) != 0) {
@@ -223,48 +250,52 @@ static void receive_message(string str)
 void set_mode(int mode)
 {
     if (KERNEL()) {
+	if (mode == MODE_DISCONNECT) {
+	    ::set_mode(mode);
+	    ::mode = mode;
+	    return;
+	}
+
 	if (mode == MODE_NOCHANGE) {
 	    mode = (blocked) ? MODE_BLOCK : ::mode;
 	} else if (mode == MODE_UNBLOCK) {
 	    mode = ::mode;
 	}
 
-	if (mode != MODE_BLOCK && mode != MODE_DISCONNECT &&
-	    strlen(buffer) != 0) {
-	    /*
-	     * buffer mode
-	     */
-	    switch (mode) {
-	    case MODE_LINE:
-	    case MODE_EDIT:
-		if (noline) {
-		    break;	/* pass mode to connection */
+	if (mode == MODE_BLOCK) {
+	    blocked = TRUE;
+	} else {
+	    ::mode = mode;
+	    blocked = FALSE;
+	    if (strlen(buffer) != 0) {
+		/*
+		 * buffer mode
+		 */
+		switch (mode) {
+		case MODE_LINE:
+		case MODE_EDIT:
+		    if (noline) {
+			break;  /* pass mode to connection */
+		    }
+		    /* fall through */
+		case MODE_RAW:
+		    if (restart == 0) {
+			restart = call_out("restart_input", 0);
+		    }
+		    return;
 		}
-		/* fall through */
-	    case MODE_RAW:
-		if (restart == 0) {
-		    restart = call_out("restart_input", 0);
-		}
-		::mode = mode;
-		return;
 	    }
+
+	    mode = MODE_RAW;
 	}
 
-	if (mode != MODE_BLOCK || ::query_mode() != MODE_BLOCK) {
+	if (mode != ::query_mode()) {
 	    if (restart != 0) {
 		remove_call_out(restart);
 		restart = 0;
 	    }
 
 	    ::set_mode(mode);
-
-	    if (mode == MODE_BLOCK) {
-		blocked = TRUE;
-	    } else if (mode == MODE_UNBLOCK) {
-		blocked = FALSE;
-	    } else {
-		::mode = mode;
-	    }
 	}
     }
 }
